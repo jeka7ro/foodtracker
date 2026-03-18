@@ -1,0 +1,226 @@
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animations */
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+/* Focus Styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+/* Transitions */
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 0.2s ease-out;
+}
+
+/* ========== Mobile Responsive ========== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+
+  /* Reduce page padding */
+  .page-content,
+  div[style*="padding: 28px 40px"] {
+    padding: 20px 24px !important;
+  }
+
+  /* Smaller grids */
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+
+  /* Sidebar becomes top bar or hidden */
+  nav,
+  aside,
+  div[style*="width: 220px"],
+  div[style*="width: '220px'"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 60px !important;
+    flex-direction: row !important;
+    z-index: 999;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  /* Main content takes full width */
+  main,
+  div[style*="marginLeft: '220px'"],
+  div[style*="marginLeft: 220px"] {
+    margin-left: 0 !important;
+    padding-bottom: 70px !important;
+  }
+
+  /* Reduce page padding on mobile */
+  div[style*="padding: 28px 40px"] {
+    padding: 16px !important;
+  }
+
+  /* Stack header elements */
+  div[style*="display: 'flex'"][style*="justifyContent: 'space-between'"] {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  /* Single column grids */
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table horizontal scroll */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Smaller fonts */
+  h1 {
+    font-size: 22px !important;
+  }
+
+  h2 {
+    font-size: 18px !important;
+  }
+
+  /* Full-width buttons */
+  button {
+    min-height: 44px;
+  }
+
+  /* Modal full screen on mobile */
+  div[style*="maxWidth: '600px'"],
+  div[style*="maxWidth: 600px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Search input full width */
+  input[type="text"][style*="width: '220px'"],
+  input[type="text"][style*="width: 220px"] {
+    width: 100% !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  div[style*="padding: 28px 40px"] {
+    padding: 12px 8px !important;
+  }
+
+  /* Smaller badge text */
+  span[style*="fontSize: '11px'"],
+  span[style*="fontSize: 11px"] {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Stack flex items */
+  div[style*="display: 'flex'"][style*="gap"] {
+    flex-wrap: wrap !important;
+  }
+}

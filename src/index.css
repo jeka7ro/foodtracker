@@ -1,0 +1,258 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', BlinkMacSystemFont,
+    'Inter', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* All inputs and selects inherit font */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* ── Date input — match app style ── */
+input[type="date"],
+input[type="datetime-local"] {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: inherit;
+}
+
+/* Hide ugly calendar icon on webkit, rely on padding */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+  filter: var(--cal-filter, none);
+}
+
+/* ─────────────────────────────────────────────────
+   macOS Tahoe Global Button System
+   Rounded, shadowed, spring-animated
+───────────────────────────────────────────────── */
+
+/* Base button reset + shared style */
+button {
+  font-family: inherit;
+}
+
+/* Primary action button (.btn-primary) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 4px 14px rgba(99, 102, 241, 0.35);
+  transition: transform 0.15s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.15s ease, opacity 0.15s;
+  user-select: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
+
+/* Secondary ghost button (.btn-secondary) */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s cubic-bezier(.34, 1.56, .64, 1), background 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(128, 128, 128, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+/* Danger button (.btn-danger) */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(.34, 1.56, .64, 1), background 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+}
+
+/* Icon-only square button (.btn-icon) */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(128, 128, 128, 0.18);
+  border-radius: 9px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s cubic-bezier(.34, 1.56, .64, 1), background 0.15s, box-shadow 0.15s;
+}
+
+.btn-icon:hover {
+  background: rgba(128, 128, 128, 0.08);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon:active {
+  transform: scale(0.93);
+}
+
+/* Segmented tab control pill (.tab-pill) */
+.tab-pill {
+  display: inline-flex;
+  padding: 4px;
+  background: rgba(128, 128, 128, 0.07);
+  border-radius: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.12);
+  gap: 2px;
+}
+
+.tab-pill button {
+  padding: 6px 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(.4, 0, .2, 1);
+}
+
+.tab-pill button.active {
+  background: #fff;
+  color: #6366F1;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+
+.tab-pill.dark button.active {
+  background: rgba(99, 102, 241, 0.22);
+}
+
+/* Global keyframes */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInR {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1
+  }
+
+  50% {
+    opacity: 0.5
+  }
+}
