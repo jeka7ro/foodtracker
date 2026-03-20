@@ -450,10 +450,31 @@ export class CompetitorScraper {
                         }
                     }
 
-                    const isPromoted = item.innerText?.toLowerCase().includes('promovat') ||
-                        !!item.querySelector('[class*="promoted"], [class*="Promoted"], [class*="sponsored"]')
+                    const itemText = item.innerText?.toLowerCase() || ''
+                    const isPromoted = itemText.includes('promovat') || itemText.includes('reducere') || itemText.includes('discount') ||
+                        !!item.querySelector('[class*="promoted"], [class*="Promoted"], [class*="sponsored"], [class*="discount"], [class*="Discount"], [class*="strikethrough"], s, del')
+                    
+                    // Try to extract discount percentage (e.g. "30% reducere")
+                    const discountMatch = (item.innerText || '').match(/(\d{1,2})%\s*(?:reducere|discount|off)/i)
+                    const discountPct = discountMatch ? parseInt(discountMatch[1]) : null
+                    
+                    // Try to find original (strikethrough) price
+                    let originalPrice = null
+                    const strikeEl = item.querySelector('s, del, [class*="strikethrough"], [class*="oldPrice"], [class*="original"]')
+                    if (strikeEl) {
+                        const oPriceMatch = strikeEl.innerText?.match(/(\d{1,4}(?:[.,]\d{1,2})?)/)
+                        if (oPriceMatch) originalPrice = parseFloat(oPriceMatch[1].replace(',', '.'))
+                    }
+                    // Also check for a second price in the text (usually the barred one is higher)
+                    if (!originalPrice && isPromoted) {
+                        const allPrices = [...(item.innerText || '').matchAll(/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:RON|lei)/gi)]
+                        if (allPrices.length >= 2) {
+                            const prices = allPrices.map(m => parseFloat(m[1].replace(',', '.')))
+                            originalPrice = Math.max(...prices)
+                        }
+                    }
 
-                    return { name, price, category, description, image_url, isPromoted }
+                    return { name, price, category, description, image_url, isPromoted, discountPct, originalPrice }
                 }
             })
 

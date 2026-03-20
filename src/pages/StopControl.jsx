@@ -102,68 +102,34 @@ export default function StopControl() {
     const [platformFilter, setPlatformFilter] = useState('all')
 
     // ─── Product Scanner State ─────────────────────────────
-    const [productStopped, setProductStopped] = useState({})
-    const [scanningProducts, setScanningProducts] = useState(false)
+    const [posDiscrepancies, setPosDiscrepancies] = useState([])
+    const [scanningPos, setScanningPos] = useState(false)
     const [productScanMsg, setProductScanMsg] = useState(null)
     const [productScanned, setProductScanned] = useState(false)
-    const [scanHistory, setScanHistory] = useState([])
-    const [expandedRest, setExpandedRest] = useState({})
 
-    const loadHistory = useCallback(async () => {
-        const { data } = await supabase.from('product_stop_history')
-            .select('id, checked_at, reference_date, check_date, missing_count, restaurant_count')
-            .order('checked_at', { ascending: false }).limit(10)
-        setScanHistory(data || [])
-    }, [])
-
-    useEffect(() => { loadHistory() }, [loadHistory])
-
-    const scanAndCompareProducts = useCallback(async () => {
-        setScanningProducts(true)
+    const verifyPos = useCallback(async () => {
+        setScanningPos(true)
         setProductScanMsg(null)
         try {
-            try { await fetch(`${WORKER_URL}/api/own-brands/scrape-all`, { method: 'POST' }) } catch (_) {}
-            const today = new Date().toISOString().split('T')[0]
-            const { data: latestRef } = await supabase.from('own_product_snapshots')
-                .select('snapshot_date').lt('snapshot_date', today)
-                .order('snapshot_date', { ascending: false }).limit(1)
-            const refDate = latestRef?.[0]?.snapshot_date
-            if (!refDate) {
-                setProductScanMsg({ ok: false, text: 'Nu exista nicio scanare anterioara de referinta. Ruleaza mai intai o scanare completa.' })
-                setProductScanned(true)
-                return
+            const res = await fetch(`${WORKER_URL}/api/pos/discrepancies`)
+            const data = await res.json()
+            if (data.success) {
+                const resArray = data.results || []
+                setPosDiscrepancies(resArray)
+                
+                const totalRest = resArray.length
+                const totalDiscrepant = resArray.filter(r => r.discrepancies.length > 0).length
+                const totalProdsStop = resArray.reduce((acc, r) => acc + r.pos_stopped_count, 0)
+                
+                setProductScanMsg({ ok: true, text: `✅ Verificare POS completă: ${totalRest} restaurante scanate | ${totalProdsStop} produse oprite în bucătării | ${totalDiscrepant === 0 ? 'Nicio discrepanță cu platformele!' : `${totalDiscrepant} restaurante cu erori platformă ⚠️`}` })
+            } else {
+                setProductScanMsg({ ok: false, text: data.error || data.message || 'Eroare la verificare POS' })
             }
-            const [{ data: refData }, { data: todayData }, { data: restaurants }] = await Promise.all([
-                supabase.from('own_product_snapshots').select('restaurant_id, platform, product_name, category, price').eq('snapshot_date', refDate),
-                supabase.from('own_product_snapshots').select('restaurant_id, platform, product_name').eq('snapshot_date', today),
-                supabase.from('restaurants').select('id, name, city, brands(name, logo_url)').eq('is_active', true)
-            ])
-            const todayKeys = new Set((todayData || []).map(p => `${p.restaurant_id}|${p.platform}|${p.product_name}`))
-            const restMap = {}
-            ;(restaurants || []).forEach(r => { restMap[r.id] = r })
-            const missing = (refData || []).filter(p => !todayKeys.has(`${p.restaurant_id}|${p.platform}|${p.product_name}`))
-            const grouped = {}
-            missing.forEach(p => {
-                const rid = p.restaurant_id
-                const rest = restMap[rid]
-                if (!grouped[rid]) grouped[rid] = { name: rest?.name || rid, city: rest?.city || '', logo: rest?.brands?.logo_url, byPlatform: {} }
-                if (!grouped[rid].byPlatform[p.platform]) grouped[rid].byPlatform[p.platform] = []
-                grouped[rid].byPlatform[p.platform].push({ name: p.product_name, category: p.category, price: p.price })
-            })
-            setProductStopped(grouped)
-            setProductScanMsg({ ok: missing.length === 0, text: missing.length === 0
-                ? `Toate produsele disponibile (ref: ${refDate})`
-                : `${missing.length} produse lipsa in ${Object.keys(grouped).length} restaurante (ref: ${refDate})` })
-            setProductScanned(true)
-            await supabase.from('product_stop_history').insert({
-                reference_date: refDate, check_date: today,
-                missing_count: missing.length, restaurant_count: Object.keys(grouped).length, results: grouped
-            })
-            await loadHistory()
         } catch (e) {
             setProductScanMsg({ ok: false, text: e.message })
-        } finally { setScanningProducts(false) }
-    }, [loadHistory])
+        }
+        finally { setScanningPos(false); setProductScanned(true) }
+    }, [])
 
     // ─── Data Queries ──────────────────────────────────────
     const { data: activeStops = [], isLoading: loadingActive } = useQuery({
@@ -238,39 +204,21 @@ export default function StopControl() {
 
     const kpiCards = [
         {
-            label: lang === 'en' ? 'Active Stops' : 'Opriri Active',
+            label: lang === 'en' ? 'Active Stops' : 'Restaurante Oprite (Total)',
             value: activeStops.length,
-            sub: activeStops.length > 0 ? (lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'en' ? 'all good' : 'totul în regulă'),
+            sub: activeStops.length > 0 ? (lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'en' ? 'all good' : 'totul funcționează'),
             color: activeStops.length > 0 ? '#FF453A' : '#34C759',
             bg: activeStops.length > 0 ? 'rgba(255,69,58,0.12)' : 'rgba(52,199,89,0.12)',
             icon: Icon.stop(activeStops.length > 0 ? '#FF453A' : '#34C759', 20),
         },
         {
-            label: lang === 'en' ? 'Live Loss' : 'Pierdere Live',
-            value: Math.round(totalActiveLoss),
-            suffix: ' RON',
-            sub: lang === 'en' ? 'from active stops' : 'din opriri active',
-            color: totalActiveLoss > 0 ? '#FF9500' : colors.text,
-            bg: 'rgba(255,149,0,0.12)',
-            icon: Icon.loss('#FF9500', 20),
-        },
-        {
-            label: lang === 'en' ? 'Stops Today' : 'Opriri Azi',
+            label: lang === 'en' ? 'Stops Today' : 'Opriri Azi (Istoric)',
             value: todayEvents.length,
-            sub: lang === 'en' ? 'in the last 24h' : 'in ultimele 24h',
+            sub: lang === 'en' ? 'in the last 24h' : 'în ultimele 24h',
             color: '#8B5CF6',
             bg: 'rgba(139,92,246,0.12)',
             icon: Icon.clock('#8B5CF6', 20),
-        },
-        {
-            label: lang === 'en' ? 'Loss Today' : 'Pierdere Azi',
-            value: Math.round(todayLoss),
-            suffix: ' RON',
-            sub: formatLoss(todayLoss),
-            color: '#10B981',
-            bg: 'rgba(16,185,129,0.12)',
-            icon: Icon.loss('#10B981', 20),
-        },
+        }
     ]
 
     return (
@@ -302,18 +250,13 @@ export default function StopControl() {
                         </h1>
                     </div>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: '2px 0 0 48px' }}>
-                        {lang === 'en' ? 'Monitor stops and financial losses' : 'Monitorizare opriri și pierderi financiare'} · {now.toLocaleTimeString('ro-RO')}
+                        {lang === 'en' ? 'Monitor complete restaurant stops' : 'Monitorizare opriri complete (restaurant închis pe platformă)'} · {now.toLocaleTimeString('ro-RO')}
                     </p>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-h" onClick={() => { queryClient.invalidateQueries({ queryKey: ['active-stops'] }); queryClient.invalidateQueries({ queryKey: ['stop-events'] }) }} style={btnGhost}>
-                        {Icon.refresh(colors.textSecondary)} Refresh
-                    </button>
                 </div>
             </div>
 
             {/* ══ KPI CARDS ══ */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '16px', marginBottom: '24px' }}>
                 {kpiCards.map((k, i) => (
                     <div key={i} className="sc-card" style={{ ...glass, padding: '22px 24px', animation: `fadeUp 0.3s ease ${0.05 * i + 0.05}s both` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
@@ -325,7 +268,7 @@ export default function StopControl() {
                         <div style={{ fontSize: '34px', fontWeight: '700', color: k.color, lineHeight: 1, letterSpacing: '-1px', marginBottom: '6px' }}>
                             <AnimCounter value={k.value} suffix={k.suffix || ''} />
                         </div>
-                        <div style={{ fontSize: '12px', color: k.color === '#34C759' ? '#34C759' : k.value === 0 ? colors.textSecondary : k.color, fontWeight: k.value > 0 && k.label !== 'Pierdere Azi' ? '600' : '400', opacity: 0.85 }}>
+                        <div style={{ fontSize: '12px', color: k.color === '#34C759' ? '#34C759' : k.value === 0 ? colors.textSecondary : k.color, fontWeight: k.value > 0 ? '600' : '400', opacity: 0.85 }}>
                             {k.sub}
                         </div>
                     </div>
@@ -335,21 +278,21 @@ export default function StopControl() {
             {/* ══ PRODUCT AVAILABILITY SCANNER ══ */}
             <div style={{ ...glass, marginBottom: '24px', overflow: 'hidden', animation: 'fadeUp 0.3s ease 0.25s both' }}>
                 {/* Header row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 24px', borderBottom: `1px solid ${isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)'}`, background: isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: '11px', background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        {Icon.scan('#ef4444', 18)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 24px', borderBottom: `1px solid ${isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)'}`, background: isDark ? 'rgba(99,102,241,0.05)' : 'rgba(99,102,241,0.03)' }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '11px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {Icon.scan('#6366F1', 18)}
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '15px', fontWeight: '700', color: colors.text, marginBottom: '2px' }}>
-                            Produse pe Stop
+                            Sincronizare Meniu (POS vs Platforme)
                         </div>
                         <div style={{ fontSize: '12px', color: colors.textSecondary }}>
-                            {lang === 'en' ? 'Compare current menu with last reference scan — shows missing products by restaurant and platform' : 'Compara meniul curent cu ultima scanare de referinta — arata produsele lipsa per restaurant si platforma'}
+                            Compară automat produsele oprite direct în casa de marcat (Syrve) cu disponibilitatea lor pe Glovo, Wolt și Bolt.
                         </div>
                     </div>
-                    <button className="btn-h" onClick={scanAndCompareProducts} disabled={scanningProducts}
-                        style={{ ...btnBase, padding: '11px 22px', background: scanningProducts ? 'rgba(239,68,68,0.4)' : 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff', boxShadow: scanningProducts ? 'none' : '0 4px 16px rgba(239,68,68,0.35)', whiteSpace: 'nowrap', flexShrink: 0, cursor: scanningProducts ? 'wait' : 'pointer' }}>
-                        {scanningProducts ? <>{Icon.spin(14)} Se scaneaza...</> : <>{Icon.scan('#fff', 14)} {lang === 'en' ? 'Scan and compare' : 'Scaneaza si compara'}</>}
+                    <button className="btn-h" onClick={verifyPos} disabled={scanningPos}
+                        style={{ ...btnBase, padding: '11px 22px', background: scanningPos ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', boxShadow: scanningPos ? 'none' : '0 4px 16px rgba(99,102,241,0.35)', whiteSpace: 'nowrap', flexShrink: 0, cursor: scanningPos ? 'wait' : 'pointer' }}>
+                        {scanningPos ? <>{Icon.spin(14)} Se verifică bucătăriile...</> : <>{Icon.scan('#fff', 14)} Lansați Scanarea Completă</>}
                     </button>
                 </div>
 
@@ -361,57 +304,40 @@ export default function StopControl() {
                     </div>
                 )}
 
-                {/* Results */}
-                {productScanned && (
-                    Object.keys(productStopped).length === 0 ? (
-                        <div style={{ padding: '32px', textAlign: 'center' }}>
-                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                                {Icon.check('#22c55e', 20)}
-                            </div>
-                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>{lang === 'en' ? 'All products are available' : 'Toate produsele sunt disponibile'}</div>
-                            <div style={{ fontSize: '12px', color: colors.textSecondary }}>Nicio diferenta fata de scanarea de referinta</div>
-                        </div>
-                    ) : (
-                        <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                            {Object.entries(productStopped).map(([rid, data]) => {
-                                const isExpanded = !!expandedRest[rid]
-                                const totalMissing = Object.values(data.byPlatform).reduce((s, a) => s + a.length, 0)
-                                return (
-                                <div key={rid} style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
-                                    <div onClick={() => setExpandedRest(prev => ({ ...prev, [rid]: !prev[rid] }))} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', background: isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)', cursor: 'pointer', transition: 'background 0.15s' }}>
-                                        <span style={{ fontSize: '10px', color: '#ef4444', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s', display: 'inline-block', lineHeight: 1, flexShrink: 0 }}>▶</span>
-                                        <div style={{ width: 28, height: 28, borderRadius: '8px', background: data.logo ? 'white' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                                            {data.logo ? <img src={data.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => e.currentTarget.style.display='none'} /> : Icon.home('#ef4444', 13)}
-                                        </div>
-                                        <span style={{ fontSize: '13px', fontWeight: '700', color: colors.text, flex: 1 }}>{data.name}</span>
-                                        <span style={{ fontSize: '11px', color: colors.textSecondary, marginRight: '8px' }}>{data.city}</span>
-                                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '2px 10px', borderRadius: '6px' }}>
-                                            {totalMissing} lipsa
+                {/* Results Grid */}
+                {posDiscrepancies.length > 0 && (
+                    <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px', background: isDark ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+                        {posDiscrepancies.map((p, i) => {
+                            const hasErrors = p.discrepancies.length > 0
+                            return (
+                                <div key={i} style={{ ...inner, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', padding: '16px 20px', borderTop: `3px solid ${hasErrors ? '#ef4444' : '#22c55e'}` }}>
+                                    <div style={{ fontSize: '14px', fontWeight: '800', marginBottom: '10px', color: colors.text }}>
+                                        {p.restaurant}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginBottom: '10px' }}>
+                                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>Stare Casa (Syrve):</span>
+                                        <span style={{ fontSize: '12px', fontWeight: '800', color: p.pos_stopped_count > 0 ? '#f97316' : '#22c55e' }}>
+                                            {p.pos_stopped_count === 0 ? 'Totul Activ' : `${p.pos_stopped_count} oprite`}
                                         </span>
                                     </div>
-                                    {isExpanded && Object.entries(data.byPlatform).map(([platform, prods]) => (
-                                        <div key={platform} style={{ padding: '10px 24px 12px 64px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                                <PlatformBadge platform={platform} size={14} />
-                                                <span style={{ fontSize: '10px', fontWeight: '800', color: PLATFORM_COLORS[platform] || '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{platform}</span>
-                                                <span style={{ fontSize: '11px', color: colors.textSecondary }}>— {prods.length} produse lipsa</span>
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                                {prods.map((p, i) => (
-                                                    <div key={i} style={{ ...inner, display: 'flex', alignItems: 'center', gap: '10px', padding: '5px 10px' }}>
-                                                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
-                                                        <span style={{ flex: 1, fontSize: '12px', fontWeight: '500', color: colors.text }}>{p.name}</span>
-                                                        {p.category && <span style={{ fontSize: '10px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', padding: '1px 6px', borderRadius: '4px' }}>{p.category}</span>}
-                                                        {p.price && <span style={{ fontSize: '11px', fontWeight: '700', color: '#6366F1' }}>{Number(p.price).toFixed(2)} RON</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
+                                    {hasErrors ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            {p.discrepancies.map((d, di) => (
+                                                <div key={di} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px', background: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.05)', borderRadius: '8px' }}>
+                                                    <PlatformBadge platform={d.platform} size={14} />
+                                                    <div style={{ fontSize: '11px', color: colors.text, lineHeight: 1.3 }}>{d.message}</div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '10px 0', color: '#22c55e' }}>
+                                            ✅ <span style={{ fontSize: '12px', fontWeight: '700' }}>Sincronizare Perfectă</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )})}
-                        </div>
-                    )
+                            )
+                        })}
+                    </div>
                 )}
             </div>
 
@@ -421,15 +347,12 @@ export default function StopControl() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 24px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, background: isDark ? 'rgba(255,69,58,0.08)' : 'rgba(255,69,58,0.04)' }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF453A', boxShadow: '0 0 8px rgba(255,69,58,0.6)', animation: 'pulse-dot 2s ease infinite' }} />
                         <span style={{ fontSize: '14px', fontWeight: '700', color: '#FF453A', flex: 1 }}>
-                            {activeStops.length} {activeStops.length === 1 ? (lang === 'en' ? 'Active Stop' : 'Oprire Activa') : (lang === 'en' ? 'Active Stops' : 'Opriri Active')}{lang === 'en' ? ' — Action Required' : ' — Actiune Necesara'}
+                            {activeStops.length} {activeStops.length === 1 ? (lang === 'en' ? 'Active Stop' : 'Oprire Activa de Restaurant') : (lang === 'en' ? 'Active Stops' : 'Restaurante Oprite')}
                         </span>
-                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>{lang === 'en' ? 'Ongoing loss: ' : 'Pierdere in curs: '}<strong style={{ color: '#FF9500' }}>{formatLoss(totalActiveLoss)}</strong></span>
                     </div>
                     {activeStops.map((stop, i) => {
                         const startMs = new Date(stop.stopped_at).getTime() || 0
-            const mins = (Date.now() - startMs) / 60000
-                        const rph = stop.restaurants?.revenue_per_hour || 0
-                        const loss = rph * mins / 60
+                        const mins = (Date.now() - startMs) / 60000
                         return (
                             <div key={stop.id} className="sc-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 24px', borderBottom: i < activeStops.length - 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none' }}>
                                 <div style={{ flex: 1 }}>
@@ -437,12 +360,12 @@ export default function StopControl() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         {stop.platform && <PlatformBadge platform={stop.platform} size={14} />}
                                         <span style={{ fontSize: '11px', color: colors.textSecondary }}>{stop.restaurants?.city}</span>
-                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type}</span>}
+                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type === 'full' ? 'TOT RESTAURANTUL OPRIT (ÎNCHIS)' : stop.stop_type === 'radius' ? 'RAZĂ LIVRARE REDUSĂ' : stop.stop_type}</span>}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>{formatDuration(mins)}</div>
-                                    <div style={{ fontSize: '11px', color: '#FF453A', fontWeight: '600' }}>-{formatLoss(loss)}</div>
+                                    <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '2px' }}>A fost închis pe <strong style={{color: colors.text}}>{new Date(stop.stopped_at).toLocaleString('ro-RO', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong></div>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>Timp scurs: {formatDuration(mins)}</div>
                                 </div>
                                 {!stop.authorized && (
                                     <button className="btn-h" onClick={() => authorizeMutation.mutate(stop.id)}
@@ -493,7 +416,7 @@ export default function StopControl() {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                                {['Restaurant', lang === 'en' ? 'Platform' : 'Platforma', lang === 'en' ? 'Type' : 'Tip', lang === 'en' ? 'Started' : 'Inceput', lang === 'en' ? 'Duration' : 'Durata', lang === 'en' ? 'Loss' : 'Pierdere', 'Status'].map(h => (
+                                {['Restaurant', lang === 'en' ? 'Platform' : 'Platforma', lang === 'en' ? 'Type' : 'Tip', lang === 'en' ? 'Started' : 'Inceput', lang === 'en' ? 'Duration' : 'Durata', 'Status'].map(h => (
                                     <th key={h} style={{ padding: '12px 20px', textAlign: h === 'Restaurant' ? 'left' : 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
                                 ))}
                             </tr>
@@ -521,16 +444,13 @@ export default function StopControl() {
                                             ) : '—'}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
-                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type}</span>}
+                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type === 'full' ? 'ÎNCHIS COMPLET' : e.stop_type === 'radius' ? 'RAZĂ LIVRARE REDUSĂ' : e.stop_type}</span>}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center', fontSize: '12px', color: colors.textSecondary, whiteSpace: 'nowrap' }}>
                                             {new Date(e.stopped_at).toLocaleString('ro-RO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: isActive ? '#FF9500' : colors.text }}>
                                             {formatDuration(mins)}
-                                        </td>
-                                        <td style={{ padding: '13px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: loss > 0 ? '#FF9500' : '#34C759' }}>
-                                            {formatLoss(loss)}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
                                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', background: isActive ? 'rgba(255,69,58,0.1)' : 'rgba(52,199,89,0.1)', color: isActive ? '#FF453A' : '#34C759' }}>
@@ -546,46 +466,7 @@ export default function StopControl() {
                 )}
             </div>
 
-            {/* ══ SCAN HISTORY ══ */}
-            {scanHistory.length > 0 && (
-                <div style={{ marginTop: '24px', animation: 'fadeUp 0.3s ease 0.4s both' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                        {Icon.history(colors.textSecondary, 15)}
-                        <span style={{ fontSize: '14px', fontWeight: '700', color: colors.text }}>{lang === 'en' ? 'Product check history' : 'Istoric verificari produs'}</span>
-                        <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '6px' }}>
-                            {lang === 'en' ? 'last' : 'ultimele'} {scanHistory.length}
-                        </span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {scanHistory.map(h => {
-                            const dt = new Date(h.checked_at)
-                            const hasIssues = h.missing_count > 0
-                            return (
-                                <div key={h.id} className="sc-card" style={{ ...glass, display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 18px', border: `1px solid ${hasIssues ? 'rgba(239,68,68,0.15)' : 'rgba(52,199,89,0.12)'}` }}>
-                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: hasIssues ? '#ef4444' : '#22c55e', boxShadow: `0 0 6px ${hasIssues ? 'rgba(239,68,68,0.5)' : 'rgba(34,197,94,0.5)'}`, flexShrink: 0 }} />
-                                    <div style={{ flex: 1 }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '700', color: colors.text }}>
-                                            {dt.toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' })} {dt.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                        <span style={{ fontSize: '11px', color: colors.textSecondary, marginLeft: '10px' }}>
-                                            referinta: {h.reference_date} → {h.check_date}
-                                        </span>
-                                    </div>
-                                    {hasIssues ? (
-                                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '2px 10px', borderRadius: '6px' }}>
-                                            {h.missing_count} produse · {h.restaurant_count} restaurante
-                                        </span>
-                                    ) : (
-                                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '2px 10px', borderRadius: '6px' }}>
-                                            Totul OK
-                                        </span>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
+
         </div>
     )
 }

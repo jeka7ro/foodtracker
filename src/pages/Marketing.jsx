@@ -340,32 +340,69 @@ export default function Marketing() {
         setLoadingStats(true)
         setBrandStats(null)
         try {
-            const { data: restaurants } = await supabase
+            // Step 1: Get restaurants matching the name (includes snapshot_id FK)
+            const { data: restaurants, error: restErr } = await supabase
                 .from('competitor_restaurants')
-                .select(`
-                    id, name, url, logo_url, rank_position, rating, delivery_time_min, delivery_time_max,
-                    competitor_snapshots!inner ( platform, city, snapshot_date, search_id ),
-                    competitor_products ( product_name, price, category, snapshot_date, is_promoted, image_url, description )
-                `)
+                .select('id, snapshot_id, name, url, logo_url, rank_position, rating, delivery_time_min, delivery_time_max')
                 .ilike('name', `%${name}%`)
                 .order('id', { ascending: false })
-                .limit(500)
+                .limit(200)
 
-            // competitor_snapshots!inner returns an array per restaurant row — flatten them
-            const appearances = (restaurants || []).flatMap(r => {
-                const snaps = Array.isArray(r.competitor_snapshots) ? r.competitor_snapshots : (r.competitor_snapshots ? [r.competitor_snapshots] : [])
-                return snaps
-                    .filter(s => !city || s.city === city)
-                    .map(s => ({
-                        id: r.id, name: r.name, url: r.url,
-                        rank_position: r.rank_position, rating: r.rating,
-                        delivery_time_min: r.delivery_time_min, delivery_time_max: r.delivery_time_max,
-                        platform: s.platform,
-                        city: s.city,
-                        snapshot_date: s.snapshot_date,
-                        products: r.competitor_products || []
-                    }))
+            if (restErr) console.error('[loadBrandStats] restaurants query error:', restErr.message)
+
+            // Collect unique snapshot IDs and restaurant IDs
+            const snapshotIds = [...new Set((restaurants || []).map(r => r.snapshot_id).filter(Boolean))]
+            const restIds = (restaurants || []).map(r => r.id)
+            
+            // Step 2: Get snapshots by their own id
+            let snapshots = []
+            if (snapshotIds.length > 0) {
+                const { data: snapsData, error: snapErr } = await supabase
+                    .from('competitor_snapshots')
+                    .select('id, platform, city, snapshot_date, search_id')
+                    .in('id', snapshotIds)
+                if (snapErr) console.error('[loadBrandStats] snapshots query error:', snapErr.message)
+                snapshots = snapsData || []
+            }
+
+            // Step 3: Get products separately using competitor_restaurant_id
+            let allProductsRaw = []
+            if (restIds.length > 0) {
+                const { data: prodData, error: prodErr } = await supabase
+                    .from('competitor_products')
+                    .select('competitor_restaurant_id, product_name, price, category, snapshot_date, is_promoted, image_url, description')
+                    .in('competitor_restaurant_id', restIds)
+                    .order('snapshot_date', { ascending: false })
+                    .limit(5000)
+                if (prodErr) console.error('[loadBrandStats] products query error:', prodErr.message)
+                allProductsRaw = prodData || []
+            }
+
+            // Build lookups
+            const prodsByRestId = {}
+            allProductsRaw.forEach(p => {
+                if (!prodsByRestId[p.competitor_restaurant_id]) prodsByRestId[p.competitor_restaurant_id] = []
+                prodsByRestId[p.competitor_restaurant_id].push(p)
             })
+
+            // Build snapshot lookup: snapshot.id -> snapshot
+            const snapsById = {}
+            snapshots.forEach(s => { snapsById[s.id] = s })
+
+            // Flatten into appearances: each restaurant row joined with its snapshot
+            const appearances = (restaurants || []).map(r => {
+                const snap = snapsById[r.snapshot_id] || {}
+                return {
+                    id: r.id, name: r.name, url: r.url,
+                    rank_position: r.rank_position, rating: r.rating,
+                    delivery_time_min: r.delivery_time_min, delivery_time_max: r.delivery_time_max,
+                    platform: snap.platform,
+                    city: snap.city,
+                    snapshot_date: snap.snapshot_date,
+                    products: prodsByRestId[r.id] || []
+                }
+            })
+            .filter(a => !city || a.city === city)
             .sort((a, b) => (b.snapshot_date || '').localeCompare(a.snapshot_date || ''))
 
             const ratings = appearances.filter(a => a.rating).map(a => a.rating)
@@ -1047,56 +1084,40 @@ export default function Marketing() {
                             })()}
 
                             {Object.keys(brandStats.priceHistory || {}).length === 0 && (() => {
-                                // Find latest restaurant URL + ID from appearances
-                                const latestAppearance = (brandStats.appearances || []).find(a => a.url && a.platform === 'wolt') ||
-                                    (brandStats.appearances || []).find(a => a.url)
-                                const restaurantUrl = latestAppearance?.url || null
-                                const restaurantId = latestAppearance?.id || null
+                                const latestAppearance = (brandStats.appearances || []).find(a => a.url && a.platform === detailCompetitor.platform) || (brandStats.appearances || []).find(a => a.url)
+                                const restaurantId = latestAppearance?.id || detailCompetitor.id || null
+                                const defaultUrl = detailCompetitor.url || latestAppearance?.url || ''
 
-                                const fetchProducts = async () => {
-                                    if (!restaurantUrl) return
-                                    setFetchingProducts(true)
-                                    try {
-                                        const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ url: restaurantUrl, name: detailCompetitor.name, restaurantId })
-                                        })
-                                        const data = await res.json()
-                                        if (data.success && data.count > 0) {
-                                            // Reload stats to show new products
-                                            await loadBrandStats(detailCompetitor.name, detailCompetitor.city)
-                                        } else {
-                                            alert(`Fetchuit ${data.count || 0} produse. Probabil restaurantul nu are meniu public sau scraper-ul nu a găsit produse.`)
-                                        }
-                                    } catch (e) {
-                                        alert('Eroare la fetch produse: ' + e.message)
-                                    } finally {
-                                        setFetchingProducts(false)
-                                    }
-                                }
+                                if (!defaultUrl) return (
+                                    <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: colors.textSecondary }}>
+                                        Niciun meniu disponibil. Rulează o căutare din pagina de rezultate pentru a obține link-ul.
+                                    </div>
+                                )
 
                                 return (
-                                    <div style={{ padding: '28px', border: `1px dashed ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`, borderRadius: '12px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                                        <div style={{ fontSize: '28px', flexShrink: 0 }}>🍽️</div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: '600', color: colors.text, marginBottom: '6px', fontSize: '14px' }}>{lang==='en'?'No menu information':'Nicio informație despre meniu'}</div>
-                                            <div style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: '1.6', marginBottom: '14px' }}>
-                                                Produsele se extrag automat pentru <strong>primele 25 restaurante</strong> din rezultatele Wolt.<br />
-                                                Poți forța extragerea manual apăsând butonul de mai jos.
-                                            </div>
-                                            {restaurantUrl && (
-                                                <button onClick={fetchProducts} disabled={fetchingProducts}
-                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 18px', borderRadius: '9px', border: 'none', cursor: fetchingProducts ? 'not-allowed' : 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', opacity: fetchingProducts ? 0.7 : 1, transition: 'opacity 0.2s' }}>
-                                                    {fetchingProducts
-                                                        ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Fetching produse...</>
-                                                        : <><span style={{ fontSize: '16px' }}>🔍</span> Fetch produse acum</>}
-                                                </button>
-                                            )}
-                                            {!restaurantUrl && (
-                                                <div style={{ fontSize: '12px', color: '#ef4444' }}>⚠️ URL Wolt lipsă — rulează o căutare pentru a obține URL-ul restaurantului.</div>
-                                            )}
-                                        </div>
+                                    <div style={{ padding: '24px', textAlign: 'center' }}>
+                                        <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '14px' }}>Niciun produs descărcat încă.</div>
+                                        <button onClick={async () => {
+                                            if (fetchingProducts) return
+                                            setFetchingProducts(true)
+                                            try {
+                                                const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ url: defaultUrl, name: detailCompetitor.name, restaurantId })
+                                                })
+                                                const data = await res.json()
+                                                if (data.success && data.count > 0) {
+                                                    await loadBrandStats(detailCompetitor.name, detailCompetitor.city)
+                                                }
+                                            } catch (e) { console.error(e) }
+                                            finally { setFetchingProducts(false) }
+                                        }} disabled={fetchingProducts}
+                                        style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', cursor: fetchingProducts ? 'not-allowed' : 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                            {fetchingProducts
+                                                ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Se descarcă…</>
+                                                : '🔄 Refresh produse'}
+                                        </button>
                                     </div>
                                 )
                             })()}
@@ -1718,6 +1739,7 @@ export default function Marketing() {
                                     date: snap.snapshot_date,
                                     searchLabel: snap.competitive_searches?.brands?.name || snap.competitive_searches?.search_term || '—',
                                     searchLogoUrl: snap.competitive_searches?.brands?.logo_url || null,
+                                    searchTerm: snap.competitive_searches?.search_term || '—',
                                 }))
                             )
                             const byBrand = {}
@@ -1749,6 +1771,7 @@ export default function Marketing() {
                                         latestUrl: rows[0]?.url,
                                         logo_url: rows.find(r => r.logo_url)?.logo_url || null,
                                         searchLabels: [...new Set(rows.map(r => r.searchLabel).filter(Boolean))],
+                                        searchTerms: [...new Set(rows.map(r => r.searchTerm).filter(Boolean))],
                                         searchEntries, // [{ label, logo }]
                                     }
                                 })
@@ -1879,8 +1902,8 @@ export default function Marketing() {
                                         ))}
                                     </div>
                                     {/* Table header */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 56px 140px 70px 70px 80px 80px', gap: '8px', padding: '9px 18px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                                        {['#', 'Brand / Restaurant', '', 'Căutat pentru', 'Locații', 'Apariții', t('best_rank'), t('rating'), t('products')].map((h, hi) => (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 110px 60px 120px 60px 70px 60px 100px', gap: '8px', padding: '9px 18px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                                        {['#', 'Brand / Restaurant', 'Cuvânt căutat', '', 'Locații', 'Apariții', <span title="Cea mai ridicată (bună) poziție pe care a ocupat-o acest concurent în lista aplicațiilor de livrare, pentru căutările noastre.">Best rank ℹ</span>, t('rating'), t('products')].map((h, hi) => (
                                             <span key={hi} style={{ fontSize: '10px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', textAlign: hi === 3 ? 'center' : 'left' }}>{h}</span>
                                         ))}
                                     </div>
@@ -1888,7 +1911,7 @@ export default function Marketing() {
                                     {pagedList.map((b, i) => (
                                         <div key={b.name}
                                             onClick={() => { setDetailCompetitor({ name: b.name, city: b.cities[0], url: b.latestUrl, platform: b.platforms[0] }); setBrandStats(null); loadBrandStats(b.name) }}
-                                            style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 56px 140px 70px 70px 80px 80px', gap: '8px', padding: '10px 18px', alignItems: 'center', borderBottom: i < pagedList.length - 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                                            style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 110px 60px 120px 60px 70px 60px 100px', gap: '8px', padding: '10px 18px', alignItems: 'center', borderBottom: i < pagedList.length - 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
                                             onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'}
                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                             {/* Row number */}
@@ -1910,6 +1933,10 @@ export default function Marketing() {
                                                     <div style={{ fontSize: '10px', color: colors.textSecondary, marginTop: '2px' }}>{b.platforms.join(', ')}</div>
                                                 </div>
                                             </div>
+                                            {/* Cuvânt căutat */}
+                                            <div style={{ fontSize: '11px', color: colors.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '500' }} title={(b.searchTerms || []).join(', ')}>
+                                                {(b.searchTerms || []).map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(', ')}
+                                            </div>
                                             {/* ★ Căutat pentru — logo-ul brandului Sushi Master (mare, separat) */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' }}>
                                                 {(b.searchEntries || []).map((entry, ei) => (
@@ -1923,11 +1950,42 @@ export default function Marketing() {
                                                         </span>
                                                 ))}
                                             </div>
-                                            <span style={{ fontSize: '11px', color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.cities.join(', ')}</span>
+                                            <span style={{ fontSize: '11px', color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.cities.join(', ')}>{b.cities.join(', ')}</span>
                                             <span style={{ fontSize: '12px', color: colors.textSecondary }}>{b.appearances}×</span>
                                             <span style={{ fontSize: '13px', fontWeight: '700', color: b.bestRank && b.bestRank <= 3 ? '#2bbec8' : colors.text }}>{b.bestRank ? `#${b.bestRank}` : '—'}</span>
                                             <span style={{ fontSize: '12px', color: colors.textSecondary }}>{b.avgRating ? `${b.avgRating}/10` : '—'}</span>
-                                            <span style={{ fontSize: '12px', color: b.productCount > 0 ? colors.text : colors.textSecondary }}>{b.productCount > 0 ? b.productCount : '—'}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                {b.productCount > 0 ? (
+                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2bbec8' }}>{b.productCount}</span>
+                                                ) : (
+                                                    <button onClick={async (e) => {
+                                                        e.stopPropagation()
+                                                        if (!b.latestUrl) return alert("Nu există un link pentru extragerea produselor. Încearcă actualizarea rezultatelor din pagina de oraș.")
+                                                        if (fetchingProducts) return
+                                                        setFetchingProducts(true)
+                                                        try {
+                                                            const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
+                                                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ url: b.latestUrl, name: b.name, restaurantId: null })
+                                                            })
+                                                            const d = await res.json()
+                                                            if (d.success && d.count > 0) {
+                                                                loadHistory(dateFrom, dateTo, historyCity, historyPlatform) // Reload table data to show new product count
+                                                            } else {
+                                                                alert(`Nu s-au găsit produse noi la ${b.name}.`)
+                                                            }
+                                                        } catch(err) {
+                                                            alert("Eroare la meniu: " + err.message)
+                                                        } finally {
+                                                            setFetchingProducts(false)
+                                                        }
+                                                    }}
+                                                    disabled={fetchingProducts}
+                                                    style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: fetchingProducts ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') : 'rgba(43,190,200,0.15)', color: fetchingProducts ? colors.textSecondary : '#2bbec8', fontSize: '11px', fontWeight: '700', cursor: fetchingProducts ? 'not-allowed' : 'pointer', transition: 'background 0.1s' }}>
+                                                        {fetchingProducts ? '⌛' : '⚡ Descarcă'}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                     {/* Pagination controls */}

@@ -40,7 +40,7 @@ export default function StopPrices() {
             if (!snapDate) { setLoading(false); return }
 
             const { data: p } = await supabase.from('own_product_snapshots')
-                .select('restaurant_id, platform, product_name, category, price, brand_id, snapshot_date, created_at, image_url')
+                .select('restaurant_id, platform, product_name, category, price, brand_id, snapshot_date, created_at, image_url, is_promoted')
                 .eq('snapshot_date', snapDate)
             setProducts(p || [])
             setLoading(false)
@@ -94,6 +94,7 @@ export default function StopPrices() {
                 url: platformUrl || null,
                 snapshot_date: p.snapshot_date,
                 created_at: p.created_at,
+                is_promoted: p.is_promoted || false,
             })
         })
 
@@ -197,13 +198,26 @@ export default function StopPrices() {
                                         {item.category && <div style={{ fontSize: '10px', color: colors.textSecondary }}>{item.category}</div>}
                                     </div>
                                     <span style={{ fontSize: '12px', color: colors.textSecondary }}>{item.entries.length} {lang === 'en' ? 'entries' : 'intrari'}</span>
-                                    <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                                    <div style={{ textAlign: 'right', minWidth: '160px' }}>
                                         <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{item.min.toFixed(2)} — {item.max.toFixed(2)} RON</div>
-                                        {item.hasDiff && (
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF9500' }}>
-                                                Δ {item.diff.toFixed(2)} RON ({item.diffPct}%)
-                                            </div>
-                                        )}
+                                        {item.hasDiff && (() => {
+                                            const minEntry = item.entries.find(e => e.price === item.min)
+                                            const maxEntry = item.entries.find(e => e.price === item.max)
+                                            const pct = item.max > 0 ? ((item.diff / item.max) * 100).toFixed(2) : '0.00'
+                                            const diffPlatforms = minEntry && maxEntry && minEntry.platform !== maxEntry.platform
+                                            return (
+                                                <>
+                                                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF9500' }}>
+                                                        Δ {item.diff.toFixed(2)} RON (-{pct}%)
+                                                    </div>
+                                                    {diffPlatforms && (
+                                                        <div style={{ fontSize: '10px', color: colors.textSecondary, marginTop: '1px' }}>
+                                                            {minEntry.platform.toUpperCase()} {item.min.toFixed(0)} vs {maxEntry.platform.toUpperCase()} {item.max.toFixed(0)} RON
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )
+                                        })()}
                                     </div>
                                     {item.hasDiff
                                         ? <span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,149,0,0.12)', color: '#FF9500' }}>{lang === 'en' ? 'DIFFERENT' : 'DIFERIT'}</span>
@@ -235,6 +249,11 @@ export default function StopPrices() {
                                                             {e.price.toFixed(2)} RON
                                                             {e.price === item.min && item.hasDiff && <span style={{ fontSize: '9px', marginLeft: '4px', color: '#22c55e' }}>MIN</span>}
                                                             {e.price === item.max && item.hasDiff && <span style={{ fontSize: '9px', marginLeft: '4px', color: '#ef4444' }}>MAX</span>}
+                                                            {e.price === item.min && item.hasDiff && (
+                                                                <div style={{ fontSize: '10px', color: '#FF9500', fontWeight: '600', marginTop: '2px' }}>
+                                                                    -{item.diff.toFixed(2)} RON (-{item.max > 0 ? ((item.diff / item.max) * 100).toFixed(2) : '0.00'}%) față de {item.entries.find(x => x.price === item.max)?.platform?.toUpperCase() || 'MAX'}
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td style={{ padding: '8px 6px', textAlign: 'center' }}>
                                                             {e.url ? (

@@ -265,4 +265,61 @@ export class IikoClient {
             period: { from: dateFrom, to: dateTo }
         }
     }
+
+    /**
+     * Fetch the active stop list (out of stock items) from the kitchen POS
+     * @returns {Array} List of product IDs or names currently stopped
+     */
+    async getStopList() {
+        if (!await this.authenticate()) return []
+
+        try {
+            const response = await fetch(`${this.apiUrl}/api/1/stop_lists`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    organizationIds: [this.config.organization_id]
+                })
+            })
+
+            if (!response.ok) {
+                throw new Error(`iiko stop_lists failed: ${response.status}`)
+            }
+
+            const data = await response.json()
+            const stoppedItemIds = new Set()
+
+            if (data.terminalGroupStopLists) {
+                for (const tg of data.terminalGroupStopLists) {
+                     for (const item of (tg.items || [])) {
+                          stoppedItemIds.add(item.productId)
+                     }
+                }
+            }
+            
+            // Map IDs to names if we have the products array cached or we fetch it
+            const products = await this.getProducts()
+            const productMap = {}
+            for (const p of products) {
+                 productMap[p.iiko_id] = p.name
+            }
+
+            const stoppedProducts = []
+            for (const id of stoppedItemIds) {
+                 stoppedProducts.push({
+                     iiko_id: id,
+                     name: productMap[id] || id,
+                     is_stopped_in_pos: true
+                 })
+            }
+
+            return stoppedProducts
+        } catch (err) {
+            console.error(`   [iiko] Error fetching stop list for ${this.restaurant.name}:`, err.message)
+            return []
+        }
+    }
 }

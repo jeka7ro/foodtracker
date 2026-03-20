@@ -4,6 +4,8 @@ import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 
+import { getSmartSearchWords } from '../lib/searchUtils'
+
 const CITY_FLAGS = {
     'Bucharest': '🏙️', 'Cluj-Napoca': '🌄', 'Timisoara': '🌉', 'Iasi': '🏙️',
     'Constanta': '🌊', 'Brasov': '🏄', 'Galati': '🏗️', 'Sibiu': '🏰',
@@ -11,8 +13,6 @@ const CITY_FLAGS = {
     'Targu Mures': '🏡', 'Bacau': '🏠', 'Ploiesti': '⛽', 'Ramnicu Valcea': '🍃',
     'Suceava': '🦨', 'Baia Mare': '⛏️',
 }
-
-const PAGE_SIZE = 50
 
 export default function MarketingAnalyticsCity() {
     const { city } = useParams()
@@ -24,6 +24,7 @@ export default function MarketingAnalyticsCity() {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
+    const [pageSize, setPageSize] = useState(50)
     const [search, setSearch] = useState('')
     const [filterCategory, setFilterCategory] = useState('')
     const [filterPlatform, setFilterPlatform] = useState('')
@@ -136,7 +137,21 @@ export default function MarketingAnalyticsCity() {
 
     const filtered = useMemo(() => {
         return data.filter(r => {
-            if (search && !r.name.toLowerCase().includes(search.toLowerCase()) && !r.category.toLowerCase().includes(search.toLowerCase())) return false
+            const isDrink = /(băutur|bautur|drink|beverage|cola|pepsi|suc|apă|apa\b|răcorit|racorit|bere|vin|red\s*bull|7up|mirinda|fanta|sprite|lipton|heineken|peroni|asahi|ursus|dorna|borsec)/i.test(r.category) || /(băutur|bautur|drink|beverage|cola|pepsi|suc|apă|apa\b|răcorit|racorit|bere|vin|red\s*bull|7up|mirinda|fanta|sprite|lipton|heineken|peroni|asahi|ursus|dorna|borsec)/i.test(r.name)
+
+            if (search) {
+                const words = getSmartSearchWords(search)
+                const textForSearch = `${r.name} ${r.category} ${r.compBrand} ${r.description}`.toLowerCase()
+                
+                // Dacă oricare cuvânt căutat NU se regăsește în textul concatenat, atunci îl excludem.
+                if (!words.every(w => textForSearch.includes(w))) return false
+                
+                // Excludere inteligentă: dacă ai căutat produse de mâncare generale (sushi, burger, pizza) 
+                // și rezultatul este de fapt o băutură (care s-a potrivit doar pentru că restaurantul are "sushi" în nume)
+                if (isDrink && (search.toLowerCase().includes('sushi') || search.toLowerCase().includes('burger') || search.toLowerCase().includes('pizza') || search.toLowerCase().includes('mancare') || search.toLowerCase().includes('food'))) {
+                    return false
+                }
+            }
             if (filterCategory && !r.category.toLowerCase().includes(filterCategory.toLowerCase())) return false
             if (filterPlatform && r.platform !== filterPlatform) return false
             if (filterCompBrand && !r.compBrand.toLowerCase().includes(filterCompBrand.toLowerCase())) return false
@@ -148,8 +163,8 @@ export default function MarketingAnalyticsCity() {
     const platforms = useMemo(() => [...new Set(data.map(r => r.platform).filter(Boolean))].sort(), [data])
     const compBrands = useMemo(() => [...new Set(data.map(r => r.compBrand).filter(Boolean))].sort(), [data])
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-    const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    const totalPages = Math.ceil(filtered.length / pageSize)
+    const pageData = filtered.slice((page - 1) * pageSize, page * pageSize)
 
     const matched = filtered.filter(r => r.hasExactMatch && r.ourPrice > 0)
     const avgDiff = matched.length > 0
@@ -273,7 +288,7 @@ export default function MarketingAnalyticsCity() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                     <div onClick={() => setSelectedProduct(row)} style={{ cursor: 'pointer', flexShrink: 0 }}>
                                                         {row.image_url ? (
-                                                            <img src={row.image_url} alt={row.name} style={{ width: 40, height: 40, borderRadius: '8px', objectFit: 'cover' }} onError={e => e.target.style.display='none'} />
+                                                            <img src={row.image_url} alt={row.name} style={{ width: 40, height: 40, borderRadius: '8px', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display='none' }} />
                                                         ) : (
                                                             <div style={{ width: 40, height: 40, borderRadius: '8px', background: 'linear-gradient(135deg,#f1f5f9,#e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🍽️</div>
                                                         )}
@@ -333,9 +348,22 @@ export default function MarketingAnalyticsCity() {
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <div style={{ padding: '16px 24px', borderTop: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '13px', color: colors.textSecondary }}>
-                                Pagina <strong style={{ color: colors.text }}>{page}</strong> din <strong style={{ color: colors.text }}>{totalPages}</strong> · {filtered.length} produse
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+                                    Pagina <strong style={{ color: colors.text }}>{page}</strong> din <strong style={{ color: colors.text }}>{totalPages}</strong> · {filtered.length} produse
+                                </span>
+                                <div style={{ height: '16px', width: '1px', background: colors.border }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: colors.textSecondary }}>
+                                    Randuri:
+                                    <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: '4px 8px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                        <option value={200}>200</option>
+                                        <option value={500}>500</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                                     style={{ padding: '7px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: page === 1 ? colors.textSecondary : colors.text, cursor: page === 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: '600', opacity: page === 1 ? 0.4 : 1 }}>

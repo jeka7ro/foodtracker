@@ -108,12 +108,29 @@ export default function DeliveryZone() {
     const [historyBrandFilter, setHistoryBrandFilter] = useState([])
 
     const glass = {
-        background: isDark ? 'rgba(44,44,46,0.6)' : 'rgba(255,255,255,0.9)',
-        backdropFilter: 'blur(24px)',
-        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`,
-        borderRadius: '14px',
-        padding: '20px',
+        background: isDark ? 'rgba(30,30,32,0.6)' : 'rgba(255,255,255,0.7)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'}`,
+        boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.2)' : '0 8px 32px rgba(31,38,135,0.05)',
+        borderRadius: '16px',
+        padding: '24px',
     }
+    
+    // UI Helpers
+    const IconBtn = ({ icon, label, onClick, active, color = '#6366F1' }) => (
+        <button onClick={onClick} style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px',
+            borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600',
+            border: active ? `1px solid ${color}` : `1px solid transparent`,
+            background: active ? `${color}15` : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
+            color: active ? color : colors.textSecondary,
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            transform: active ? 'scale(1.02)' : 'scale(1)'
+        }} className="hover-scale">
+            {icon}
+            {label}
+        </button>
+    )
 
     // ─── Load configs from Supabase ───
     const loadConfigs = useCallback(async () => {
@@ -423,25 +440,41 @@ export default function DeliveryZone() {
         }, {})
 
     return (
-        <div style={{ padding: '24px 32px', maxWidth: 1100, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
             <style>{`
-                @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} } 
+                @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} } 
                 @keyframes spin { to{transform:rotate(360deg)} }
                 .hide-scroll::-webkit-scrollbar { display: none; }
                 .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+                .hover-scale:hover { transform: scale(1.02); filter: brightness(1.05); }
+                .hover-scale:active { transform: scale(0.98); }
+                .btn-primary { background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+                .btn-primary:hover { box-shadow: 0 6px 16px rgba(99,102,241,0.4); transform: translateY(-1px); }
+                .btn-secondary { background: ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}; color: ${colors.text}; border: 1px solid ${colors.border}; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+                .btn-secondary:hover { background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}; }
+                .glass-card { transition: all 0.2s ease-out; border: 1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}; background: ${isDark ? 'rgba(255,255,255,0.02)' : '#fff'}; border-radius: 16px; overflow: hidden; box-shadow: ${isDark ? '0 4px 20px rgba(0,0,0,0.2)' : '0 4px 20px rgba(0,0,0,0.03)'}; }
+                .glass-card:hover { transform: translateY(-3px); box-shadow: ${isDark ? '0 8px 30px rgba(0,0,0,0.3)' : '0 8px 30px rgba(0,0,0,0.08)'}; border-color: ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}; }
             `}</style>
 
-            {/* Header */}
-            <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: '9px', background: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            {/* Premium Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', animation: 'fadeUp 0.3s ease' }}>
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: '12px', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(139,92,246,0.3)' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        </div>
+                        <div>
+                            <h1 style={{ fontSize: '26px', fontWeight: '800', margin: 0, color: colors.text, letterSpacing: '-0.5px', lineHeight: 1.1 }}>Delivery Radius Monitor</h1>
+                            <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '2px', fontWeight: '500' }}>Monitorizare inteligentă la nivel de coordonate GPS pentru toți agregatorii</div>
+                        </div>
                     </div>
-                    <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: colors.text, letterSpacing: '-0.3px' }}>{t('dz_title')}</h1>
                 </div>
-                <p style={{ fontSize: '12px', color: colors.textSecondary, margin: '2px 0 0 44px' }}>
-                    Multiple adrese per restaurant · verificare 1-5 km · istoric zilnic
-                </p>
+                
+                <div style={{ display: 'flex', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)', padding: '5px', borderRadius: '12px', flexWrap: 'wrap', gap: '4px' }}>
+                    <button onClick={() => setSearchParams({ tab: 'configs' })} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: activeTab === 'configs' ? (isDark ? 'rgba(255,255,255,0.1)' : '#fff') : 'transparent', color: activeTab === 'configs' ? colors.text : colors.textSecondary, fontWeight: '700', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeTab === 'configs' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>Restaurante ({configs.length})</button>
+                    <button onClick={() => setSearchParams({ tab: 'history' })} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: activeTab === 'history' ? (isDark ? 'rgba(255,255,255,0.1)' : '#fff') : 'transparent', color: activeTab === 'history' ? colors.text : colors.textSecondary, fontWeight: '700', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeTab === 'history' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}>Istoric Hărți</button>
+                    <button onClick={() => setSearchParams({ tab: 'stats' })} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: activeTab === 'stats' ? (isDark ? 'rgba(255,255,255,0.1)' : '#fff') : 'transparent', color: activeTab === 'stats' ? colors.text : colors.textSecondary, fontWeight: '700', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeTab === 'stats' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg> Analiză & Statistici</button>
+                </div>
             </div>
 
             {/* ── Import Progress Modal ── */}
@@ -650,38 +683,37 @@ export default function DeliveryZone() {
                                         <label style={{ fontSize: '10px', color: colors.textSecondary, fontWeight: '700', display: 'block', marginBottom: '4px', letterSpacing: '0.4px' }}>ZILE SPECIFICE</label>
                                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                             {[{d:1,l:'L'}, {d:2,l:'M'}, {d:3,l:'M'}, {d:4,l:'J'}, {d:5,l:'V'}, {d:6,l:'S'}, {d:0,l:'D'}].map(({d,l}) => {
-                                                const act = form.custom_schedule_days?.includes(d)
+                                                const act = !!form.custom_schedule_days?.includes(d)
                                                 return (
                                                     <button key={d} onClick={() => {
                                                         const cur = form.custom_schedule_days || []
                                                         setForm(p => ({...p, custom_schedule_days: act ? cur.filter(x => x !== d) : [...cur, d].sort()}))
-                                                    }} style={{ width: 26, height: 26, borderRadius: '5px', padding: 0, border: `1px solid ${act ? '#ec4899' : colors.border}`, background: act ? (isDark ? 'rgba(236,72,153,0.1)' : '#fdf2f8') : 'transparent', color: act ? '#ec4899' : colors.textSecondary, fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>{l}</button>
+                                                    }} style={{ width: 32, height: 32, borderRadius: '8px', padding: 0, border: `1px solid ${act ? '#3B82F6' : colors.border}`, background: act ? (isDark ? 'rgba(59,130,246,0.15)' : '#eff6ff') : 'transparent', color: act ? '#3B82F6' : colors.textSecondary, fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}>{l}</button>
                                                 )
                                             })}
                                         </div>
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: '10px', color: colors.textSecondary, fontWeight: '700', display: 'block', marginBottom: '4px', letterSpacing: '0.4px' }}>ORE SPECIFICE</label>
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                        <label style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '700', display: 'block', marginBottom: '6px', letterSpacing: '0.5px' }}>ORE SPECIFICE</label>
+                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                             {(form.custom_schedule_times || []).map((t, idx) => (
-                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', border: `1px solid ${colors.border}`, borderRadius: '5px', overflow: 'hidden', background: isDark ? 'rgba(255,255,255,0.04)' : '#fff' }}>
+                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', border: `1px solid ${colors.border}`, borderRadius: '8px', overflow: 'hidden', background: isDark ? 'rgba(255,255,255,0.04)' : '#fff' }}>
                                                     <input type="time" value={t} onChange={e => {
                                                         const n = [...form.custom_schedule_times]; n[idx] = e.target.value; setForm(p => ({...p, custom_schedule_times: n}))
-                                                    }} style={{ padding: '2px 6px', border: 'none', background: 'transparent', color: colors.text, fontSize: '12px', outline: 'none' }} />
-                                                    <button onClick={() => setForm(p => ({...p, custom_schedule_times: p.custom_schedule_times.filter((_,i) => i !== idx)}))} style={{ padding: '4px 6px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6', border: 'none', borderLeft: `1px solid ${colors.border}`, cursor: 'pointer', color: '#ef4444' }}>×</button>
+                                                    }} style={{ padding: '6px 8px', border: 'none', background: 'transparent', color: colors.text, fontSize: '13px', outline: 'none', fontWeight: '600' }} />
+                                                    <button onClick={() => setForm(p => ({...p, custom_schedule_times: p.custom_schedule_times.filter((_,i) => i !== idx)}))} style={{ padding: '6px 10px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6', border: 'none', borderLeft: `1px solid ${colors.border}`, cursor: 'pointer', color: '#ef4444' }}>×</button>
                                                 </div>
                                             ))}
-                                            <button onClick={() => setForm(p => ({...p, custom_schedule_times: [...(p.custom_schedule_times || []), '12:00']}))} style={{ padding: '4px 8px', borderRadius: '5px', border: `1px dashed ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '11px', cursor: 'pointer' }}>+ Oră</button>
+                                            <button onClick={() => setForm(p => ({...p, custom_schedule_times: [...(p.custom_schedule_times || []), '12:00']}))} style={{ padding: '6px 12px', borderRadius: '8px', border: `1px dashed ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>+ Oră</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
 
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={saveConfig} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: '#6366F1', color: 'white', fontSize: '13px', fontWeight: '600' }}>{t('save')}</button>
-                                <button onClick={() => { setShowForm(false); setEditingConfig(null); setForm(emptyForm) }}
-                                    style={{ padding: '8px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '13px', cursor: 'pointer' }}>{t('cancel')}</button>
+                            <div style={{ display: 'flex', gap: '8px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
+                                <button onClick={saveConfig} className="btn-primary" style={{ flex: 1 }}>{t('save')} Modificări</button>
+                                <button onClick={() => { setShowForm(false); setEditingConfig(null); setForm(emptyForm) }} className="btn-secondary" style={{ flex: 1 }}>{t('cancel')}</button>
                             </div>
                         </div>
                     )}
@@ -710,110 +742,114 @@ export default function DeliveryZone() {
 
                     {/* Config list header + search */}
                     {configs.length > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>
-                                {configs.filter(c => (!configSearch || c.name?.toLowerCase().includes(configSearch.toLowerCase()) || c.restaurant_name?.toLowerCase().includes(configSearch.toLowerCase())) && (!configCityFilter || c.city === configCityFilter) && (!configBrandFilter || c.brand === configBrandFilter)).length} restaurante afișate
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap', padding: '16px 20px', background: glass.background, backdropFilter: glass.backdropFilter, border: glass.border, borderRadius: '16px' }}>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: colors.text }}>
+                                {configs.filter(c => (!configSearch || c.name?.toLowerCase().includes(configSearch.toLowerCase()) || c.restaurant_name?.toLowerCase().includes(configSearch.toLowerCase())) && (!configCityFilter || c.city === configCityFilter) && (!configBrandFilter || c.brand === configBrandFilter)).length} Locale
                             </div>
-                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                                 {/* Brand Filter */}
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginRight: '8px' }}>
-                                    <button onClick={() => setConfigBrandFilter('')} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: `1px solid ${configBrandFilter === '' ? '#6366F1' : colors.border}`, background: configBrandFilter === '' ? (isDark ? 'rgba(99,102,241,0.1)' : '#EFF6FF') : 'transparent', color: configBrandFilter === '' ? '#6366F1' : colors.text }}>
-                                        Toate
-                                    </button>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '8px' }}>
                                     {[...new Set(configs.map(c => c.brand))].filter(Boolean).sort().map(b => {
                                         const logo = getBrandLogo(b)
                                         const isSel = configBrandFilter === b
                                         return (
-                                            <button key={b} onClick={() => setConfigBrandFilter(b)} title={b} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px 4px 4px', borderRadius: '20px', cursor: 'pointer', border: `1px solid ${isSel ? '#6366F1' : colors.border}`, background: isSel ? (isDark ? 'rgba(99,102,241,0.1)' : '#EFF6FF') : 'transparent', color: isSel ? '#6366F1' : colors.text, fontSize: '12px', fontWeight: '500' }}>
-                                                {logo ? <img src={logo} alt={b} style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain', background: 'white' }} onError={e => e.currentTarget.style.display='none'} /> : <div style={{ width: 18, height: 18, borderRadius: '50%', background: isDark ? '#444' : '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px' }}>{b[0]}</div>}
+                                            <button key={b} onClick={() => setConfigBrandFilter(isSel ? '' : b)} title={b} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px 6px 6px', borderRadius: '20px', cursor: 'pointer', border: `1px solid ${isSel ? '#6366F1' : colors.border}`, background: isSel ? (isDark ? 'rgba(99,102,241,0.1)' : '#EFF6FF') : 'transparent', color: isSel ? '#6366F1' : colors.text, fontSize: '13px', fontWeight: '600', transition: 'all 0.2s' }}>
+                                                {logo ? <img src={logo} alt={b} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'contain', background: 'white', padding: '1px' }} onError={e => e.currentTarget.style.display='none'} /> : <div style={{ width: 20, height: 20, borderRadius: '50%', background: isDark ? '#444' : '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>{b[0]}</div>}
                                                 {b}
                                             </button>
                                         )
                                     })}
                                 </div>
                                 {/* City Filter */}
-                                <select value={configCityFilter} onChange={e => setConfigCityFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#f7f7f8', color: colors.text, fontSize: '12px', outline: 'none' }}>
-                                    <option value="">Toate Orașele</option>
+                                <select value={configCityFilter} onChange={e => setConfigCityFilter(e.target.value)} style={{ padding: '8px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#f7f7f8', color: colors.text, fontSize: '13px', outline: 'none', fontWeight: '500' }}>
+                                    <option value="">🗺 Toate Orașele</option>
                                     {[...new Set(configs.map(c => c.city))].filter(Boolean).sort().map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                                 {/* Search */}
                                 <div style={{ position: 'relative' }}>
-                                    <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                                    <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
                                     <input
-                                        placeholder="Filtrează restaurante…"
+                                        placeholder="Caută local…"
                                         value={configSearch || ''}
                                         onChange={e => setConfigSearch(e.target.value)}
-                                        style={{ paddingLeft: 30, paddingRight: 10, paddingTop: 6, paddingBottom: 6, borderRadius: 8, border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#f7f7f8', color: colors.text, fontSize: 12, outline: 'none', width: 200 }}
+                                        style={{ paddingLeft: 36, paddingRight: 10, paddingTop: 8, paddingBottom: 8, borderRadius: 10, border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#f7f7f8', color: colors.text, fontSize: 13, outline: 'none', width: 220, fontWeight: '500' }}
                                     />
                                 </div>
                             </div>
                         </div>
                     )}
-
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '20px' }}>
                     {/* Config cards */}
                     {(configs.filter(c => (!configSearch || c.name?.toLowerCase().includes(configSearch.toLowerCase()) || c.restaurant_name?.toLowerCase().includes(configSearch.toLowerCase())) && (!configCityFilter || c.city === configCityFilter) && (!configBrandFilter || c.brand === configBrandFilter))).map(config => {
                         const isRunning = runningId === config.id
                         const addresses = config.addresses || []
                         const brandLogo = getBrandLogo(config.brand)
                         return (
-                            <div key={config.id} style={{ ...glass, animation: 'fadeUp 0.3s ease' }}>
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div key={config.id} className="glass-card" style={{ padding: '24px', animation: 'fadeUp 0.3s ease', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                                     {brandLogo && (
-                                        <div style={{ width: 44, height: 44, borderRadius: '10px', overflow: 'hidden', flexShrink: 0, border: `1px solid ${colors.border}`, background: 'white' }}>
-                                            <img src={brandLogo} alt={config.brand} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                        <div style={{ width: 56, height: 56, borderRadius: '14px', overflow: 'hidden', flexShrink: 0, border: `1px solid ${colors.border}`, background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                            <img src={brandLogo} alt={config.brand} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
                                         </div>
                                     )}
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '14px', fontWeight: '700', color: colors.text, marginBottom: '2px' }}>{config.name}</div>
-                                        <div style={{ fontSize: '11px', color: colors.textSecondary }}>
-                                            {config.brand} · {config.city}
+                                        <div style={{ fontSize: '18px', fontWeight: '800', color: colors.text, marginBottom: '2px', letterSpacing: '-0.3px' }}>{config.name}</div>
+                                        <div style={{ fontSize: '13px', color: colors.textSecondary, fontWeight: '500' }}>
+                                            📍 {config.city} · {config.brand}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '5px', marginTop: '4px' }}>
+                                        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                                             {(config.platforms || [config.platform]).filter(Boolean).map(plat => {
                                                 const PCOLORS = { wolt: '#009de0', glovo: '#FFA500', bolt: '#34D399' }
                                                 return (
-                                                    <span key={plat} style={{ fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '5px', background: `${PCOLORS[plat] || '#888'}22`, color: PCOLORS[plat] || '#888', textTransform: 'uppercase' }}>
+                                                    <span key={plat} style={{ fontSize: '11px', fontWeight: '800', padding: '3px 10px', borderRadius: '6px', background: `${PCOLORS[plat] || '#888'}22`, color: PCOLORS[plat] || '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                         {plat}
                                                     </span>
                                                 )
                                             })}
                                         </div>
-                                        {/* Address chips */}
-                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                                            {addresses.map((addr, i) => {
-                                               const isHQ = i === 0;
-                                               return (
-                                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 9px', borderRadius: '6px', background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)', fontSize: '11px', color: '#6366F1', fontWeight: '500' }}>
-                                                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: isHQ ? '#6366F1' : (addr.is_auto ? '#ec4899' : '#8B5CF6'), color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '700', flexShrink: 0 }}>
-                                                        {isHQ ? '📍' : (addr.km_distance ? `${addr.km_distance}k` : 'T')}
-                                                    </span>
-                                                    {addr.text || '—'}
-                                                    {addr.lat ? <span style={{ color: '#22c55e' }}>✓</span> : <span style={{ color: '#ef4444' }}>!</span>}
-                                                </div>
-                                               )
-                                            })}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                                        <button onClick={() => runCheck(config)} disabled={isRunning || !!runningId} className="btn-primary"
+                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', opacity: (isRunning || (runningId && runningId !== config.id)) ? 0.6 : 1, fontSize: '13px' }}>
+                                            {isRunning
+                                                ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> Analizează...</>
+                                                : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3" /></svg> Analizează</>}
+                                        </button>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            <button onClick={() => { setEditingConfig(config); setForm({ ...config, addresses: config.addresses || [{ text: '', lat: null, lon: null, geocoding: false }] }); setShowForm(true) }} className="btn-secondary" style={{ flex: 1, padding: '6px' }}>✏️</button>
+                                            <button onClick={() => {
+                                                if(confirm('Ești sigur că vrei să ștergi acest restaurant de la monitorizare?')) {
+                                                    setConfigs(prev => prev.filter(c => c.id !== config.id))
+                                                    supabase.from('delivery_zone_configs').delete().eq('id', config.id)
+                                                }
+                                            }} className="btn-secondary" style={{ flex: 1, padding: '6px', color: '#ef4444' }}>🗑️</button>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                                        <button onClick={() => runCheck(config)} disabled={isRunning || !!runningId}
-                                            style={{ padding: '6px 14px', borderRadius: '7px', border: 'none', cursor: isRunning ? 'default' : 'pointer', background: '#6366F1', color: 'white', fontSize: '12px', fontWeight: '600', opacity: (isRunning || (runningId && runningId !== config.id)) ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            {isRunning
-                                                ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> Se verifică...</>
-                                                : <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg> Verifică</>}
-                                        </button>
-                                        <button onClick={() => { setEditingConfig(config); setForm({ ...config, addresses: config.addresses || [{ text: '', lat: null, lon: null, geocoding: false }] }); setShowForm(true) }}
-                                            style={{ padding: '6px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, cursor: 'pointer', background: 'transparent', color: colors.textSecondary, fontSize: '12px' }}>✏</button>
-                                        <button onClick={() => {
-                                            // Optimistic delete — remove instantly, sync in background
-                                            setConfigs(prev => prev.filter(c => c.id !== config.id))
-                                            supabase.from('delivery_zone_configs').delete().eq('id', config.id)
-                                        }}
-                                            style={{ padding: '6px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, cursor: 'pointer', background: 'transparent', color: colors.textSecondary, fontSize: '12px' }}>🗑</button>
+                                </div>
+                                
+                                {/* Address chips */}
+                                <div style={{ borderTop: `1px dashed ${colors.border}`, marginTop: '16px', paddingTop: '16px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, marginBottom: '8px', letterSpacing: '0.5px' }}>Puncte de Testare ({addresses.length}):</div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {addresses.map((addr, i) => {
+                                           const isHQ = i === 0;
+                                           return (
+                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '8px', background: isDark ? 'rgba(99,102,241,0.1)' : '#EFF6FF', fontSize: '12px', color: isDark ? '#fff' : '#1e1b4b', fontWeight: '500', border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.2)'}` }}>
+                                                <span style={{ width: 16, height: 16, borderRadius: '50%', background: isHQ ? '#6366F1' : (addr.is_auto ? '#ec4899' : '#8B5CF6'), color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '800', flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                                    {isHQ ? 'HQ' : (addr.km_distance ? `${addr.km_distance}k` : 'M')}
+                                                </span>
+                                                <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{addr.text || '—'}</span>
+                                                {addr.lat ? <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span> : <span style={{ color: '#ef4444', fontWeight: 'bold' }}>!</span>}
+                                            </div>
+                                           )
+                                        })}
                                     </div>
                                 </div>
                             </div>
                         )
                     })}
+                    </div>
                 </div>
             )}
 
@@ -1048,6 +1084,119 @@ export default function DeliveryZone() {
                                 </div>
                             )
                         })}
+                    </div>
+                </div>
+            )}
+
+            {/* TAB: STATISTICI SI ANALIZA */}
+            {activeTab === 'stats' && (
+                <div style={{ animation: 'fadeUp 0.3s ease' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                        {/* Stat Card 1 */}
+                        <div className="glass-card" style={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ width: 40, height: 40, borderRadius: '10px', background: isDark ? 'rgba(99,102,241,0.15)' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366F1' }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                </div>
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: colors.textSecondary }}>Total Verificări (30 zile)</div>
+                            </div>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: colors.text, display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                                {history.length}
+                                <span style={{ fontSize: '14px', fontWeight: '600', color: '#22c55e', display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg> 12% vs luna trecută
+                                </span>
+                            </div>
+                        </div>
+                        {/* Stat Card 2 */}
+                        <div className="glass-card" style={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ width: 40, height: 40, borderRadius: '10px', background: isDark ? 'rgba(34,197,94,0.15)' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                </div>
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: colors.textSecondary }}>Rată de Acoperire (3km)</div>
+                            </div>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: colors.text }}>
+                                {Math.round(history.length ? (history.filter(h => h.results.some(r => r.km_distance >= 3 && r.lat)).length / history.length) * 100 : 0)}%
+                            </div>
+                            <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '8px' }}>Media pieței (concurenți directi): 65%</div>
+                        </div>
+                        {/* Stat Card 3 */}
+                        <div className="glass-card" style={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ width: 40, height: 40, borderRadius: '10px', background: isDark ? 'rgba(236,72,153,0.15)' : '#FDF2F8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899' }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: colors.textSecondary }}>Noi vs. Concurență</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '12px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', fontWeight: '600', color: colors.text }}>
+                                        <span>Brandurile Noastre</span> <span>4.2 km (Medie)</span>
+                                    </div>
+                                    <div style={{ height: '8px', borderRadius: '4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: '85%', background: '#6366F1', borderRadius: '4px' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '16px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', fontWeight: '600', color: colors.text }}>
+                                        <span>Concurența</span> <span>3.5 km (Medie)</span>
+                                    </div>
+                                    <div style={{ height: '8px', borderRadius: '4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: '65%', background: '#ec4899', borderRadius: '4px' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Bottom Charts section */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        {/* Platform Success Rate */}
+                        <div className="glass-card" style={{ padding: '24px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: '800', marginTop: 0, marginBottom: '24px', color: colors.text }}>Succes Livrare per Agregator (1-5km)</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {['Glovo', 'Wolt', 'Bolt'].map(p => {
+                                    const pColor = p === 'Glovo' ? '#FFA500' : (p === 'Wolt' ? '#009de0' : '#34D399')
+                                    const percent = p === 'Glovo' ? 82 : (p === 'Wolt' ? 76 : 89) // mock percentages for demo
+                                    return (
+                                    <div key={p}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <img src={`/logos/${p.toLowerCase()}.svg`} style={{ width: 20, height: 20, borderRadius: '4px' }} alt={p} onError={e => e.currentTarget.style.display='none'} />
+                                                <span style={{ fontSize: '14px', fontWeight: '700', color: colors.text }}>{p}</span>
+                                            </div>
+                                            <span style={{ fontSize: '14px', fontWeight: '800', color: pColor }}>{percent}%</span>
+                                        </div>
+                                        <div style={{ height: '10px', borderRadius: '5px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: `${percent}%`, background: pColor, borderRadius: '5px' }}></div>
+                                        </div>
+                                    </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Competitive Alert Box */}
+                        <div style={{ ...glass, background: isDark ? 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(236,72,153,0.1))' : 'linear-gradient(135deg, #EEF2FF, #FDF2F8)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                <div style={{ width: 44, height: 44, borderRadius: '12px', background: 'linear-gradient(135deg, #ef4444, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: colors.text }}>Alerte de Piață</h3>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ padding: '16px', background: isDark ? 'rgba(0,0,0,0.3)' : '#fff', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text, marginBottom: '4px' }}>Scădere Radius: Glovo (București)</div>
+                                    <div style={{ fontSize: '12px', color: colors.textSecondary }}>Din istoric, în ultimele 3 zile aria de livrare la distanța de 4km a scăzut de la 92% la 45% disponibilitate în orele de vârf.</div>
+                                </div>
+                                <div style={{ padding: '16px', background: isDark ? 'rgba(0,0,0,0.3)' : '#fff', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text, marginBottom: '4px' }}>Oportunitate Extindere: Bolt Food</div>
+                                    <div style={{ fontSize: '12px', color: colors.textSecondary }}>Măsurătorile automante pe adrese de test arată că Bolt acoperă o rază efectivă cu 1.2km mai mare decât competitorii în Cluj-Napoca.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

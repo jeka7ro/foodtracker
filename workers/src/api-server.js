@@ -10,6 +10,7 @@ import { LossCalculator } from './services/loss-calculator.js'
 import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import { OwnBrandScraper } from './scrapers/own-brand-scraper.js'
 import { getSmartSearchWords } from '../../src/lib/searchUtils.js'
+import { IikoClient } from './services/iiko-client.js'
 
 const ownBrandScraper = new OwnBrandScraper()
 
@@ -1201,6 +1202,147 @@ app.post('/api/delivery-zone/check', async (req, res) => {
     }
 })
 
+// ─── POS Discrepancies (Syrve/iiko vs Aggregators) ───
+app.get('/api/pos/discrepancies', async (req, res) => {
+    try {
+        console.log('[API] Checking POS discrepancies...')
+        const today = new Date().toISOString().split('T')[0]
+        
+        // 1. Fetch all configurable restaurants
+        const { data: restaurants } = await supabase
+            .from('restaurants')
+            .select('id, name, city, iiko_config')
+            .not('iiko_config', 'is', null)
+            .eq('is_active', true)
+
+        if (!restaurants || restaurants.length === 0) {
+            return res.json({ success: true, results: [], message: 'No POS records found' })
+        }
+
+        const results = []
+        for (const rest of restaurants) {
+            const client = new IikoClient(rest)
+            const stopList = await client.getStopList()
+            // Map true POS stopped ids by name loosely
+            const posStoppedNames = stopList.map(s => s.name.toLowerCase().trim())
+            
+            // 2. Extragem datele preincarcate din snapshot-urile pe azi pt acelasi restaurant
+            const { data: snaps } = await supabase
+                .from('own_product_snapshots')
+                .select('product_name, platform, is_available')
+                .eq('restaurant_id', rest.id)
+                .eq('snapshot_date', today)
+
+            if (!snaps || snaps.length === 0) continue
+
+            // Discrepancies logic:
+            // - if it's NOT in posStoppedNames, it SHOULD be available
+            // - if it's in posStoppedNames, it SHOULD be unavailable
+            // But we know that own_product_snapshots only registers `is_available` if we found it.
+            // Wait, actually `detectStoppedProducts` uses yesterday vs today trick to find "stopped" items.
+            // For true 1-to-1: if POS says STOP -> but it's found in today's snaps (meaning it's active on Glovo) -> Critical ALARM!
+            
+            const discrepancies = []
+            
+            // If the item is stopped in POS but active on platform:
+            posStoppedNames.forEach(posName => {
+                const activeOnPlatforms = snaps.filter(s => s.product_name.toLowerCase().includes(posName) || posName.includes(s.product_name.toLowerCase()))
+                activeOnPlatforms.forEach(found => {
+                    discrepancies.push({
+                        type: 'pos_stopped_but_active_on_platform',
+                        product_name: found.product_name,
+                        platform: found.platform,
+                        message: `Stare critică: "${found.product_name}" este OPRIT în casa de marcat, dar clienții îl pot comanda pe ${found.platform.toUpperCase()}.`
+                    })
+                })
+            })
+
+            // Additional logic: what if it's inactive on platform, but ACTIVE in POS?
+            const { data: yesterdaySnaps } = await supabase
+                .from('own_product_snapshots')
+                .select('product_name, platform')
+                .eq('restaurant_id', rest.id)
+                .eq('snapshot_date', new Date(Date.now() - 86400000).toISOString().split('T')[0])
+                
+            if (yesterdaySnaps) {
+                const todayKeys = new Set(snaps.map(s => `${s.platform}|${s.product_name}`))
+                const stoppedOnPlatform = yesterdaySnaps.filter(p => !todayKeys.has(`${p.platform}|${p.product_name}`))
+                
+                stoppedOnPlatform.forEach(platStop => {
+                    const lcName = platStop.product_name.toLowerCase()
+                    const posHasItStopped = posStoppedNames.some(pName => lcName.includes(pName) || pName.includes(lcName))
+                    
+                    if (!posHasItStopped) {
+                        discrepancies.push({
+                            type: 'active_in_pos_but_stopped_on_platform',
+                            product_name: platStop.product_name,
+                            platform: platStop.platform,
+                            message: `Nesincronizare: "${platStop.product_name}" este DISPONIBIL în bucătărie, dar manual oprit (inactiv) pe ${platStop.platform.toUpperCase()}.`
+                        })
+                    }
+                })
+            }
+
+            results.push({
+                restaurant: rest.name,
+                pos_stopped_count: stopList.length,
+                pos_stopped_items: posStoppedNames,
+                discrepancies
+            })
+        }
+
+        // ─── Format and Save to History (so it appears in /stop-istoric) ───
+        try {
+            const historyResults = {}
+            let totalMissing = 0
+
+            results.forEach(r => {
+                if (r.discrepancies?.length > 0) {
+                    // Find restaurant ID by name to keep structure
+                    const restObj = restaurants.find(x => x.name === r.restaurant)
+                    const rid = restObj?.id || r.restaurant
+                    
+                    if (!historyResults[rid]) {
+                        historyResults[rid] = {
+                            name: r.restaurant,
+                            city: restObj?.city || 'Necunoscut',
+                            byPlatform: {}
+                        }
+                    }
+
+                    r.discrepancies.forEach(d => {
+                        const plat = d.platform || 'glovo'
+                        if (!historyResults[rid].byPlatform[plat]) {
+                            historyResults[rid].byPlatform[plat] = []
+                        }
+                        historyResults[rid].byPlatform[plat].push({ name: d.product_name || 'Eroare flux' })
+                        totalMissing++
+                    })
+                }
+            })
+
+            // Only insert into history if we actually checked something
+            if (results.length > 0) {
+                await supabase.from('product_stop_history').insert({
+                    reference_date: 'iiko POS (Syrve)',
+                    check_date: today,
+                    checked_at: new Date().toISOString(),
+                    missing_count: totalMissing,
+                    restaurant_count: results.length,
+                    results: historyResults
+                })
+            }
+        } catch (histErr) {
+            console.error('[API POS] Failed to save history:', histErr)
+        }
+
+        res.json({ success: true, results })
+    } catch (err) {
+        console.error('[API POS]', err)
+        res.status(500).json({ error: err.message })
+    }
+})
+
 // ─── AI Chat — răspunsuri bazate pe date reale din Supabase + LLM ───
 app.post('/api/ai-chat', async (req, res) => {
     const { message = '', lang = 'ro' } = req.body
@@ -1216,10 +1358,20 @@ app.post('/api/ai-chat', async (req, res) => {
              }
         }
 
+        // ── LLM Real-time Context Fetching ──
+        const { data: rests } = await supabase.from('restaurants').select('name, city, is_active')
+        const activeCount = rests?.filter(r => r.is_active).length || 0
+        const { data: stops } = await supabase.from('stop_events').select('restaurants(name), platform, estimated_loss_amount').is('resumed_at', null)
+        const stopCount = stops?.length || 0
+        const totalLoss = stops?.reduce((s, l) => s + Number(l.estimated_loss_amount || 0), 0) || 0
+
         // ── Concurenți / prețuri ──
-        if (/(?:concurent|competitor|ieftin|scump|pre[tț]|price|cheaper|sushi|roll|meniu|burger|pizza|wolt|glovo|bolt)/i.test(q) && q.split(' ').length < 15 && !q.includes('?')) {
-            let searchedKeys = getSmartSearchWords(q).filter(w => w.length > 2 && !['unde', 'gasesc', 'găsesc', 'gsesc', 'caut', 'vreau', 'ce', 'are', 'au', 'arată', 'arata', 'concurent', 'competitor', 'ieftin', 'scump', 'pret', 'preț', 'price', 'cheaper', 'wolt', 'glovo', 'bolt', 'care', 'este', 'cel', 'mai', 'bun', 'un', 'o', 'niște', 'de', 'la', 'pe', 'din'].includes(w))
+        if (/(?:concurent|competitor|ieftin|scump|pre[tț]|price|cheaper|sushi|suhsi|shushi|roll|maki|meniu|menu|burger|pizza|wolt|glovo|bolt)/i.test(q) && q.split(' ').length < 15) {
+            let searchedKeys = getSmartSearchWords(q).filter(w => w.length > 2 && !['unde', 'gasesc', 'găsesc', 'gsesc', 'caut', 'vreau', 'ce', 'are', 'au', 'arată', 'arata', 'concurent', 'competitor', 'ieftin', 'scump', 'pret', 'preț', 'price', 'cheaper', 'wolt', 'glovo', 'bolt', 'care', 'este', 'cel', 'mai', 'bun', 'un', 'o', 'niște', 'de', 'la', 'pe', 'din', 'any', 'the', 'is', 'how', 'show', 'me'].includes(w))
             
+            // Auto-correct spelling
+            if (searchedKeys.includes('suhsi') || searchedKeys.includes('shushi')) searchedKeys.push('sushi')
+
             if (searchedKeys.length > 0) {
                 let qryCols = 'platform, product_name, price, city, competitor_restaurants(name, url)';
                 let prodsQuery = supabase.from('competitor_products').select(qryCols).order('price', { ascending: true })
@@ -1235,7 +1387,7 @@ app.post('/api/ai-chat', async (req, res) => {
                 let ownQuery = supabase.from('own_product_snapshots').select('product_name, price, city, brands(name)')
                 
                 // pentru o mai buna acoperire la brandul curent (Sushi Master), eliminam cuvantul "sushi" care lipseste din numele produselor proprii
-                const ownSearchKeys = searchedKeys.filter(k => k !== 'sushi')
+                const ownSearchKeys = searchedKeys.filter(k => k !== 'sushi' && k !== 'suhsi')
                 if (ownSearchKeys.length > 0) {
                     for (let k of ownSearchKeys) ownQuery = ownQuery.ilike('product_name', `%${k}%`)
                 } else {
@@ -1250,7 +1402,7 @@ app.post('/api/ai-chat', async (req, res) => {
                     }).join(', ')
                     ownInfoLine = `\n\n🎯 **Avem și noi!** Printre brandurile voastre am găsit: ${ownList}.`
                 } else {
-                    ownInfoLine = `\n\n🎯 Analizând brandurile voastre, se pare că nu aveți un produs similar cu "${searchedKeys.join(' ')}".`
+                    ownInfoLine = `\n\n🎯 Analizând brandurile voastre, se pare că nu aveți un produs exact ca "${searchedKeys.join(' ')}".`
                 }
 
                 if (prods && prods.length > 0) {
@@ -1271,15 +1423,20 @@ app.post('/api/ai-chat', async (req, res) => {
                     ? `🍣 Am găsit ${pListUnique.length} rezultate unice pentru "${searchedKeys.join(' ')}". Cel mai ieftin este **${cheapest.product_name}** la **${cheapest.price} lei** (${cheapest.platform}, în ${cheapest.city}). Preț mediu pe zonă: **${avgPrice} lei**.\n\nIată rezultatele:\n${pList}${ownInfoLine}`
                     : `🍣 Found ${pListUnique.length} unique results for "${searchedKeys.join(' ')}". Cheapest: **${cheapest.product_name}** at **${cheapest.price} RON** (${cheapest.platform}, in ${cheapest.city}). Avg: **${avgPrice} RON**.\n\nResults:\n${pList}${ownInfoLine}`
                     })
+                } else {
+                    return res.json({ reply: ro
+                        ? `🍣 Din păcate nu scanez în acest moment niciun produs concurent care să conțină exact cuvintele "${searchedKeys.join(' ')}".\n\nÎncearcă alte cuvinte sau asigură-te că am date proaspete de pe piață!`
+                        : `🍣 Unfortunately I couldn't find any competitor products matching "${searchedKeys.join(' ')}".\n\nTry other keywords!`
+                    })
                 }
-            } else if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
-                // If no keys matched and no AI API key, fallback to general data
+            } else {
+                // If it matched the initial regex but we couldn't extract good search keys (or they just typed "concurent")
                 const { data: snaps } = await supabase.from('competitor_snapshots').select('platform, total_results').order('scraped_at', { ascending: false }).limit(10)
-                const { data: rests } = await supabase.from('competitor_restaurants').select('name, rating, rank_position').order('rank_position', { ascending: true }).limit(5)
+                const { data: restsComp } = await supabase.from('competitor_restaurants').select('name, rating, rank_position').order('rank_position', { ascending: true }).limit(5)
 
                 const totalCompetitors = snaps?.reduce((s, sn) => s + (sn.total_results || 0), 0) || 0
                 const platforms = [...new Set(snaps?.map(s => s.platform) || [])].join(', ')
-                const topRest = rests?.[0]?.name
+                const topRest = restsComp?.[0]?.name
                 return res.json({ reply: ro
                     ? `🍣 Monitorizez **${totalCompetitors} concurenți** pe **${platforms || 'Wolt, Glovo'}**. ${topRest ? `Top restaurant: **${topRest}**.` : ''}`
                     : `🍣 Tracking **${totalCompetitors} competitors** on **${platforms || 'Wolt, Glovo'}**. ${topRest ? `Top: **${topRest}**.` : ''}`
@@ -1287,19 +1444,32 @@ app.post('/api/ai-chat', async (req, res) => {
             }
         }
 
+        // ── Rule-based Answers (Instant response for common platform questions) ──
+        if (q.includes('zona de livrare') || q.includes('zone de livrare') || q.includes('zone livrare') || /delivery.*zone/.test(q)) {
+            const orasMatch = q.match(/(bucure[sș]ti|bra[sș]ov|cluj|timi[sș]oara|ia[sș]i|constan[tț]a|sibiu)/i);
+            const oras = orasMatch ? orasMatch[0] : 'orașul dorit';
+            return res.json({ reply: ro ? `📍 Ca să verifici zona de livrare pentru **${oras}**, mergi în meniul la secțiunea **Zone Livrare**.\n\nAcolo vei găsi radarul promoțiilor și diferențele de preț per zone!` : `📍 To check delivery zones, go to the **Delivery Zone** section in the menu.` })
+        }
+
+        if (/oprit|offline|stop|inchis|closed|down/i.test(q)) {
+            let activeStopsMsg = ''
+            if (stopCount > 0) {
+                const stopDetails = stops.slice(0, 3).map(s => `- **${s.restaurants?.name || 'Necunoscut'}** pe ${s.platform} (${s.estimated_loss_amount || 0} RON pierderi)`).join('\n')
+                activeStopsMsg = `\n\n⚠️ **Avem ${stopCount} restaurante oprite ACUM:**\n${stopDetails}`
+            } else {
+                activeStopsMsg = `\n\n✅ Totul funcționează normal chiar acum. Nu avem restaurante oprite.`
+            }
+            return res.json({ reply: `🛑 **Monitorizare Opriri:** \nAplicația verifică ${activeCount} restaurante din 5 în 5 minute.${activeStopsMsg}\n\nPentru detalii complete, mergi la secțiunea **Stop Control** din stânga!` })
+        }
+
+        if (/functioneaza|face|work|do/i.test(q)) {
+            return res.json({ reply: `Salut! Sistemul face 3 lucruri majore:\n1. 📊 **Prețuri:** Monitorizează concurența.\n2. 🛑 **Disponibilitate:** Verifică opririle pe platforme.\n3. 📍 **Zone:** Analizează metrici locale.\nAlege orice secțiune din meniu!` })
+        }
+
         // ── LLM (Mini-versiune Antigravity) - Gemini / OpenAI / Free Fallback ──
-        // Fetch real-time context to make the LLM "smart" 
-        const { data: rests } = await supabase.from('restaurants').select('name, city, is_active')
-        const activeCount = rests?.filter(r => r.is_active).length || 0
-        const { data: stops } = await supabase.from('stop_logs').select('restaurant_name, platform, estimated_loss').limit(10)
-        const stopCount = stops?.length || 0
-        const totalLoss = stops?.reduce((s, l) => s + Number(l.estimated_loss || 0), 0).toFixed(2)
         
-        const systemPrompt = `Ești Smart Assistant, o mini-versiune a asistentului AI care a construit această aplicație de monitorizare a restaurantelor pentru delivery (Wolt, Glovo, Bolt). 
-Aplicația monitorizează prețurile concurenților, statusul restaurantelor proprii (dacă sunt oprite/offline pierzând bani), zonele de livrare și analizele financiare (P&L).
-Aici sunt niște date live din sistemul tău:
-- Restaurante proprii active: ${activeCount}
-- Număr de opriri recente detectate: ${stopCount} (pierderi estimate: ${totalLoss} lei)
+        const systemPrompt = `Ești Smart Assistant, creat pentru aplicația de monitorizare food delivery. 
+Avem: ${activeCount} restaurante, ${stopCount} opriri active, pierderi ${totalLoss} lei.
 Orașele principale: ${[...new Set((rests || []).map(r => r.city))].filter(Boolean).slice(0,5).join(', ')}.
 
 Trebuie să răspunzi inteligent, profesionist dar politicos și direct (cel mai des în română, dar și în engleză dacă ești întrebat) la orice întrebare primești de la utilizator. Ești expert tehnic.
@@ -1351,7 +1521,7 @@ Dacă utilizatorul întreabă ceva general, tehnologic sau din afara platformei 
                     signal: AbortSignal.timeout(10000)
                 })
                 const data = await response.json()
-                const replyText = data?.choices?.[0]?.message?.content || ro ? "Am un mic delay pe conexiunea gratuită. Încearcă din nou." : "Delay on free AI endpoint. Try again."
+                const replyText = data?.choices?.[0]?.message?.content || (ro ? "Am un mic delay pe conexiunea gratuită. Încearcă din nou." : "Delay on free AI endpoint. Try again.")
                 return res.json({ reply: replyText })
             } catch (pollErr) {
                  return res.json({ reply: ro ? "Serverul AI gratuit a picat. E nevoie să pui GEMINI_API_KEY / OPENAI_API_KEY în .env." : "Free AI server down. You need to set GEMINI or OPENAI key." })

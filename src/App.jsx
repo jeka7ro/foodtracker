@@ -9,7 +9,6 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Monitoring from './pages/Monitoring'
 import StopControl from './pages/StopControl'
-import StopVerificare from './pages/StopVerificare'
 import StopPrices from './pages/StopPrices'
 import StopIstoric from './pages/StopIstoric'
 import Marketing from './pages/Marketing'
@@ -80,7 +79,10 @@ function Layout({ children }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const location = useLocation()
 
-    const isMarketingActive = location.pathname.startsWith('/marketing') || location.pathname === '/competitors' || location.pathname === '/brands'
+    const isOwnProductsActive = location.pathname === '/own-products' || location.pathname === '/brands' || location.pathname === '/restaurants'
+    const [ownProductsOpen, setOwnProductsOpen] = useState(isOwnProductsActive)
+
+    const isMarketingActive = location.pathname.startsWith('/marketing') || location.pathname === '/competitors' || location.pathname === '/competitor-products'
     const [mktOpen, setMktOpen] = useState(isMarketingActive)
     const isStopActive = location.pathname.startsWith('/stop-control') || location.pathname.startsWith('/stop-')
     const [stopOpen, setStopOpen] = useState(isStopActive)
@@ -97,12 +99,13 @@ function Layout({ children }) {
     ]
     const stopSubItems = [
         { path: '/stop-control', label: lang === 'en' ? 'Overview' : 'Opriri', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
-        { path: '/stop-verificare', label: lang === 'en' ? 'Product Check' : 'Verificare Produse', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
         { path: '/stop-preturi', label: lang === 'en' ? 'Prices' : 'Comparație Prețuri', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
         { path: '/stop-istoric', label: lang === 'en' ? 'History' : 'Istoric', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
     ]
-    const postStopItems = [
-        { path: '/own-products', iconKey: 'ownproducts', label: lang === 'en' ? 'Own Products' : 'Produse Proprii' },
+    const ownProductsSubItems = [
+        { path: '/own-products', label: lang === 'en' ? 'Own Products' : 'Produse Proprii', icon: NAV_ICONS.ownproducts },
+        { path: '/brands', label: t('nav_brands'), icon: NAV_ICONS.brands },
+        { path: '/restaurants', label: t('nav_restaurants'), icon: NAV_ICONS.restaurants },
     ]
     const mktSubItems = [
         {
@@ -136,18 +139,12 @@ function Layout({ children }) {
             icon: NAV_ICONS.competitors
         },
         {
-            path: '/brands', match: (p) => p === '/brands',
-            label: t('nav_brands'),
-            icon: NAV_ICONS.brands
-        },
-        {
             path: '/competitor-products', match: (p) => p === '/competitor-products',
             label: lang === 'en' ? 'Competitor Products' : 'Produse Concurenți',
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         },
     ]
     const bottomItems = [
-        { path: '/restaurants', iconKey: 'restaurants', label: t('nav_restaurants') },
         { path: '/alerts', iconKey: 'alerts', label: t('nav_alerts') },
         { path: '/events', iconKey: 'events', label: t('nav_events') },
         { path: '/rules', iconKey: 'rules', label: t('nav_rules') },
@@ -300,24 +297,51 @@ function Layout({ children }) {
                         </div>
                     )}
 
-                    {/* Own Products */}
-                    {postStopItems.map(item => (
-                        <NavLink key={item.path} to={item.path} title={sidebarCollapsed ? item.label : undefined}
-                            style={({ isActive }) => ({
-                                display: 'flex', alignItems: 'center', gap: '10px',
-                                padding: sidebarCollapsed ? '9px 0' : '9px 16px',
-                                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                                borderRadius: '10px', textDecoration: 'none',
-                                fontSize: '16px', fontWeight: '600',
-                                letterSpacing: '-0.15px',
-                                color: isActive ? '#2bbec8' : colors.textSecondary,
-                                background: isActive ? 'rgba(43,190,200,0.12)' : 'transparent',
-                                transition: 'all 0.15s',
-                            })}>
-                            <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
-                            {!sidebarCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
-                        </NavLink>
-                    ))}
+                    {/* Own Products expandable group */}
+                    <div onClick={() => { if (!sidebarCollapsed) setOwnProductsOpen(o => !o) }}
+                        title={sidebarCollapsed ? (lang === 'en' ? 'Own Products' : 'Produse Proprii') : undefined}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: sidebarCollapsed ? '9px 0' : '9px 16px',
+                            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                            borderRadius: '10px', cursor: 'pointer',
+                            fontSize: '14px', fontWeight: '500',
+                            color: isOwnProductsActive ? '#2bbec8' : colors.textSecondary,
+                            background: isOwnProductsActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            transition: 'all 0.15s', userSelect: 'none',
+                        }}>
+                        <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.ownproducts}</span>
+                        {!sidebarCollapsed && <>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lang === 'en' ? 'Own Products' : 'Produse Proprii'}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                                style={{ transform: ownProductsOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </>}
+                    </div>
+                    {ownProductsOpen && !sidebarCollapsed && (
+                        <div style={{ marginBottom: '4px' }}>
+                            {ownProductsSubItems.map(sub => {
+                                const isActive = location.pathname === sub.path
+                                return (
+                                    <NavLink key={sub.path} to={sub.path}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '8px 16px 8px 34px', borderRadius: '10px',
+                                            textDecoration: 'none', fontSize: '15px',
+                                            letterSpacing: '-0.15px',
+                                            fontWeight: isActive ? '700' : '500',
+                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
+                                            transition: 'all 0.15s',
+                                        }}>
+                                        <span style={{ opacity: 0.7, flexShrink: 0, transform: 'scale(0.8)', transformOrigin: 'center left', display: 'flex' }}>{sub.icon}</span>
+                                        {sub.label}
+                                    </NavLink>
+                                )
+                            })}
+                        </div>
+                    )}
 
                     <div onClick={() => { if (!sidebarCollapsed) setMktOpen(o => !o) }}
                         title={sidebarCollapsed ? t('nav_marketing') : undefined}
@@ -573,7 +597,6 @@ export default function App() {
                                     <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                                     <Route path="/monitoring" element={<ProtectedRoute><Layout><Monitoring /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-control" element={<ProtectedRoute><Layout><StopControl /></Layout></ProtectedRoute>} />
-                                    <Route path="/stop-verificare" element={<ProtectedRoute><Layout><StopVerificare /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-preturi" element={<ProtectedRoute><Layout><StopPrices /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-istoric" element={<ProtectedRoute><Layout><StopIstoric /></Layout></ProtectedRoute>} />
                                     <Route path="/marketing" element={<ProtectedRoute><Layout><Marketing /></Layout></ProtectedRoute>} />

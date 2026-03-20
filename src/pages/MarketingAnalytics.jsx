@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabaseClient'
 import { getSmartSearchWords } from '../lib/searchUtils'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList,
-    ComposedChart, Line, ReferenceLine, Scatter, ErrorBar
+    ComposedChart, Line, ReferenceLine, Scatter
 } from 'recharts'
 
 const CITY_FLAGS = {
@@ -163,7 +163,7 @@ export default function MarketingAnalytics() {
 
                 if (own) {
                     own.forEach((o, index) => {
-                        o._myId = index;
+                        o['_myId'] = index;
                         const brandData = o.brands || {}
                         const brandObj = Array.isArray(brandData) ? brandData[0] : brandData
                         const brandName = brandObj?.name || ''
@@ -172,7 +172,7 @@ export default function MarketingAnalytics() {
                             const pName = o.product_name || '';
                             const keyWithCity = `${pName.trim().toLowerCase()}___${o.city || ''}`
                             const keyAnyCity = `${pName.trim().toLowerCase()}___`
-                            const val = { price: o.price, brand: brandName, logo: brandLogo, _myId: o._myId }
+                            const val = { price: o.price, brand: brandName, logo: brandLogo, _myId: o['_myId'] }
                             
                             ownMap[keyWithCity] = val
                             if (!ownMap[keyAnyCity]) ownMap[keyAnyCity] = val
@@ -207,6 +207,10 @@ export default function MarketingAnalytics() {
                         if (pcsMatch) {
                             pieces = pcsMatch[1] || pcsMatch[2] || pcsMatch[3] || pcsMatch[0].replace(/\D/g, '')
                         }
+
+                        // Parse numeric weight for scatter plot
+                        const weightNum = weightMatch ? (Math.round((weightMatch[2].toLowerCase() === 'kg' ? Number(weightMatch[1]) * 1000 : Number(weightMatch[1])))) : 0;
+
                         
                         // Extract platform
                         const platform = p.platform || 'glovo'
@@ -323,6 +327,7 @@ export default function MarketingAnalytics() {
                             compUrl: compUrl,
                             compCity: compCity,
                             weight,
+                            weightNum,
                             pieces: pieces,
                             platform,
                             snapshot_date: p.snapshot_date ? p.snapshot_date.split('T')[0] : '—',
@@ -334,7 +339,7 @@ export default function MarketingAnalytics() {
                     // Injectăm produsele proprii care corespund căutării/categoriei, dar NU au avut concurent (pentru a afișa orașele lipsă)
                     if (own) {
                         own.forEach(o => {
-                            if (matchedOwnIds.has(o._myId)) return;
+                            if (matchedOwnIds.has(o['_myId'])) return;
                             
                             let matchSearch = true;
                             if (search) {
@@ -378,6 +383,7 @@ export default function MarketingAnalytics() {
                                     compUrl: '',
                                     compCity: o.city,
                                     weight: '—',
+                                    weightNum: 0,
                                     pieces: '1',
                                     platform: o.platform || 'glovo',
                                     snapshot_date: o.snapshot_date ? o.snapshot_date.split('T')[0] : Object.values(ownMap)[0]?.snapshot_date?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -415,7 +421,7 @@ export default function MarketingAnalytics() {
     }, [selectedCategory, filterCity, filterCompBrand, filterOwnBrand, search, startDate, endDate, productType, refreshKey])
 
     const avgDiff = useMemo(() => {
-        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0)
+        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0)
         if (!matched.length) return 0
         const totalOur = matched.reduce((sum, item) => sum + item.ournPrice, 0)
         const totalComp = matched.reduce((sum, item) => sum + item.compPrice, 0)
@@ -425,13 +431,13 @@ export default function MarketingAnalytics() {
 
     // Top 8 products for chart (only exact matches to avoid meaningless diffs)
     const chartData = useMemo(() => {
-        return realData.filter(r => r.hasExactMatch && r.ournPrice > 0).slice(0, 8)
+        return realData.filter(r => r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0).slice(0, 8)
     }, [realData])
 
     // Competitor Analysis chart data
     const compAnalysis = useMemo(() => {
         const compAverages = {}
-        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0)
+        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0)
         matched.forEach(item => {
             if (!compAverages[item.compBrand]) {
                 compAverages[item.compBrand] = { brand: item.compBrand, totalDiff: 0, count: 0 }
@@ -444,6 +450,46 @@ export default function MarketingAnalytics() {
             .map(c => ({ name: c.brand, diffPercent: Number((c.totalDiff / c.count).toFixed(1)) }))
             .sort((a,b) => b.diffPercent - a.diffPercent)
             .slice(0, 8)
+    }, [realData])
+
+    // Sophisticated Scatter Data (Value for money)
+    const scatterMarketData = useMemo(() => {
+        const points = []
+        realData.forEach(r => {
+            if (r.weightNum > 0) {
+                if (r.compPrice > 0) {
+                    points.push({ name: r.name, brand: r.compBrand, price: r.compPrice, weight: r.weightNum, type: 'Piață', fill: '#6366F1' })
+                }
+                if (r.ournPrice > 0) {
+                    points.push({ name: r.name, brand: r.ourBrand, price: r.ournPrice, weight: r.weightNum, type: 'Noi', fill: '#EF4444' })
+                }
+            }
+        })
+        return points
+    }, [realData])
+
+    // Sophisticated Trend Data
+    const trendData = useMemo(() => {
+        const byDate = {}
+        realData.forEach(r => {
+            if (!r.snapshot_date || r.snapshot_date === '—') return
+            if (r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0) {
+                if (!byDate[r.snapshot_date]) byDate[r.snapshot_date] = { date: r.snapshot_date, ourSum: 0, compSum: 0, count: 0 }
+                byDate[r.snapshot_date].ourSum += r.ournPrice
+                byDate[r.snapshot_date].compSum += r.compPrice
+                byDate[r.snapshot_date].count++
+            }
+        })
+        const points = Object.values(byDate)
+            .map(d => ({
+                date: new Date(d.date).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' }),
+                IndexConcurenta: 100,
+                IndexNoi: Number(((d.ourSum / d.compSum) * 100).toFixed(1))
+            }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+        
+        // Fallback to mock trend if historical is empty
+        return points.length > 0 ? points : mockTrend.map(m => ({ date: m.date, IndexConcurenta: 100, IndexNoi: m.index }))
     }, [realData])
 
     // Global average for our brand matching the filter
@@ -474,18 +520,18 @@ export default function MarketingAnalytics() {
             }
 
             if (!catMap[cat]) catMap[cat] = { compPrices: [], ourPrices: [], display }
-            catMap[cat].compPrices.push(r.compPrice)
-            if (r.hasExactMatch && r.ournPrice > 0) catMap[cat].ourPrices.push(r.ournPrice)
+            if (r.compPrice > 0) catMap[cat].compPrices.push(r.compPrice)
+            if (r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0) catMap[cat].ourPrices.push(r.ournPrice)
         })
         return Object.values(catMap)
             .filter(v => isProductAnalysis ? v.compPrices.length >= 1 : v.compPrices.length >= 3)
             .map(v => {
-                const sorted = [...v.compPrices].sort((a, b) => a - b)
+                const sorted = [...v.compPrices].map(Number).sort((a, b) => a - b)
                 const min = sorted[0]
                 const max = sorted[sorted.length - 1]
-                const avg = sorted.reduce((s, x) => s + x, 0) / sorted.length
+                const avg = sorted.reduce((s, x) => Number(s) + Number(x), 0) / sorted.length
                 const localOurAvg = v.ourPrices.length > 0
-                    ? v.ourPrices.reduce((s, x) => s + x, 0) / v.ourPrices.length
+                    ? v.ourPrices.reduce((s, x) => Number(s) + Number(x), 0) / v.ourPrices.length
                     : null
                 return {
                     name: v.display.length > 18 ? v.display.substring(0, 18) + '…' : v.display,
@@ -517,7 +563,7 @@ export default function MarketingAnalytics() {
     // Category Analysis
     const catAnalysis = useMemo(() => {
         const catAverages = {}
-        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0)
+        const matched = realData.filter(r => r.hasExactMatch && r.ournPrice > 0 && r.compPrice > 0)
         matched.forEach(item => {
             if (!catAverages[item.category]) {
                 catAverages[item.category] = { category: item.category, totalDiff: 0, count: 0 }
@@ -642,6 +688,68 @@ export default function MarketingAnalytics() {
                         ))}
                     </div>
 
+                    {/* SOPHISTICATED CHARTS ROW */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+                        {/* Scatter Plot: Value for Money */}
+                        <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>Value for Money (Preț vs Gramaj)</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>Produsele din stânga jos sunt ieftine dar mici. Cele din dreapta jos sunt <strong style={{color:'#10B981'}}>Best Value</strong>.</p>
+                            </div>
+                            {scatterMarketData.length > 0 ? (
+                            <div style={{ flex: 1, minHeight: 280 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart margin={{ top: 10, right: 30, bottom: 20, left: 10 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
+                                        <XAxis dataKey="weight" type="number" name="Gramaj" unit="g" domain={['auto', 'auto']} tick={{ fill: colors.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <YAxis dataKey="price" type="number" name="Preț" unit="lei" domain={['auto', 'auto']} tick={{ fill: colors.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(value, name) => [`${value}`, name]} labelFormatter={() => ''} content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                const d = payload[0].payload;
+                                                return (
+                                                    <div style={{ background: isDark ? '#2c2c2e' : '#fff', border: `1px solid ${colors.border}`, padding: '10px', borderRadius: '8px' }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: '700', color: colors.text }}>{d.name}</div>
+                                                        <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '4px' }}>{d.brand}</div>
+                                                        <div style={{ fontSize: '12px', color: d.fill, fontWeight: '800' }}>{d.price} lei / {d.weight}g</div>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }} />
+                                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                        <Scatter name="Piață" data={scatterMarketData.filter(d => d.type === 'Piață')} fill="#6366F1" />
+                                        <Scatter name="Noi" data={scatterMarketData.filter(d => d.type === 'Noi')} fill="#EF4444" shape="star" />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
+                            ) : <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt suficiente date de gramaj extrase.</div>}
+                        </div>
+
+                        {/* Trend Line: Price Index Evolution */}
+                        <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>Evoluție Index Preț (Trend Piață)</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>Linia albastră reprezintă media pieței. Cea roșie poziția brandului tău față de ea.</p>
+                            </div>
+                            {trendData.length > 0 ? (
+                            <div style={{ flex: 1, minHeight: 280 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart data={trendData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
+                                        <XAxis dataKey="date" tick={{ fill: colors.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <YAxis domain={['auto', 'auto']} tick={{ fill: colors.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                                        <Tooltip contentStyle={{ background: isDark ? '#2c2c2e' : '#fff', border: `1px solid ${colors.border}`, borderRadius: '8px', fontSize: '12px' }} />
+                                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                        <ReferenceLine y={100} stroke="#6366F1" strokeDasharray="3 3" label={{ position: 'top', value: 'Echilibru Piață', fill: '#6366F1', fontSize: 10 }} />
+                                        <Line type="monotone" name="Media Pieței" dataKey="IndexConcurenta" stroke="#6366F1" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" name="Media Ta (Index)" dataKey="IndexNoi" stroke="#EF4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
+                            ) : <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu există istoric salvat.</div>}
+                        </div>
+                    </div>
+
                     {/* Smart Min/Avg/Max Chart */}
                     <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
@@ -704,7 +812,14 @@ export default function MarketingAnalytics() {
                     {/* Additional charts: Category diff + Competitor diff */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                         <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600', color: colors.text }}>Diferență Preț per Categorie (%)</h3>
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '600', color: colors.text }}>Diferență Preț per Categorie (%)</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary, lineHeight: '1.4' }}>
+                                    Arată cu cât sunt categoriile concurenței mai scumpe sau mai ieftine.<br/>
+                                    <span style={{ color: '#F43F5E', fontWeight: 'bold' }}>+ (Bara la dreapta):</span> Piața este mai SCUMPĂ decât tine.<br/>
+                                    <span style={{ color: '#10B981', fontWeight: 'bold' }}>- (Bara la stânga):</span> Piața este mai IEFTINĂ decât tine.
+                                </p>
+                            </div>
                             <div style={{ flex: 1, minHeight: 250 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={catAnalysis} margin={{ top: 20, right: 30, left: 10, bottom: 0 }} layout="vertical">
@@ -720,7 +835,14 @@ export default function MarketingAnalytics() {
                             </div>
                         </div>
                         <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600', color: colors.text }}>Diferență Preț vs Noi (%)</h3>
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '600', color: colors.text }}>Tipar Concurenți direcți vs Noi (%)</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary, lineHeight: '1.4' }}>
+                                    Cine vinde mai scump și cine mai ieftin raportat la brandul tău.<br/>
+                                    <span style={{ color: '#F43F5E', fontWeight: 'bold' }}>+ (Bara la dreapta):</span> Adversarul vinde mai SCUMP.<br/>
+                                    <span style={{ color: '#10B981', fontWeight: 'bold' }}>- (Bara la stânga):</span> Adversarul vinde mai IEFTIN.
+                                </p>
+                            </div>
                             <div style={{ flex: 1, minHeight: 250 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={compAnalysis} margin={{ top: 10, right: 30, left: 10, bottom: 0 }} layout="vertical">

@@ -56,22 +56,63 @@ function Avatar({ user, size = 36 }) {
     )
 }
 
+// ─── Role permissions config ───
+const ALL_PAGES = [
+    { path: '/dashboard',            label: 'Dashboard',            icon: '📊' },
+    { path: '/monitoring',           label: 'Monitoring',           icon: '📡' },
+    { path: '/stop-control',         label: 'Stop Control',         icon: '🛑' },
+    { path: '/stop-preturi',         label: 'Comparație Prețuri',   icon: '💰' },
+    { path: '/stop-istoric',         label: 'Istoric Stop',         icon: '🕐' },
+    { path: '/own-products',         label: 'Produse Proprii',      icon: '🏠' },
+    { path: '/brands',               label: 'Branduri',             icon: '⭐' },
+    { path: '/restaurants',          label: 'Restaurante',          icon: '☕' },
+    { path: '/marketing',            label: 'Marketing',            icon: '🎯' },
+    { path: '/marketing-analytics',  label: 'Marketing Analytics',  icon: '📈' },
+    { path: '/marketing-promotions', label: 'Radar Promoții',       icon: '🏷️' },
+    { path: '/competitors',          label: 'Competitori',          icon: '👥' },
+    { path: '/competitor-products',  label: 'Produse Competitori',  icon: '🛒' },
+    { path: '/alerts',               label: 'Alerte',               icon: '🔔' },
+    { path: '/events',               label: 'Evenimente',           icon: '📅' },
+    { path: '/rules',                label: 'Reguli',               icon: '📋' },
+    { path: '/reports',              label: 'Rapoarte',             icon: '📊' },
+    { path: '/delivery-zone',        label: 'Zone Livrare',         icon: '🚚' },
+    { path: '/users',                label: 'Utilizatori',          icon: '👤' },
+]
+const DEFAULT_PERMS = {
+    admin: '*',
+    manager: ['/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/marketing', '/marketing-analytics', '/marketing-promotions', '/competitors', '/competitor-products', '/brands', '/restaurants', '/alerts', '/events', '/reports', '/delivery-zone'],
+    operational: ['/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/restaurants', '/alerts', '/events', '/rules', '/delivery-zone'],
+    marketing: ['/marketing', '/marketing-analytics', '/marketing-promotions', '/competitors', '/competitor-products', '/brands'],
+    area_manager: ['/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/restaurants', '/alerts', '/events', '/reports', '/delivery-zone'],
+    manager_restaurant: ['/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/alerts', '/events'],
+    analyst: ['/dashboard', '/monitoring', '/competitors', '/competitor-products', '/brands', '/restaurants', '/alerts', '/reports', '/delivery-zone'],
+    viewer: ['/dashboard', '/alerts'],
+}
+
 export default function Users() {
     const { colors, isDark, toggleTheme } = useTheme()
     const { lang, setLang } = useLanguage()
-    const { user: currentUser, updateDbUser } = useAuth()
+    const { user: currentUser, updateDbUser, refreshPermissions } = useAuth()
     const { uploadAvatar } = useUserProfile()
     const fileRef = useRef()
 
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [selected, setSelected] = useState(new Set())          // IDs selected
+    const [selected, setSelected] = useState(new Set())
     const [showInvite, setShowInvite] = useState(false)
-    const [editUser, setEditUser] = useState(null)               // user being edited in slideout
+    const [editUser, setEditUser] = useState(null)
     const [bulkRole, setBulkRole] = useState('')
     const [showBulkRole, setShowBulkRole] = useState(false)
     const [initError, setInitError] = useState('')
+    const [activeTab, setActiveTab] = useState('users') // 'users' | 'roles'
+
+    // ── Role permissions state ──
+    const [permissions, setPermissions] = useState({})
+    const [permLoading, setPermLoading] = useState(true)
+    const [permSaving, setPermSaving] = useState(false)
+    const [permSaved, setPermSaved] = useState(false)
+    const [permDbError, setPermDbError] = useState(null)
 
     // Invite form
     const [inviteFirst, setInviteFirst] = useState('')
@@ -295,6 +336,88 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
         </div>
     )
 
+    // ── Load role permissions ──
+    useEffect(() => {
+        async function loadPerms() {
+            const { data, error } = await supabase.from('role_permissions').select('role, allowed_paths')
+            if (error) {
+                // Table may not exist — show matrix with defaults anyway
+                console.warn('[Perms] role_permissions not found, using defaults')
+                setPermissions({ ...DEFAULT_PERMS })
+                setPermLoading(false)
+                return
+            }
+            if (!data || data.length === 0) {
+                setPermissions({ ...DEFAULT_PERMS })
+                setPermLoading(false)
+                return
+            }
+            const perms = {}
+            data.forEach(row => {
+                perms[row.role] = row.role === 'admin' ? '*' : (row.allowed_paths || [])
+            })
+            ROLES.forEach(r => { if (!perms[r.value]) perms[r.value] = DEFAULT_PERMS[r.value] || [] })
+            setPermissions(perms)
+            setPermLoading(false)
+        }
+        loadPerms()
+    }, [])
+
+    const isPageAllowed = (role, path) => {
+        if (role === 'admin') return true
+        const allowed = permissions[role]
+        return allowed === '*' || (Array.isArray(allowed) && allowed.includes(path))
+    }
+    const togglePage = (role, path) => {
+        if (role === 'admin') return
+        setPermissions(prev => {
+            const cur = Array.isArray(prev[role]) ? [...prev[role]] : []
+            const i = cur.indexOf(path)
+            i >= 0 ? cur.splice(i, 1) : cur.push(path)
+            return { ...prev, [role]: cur }
+        })
+        setPermSaved(false)
+    }
+    const toggleAllForRole = (role) => {
+        if (role === 'admin') return
+        const all = ALL_PAGES.map(p => p.path)
+        const cur = Array.isArray(permissions[role]) ? permissions[role] : []
+        setPermissions(prev => ({ ...prev, [role]: all.every(p => cur.includes(p)) ? [] : [...all] }))
+        setPermSaved(false)
+    }
+    const savePermissions = async () => {
+        setPermSaving(true)
+        try {
+            const rows = ROLES.map(r => ({ role: r.value, allowed_paths: r.value === 'admin' ? ALL_PAGES.map(p => p.path) : (permissions[r.value] || []) }))
+            await supabase.from('role_permissions').delete().neq('role', '__never__')
+            const { error } = await supabase.from('role_permissions').insert(rows)
+            if (error) {
+                if (error.message.includes('role_permissions') || error.code === '42P01') {
+                    setPermDbError(error.message)
+                }
+                throw error
+            }
+            setPermSaved(true)
+            setPermDbError(null)
+            if (refreshPermissions) await refreshPermissions()
+            setTimeout(() => setPermSaved(false), 3000)
+        } catch (err) {
+            if (!permDbError) alert(`${t('Eroare la salvare', 'Save error')}: ${err.message}\n\n${t('Tabelul role_permissions nu există. Rulează SQL-ul din pagină în Supabase SQL Editor.', 'Table role_permissions does not exist. Run the SQL from the page in Supabase SQL Editor.')}`)
+        }
+        setPermSaving(false)
+    }
+    const resetPermsToDefaults = () => { setPermissions({ ...DEFAULT_PERMS }); setPermSaved(false) }
+
+    const PERM_SQL = `CREATE TABLE IF NOT EXISTS public.role_permissions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  role text NOT NULL UNIQUE,
+  allowed_paths text[] NOT NULL DEFAULT '{}',
+  updated_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.role_permissions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for authenticated" ON public.role_permissions
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);`
+
     return (
         <div style={{ padding: '28px 32px', maxWidth: '1100px' }}>
 
@@ -308,19 +431,50 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         {t('Gestionează accesul și rolurile echipei', 'Manage team access and roles')}
                     </p>
                 </div>
-                <button onClick={() => setShowInvite(true)} style={{
-                    padding: '9px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                    background: '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700',
-                    display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 12px rgba(99,102,241,0.35)'
-                }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                        <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
-                    </svg>
-                    {t('Adaugă utilizator', 'Add user')}
-                </button>
+                {activeTab === 'users' ? (
+                    <button onClick={() => setShowInvite(true)} style={{
+                        padding: '9px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                        background: '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700',
+                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 12px rgba(99,102,241,0.35)'
+                    }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                            <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
+                        </svg>
+                        {t('Adaugă utilizator', 'Add user')}
+                    </button>
+                ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={resetPermsToDefaults}
+                            style={{ padding: '9px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                            🔄 {t('Resetează', 'Reset')}
+                        </button>
+                        <button onClick={savePermissions} disabled={permSaving}
+                            style={{ padding: '9px 20px', borderRadius: '10px', border: 'none', background: permSaved ? '#10b981' : '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: `0 2px 12px ${permSaved ? 'rgba(16,185,129,0.35)' : 'rgba(99,102,241,0.35)'}`, opacity: permSaving ? 0.7 : 1, transition: 'all 0.2s' }}>
+                            {permSaving ? '...' : permSaved ? `✓ ${t('Salvat!', 'Saved!')}` : `💾 ${t('Salvează', 'Save')}`}
+                        </button>
+                    </div>
+                )}
             </div>
 
+            {/* ── Tabs ── */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', padding: '3px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: '12px', border: `1px solid ${colors.border}`, width: 'fit-content' }}>
+                {[{ id: 'users', label: t('Utilizatori', 'Users'), icon: '👤' }, { id: 'roles', label: t('Setări Roluri', 'Role Settings'), icon: '⚙️' }].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        style={{
+                            padding: '8px 18px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                            fontSize: '13px', fontWeight: '700', transition: 'all 0.18s',
+                            background: activeTab === tab.id ? (isDark ? 'rgba(99,102,241,0.25)' : '#fff') : 'transparent',
+                            color: activeTab === tab.id ? '#6366F1' : colors.textSecondary,
+                            boxShadow: activeTab === tab.id ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
+                        }}>
+                        {tab.icon} {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* ═══ TAB: USERS ═══ */}
+            {activeTab === 'users' && (<>
             {/* ── Search + Bulk bar ── */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
@@ -496,6 +650,84 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                     {users.filter(u => !u.is_active).length} {t('inactivi', 'inactive')}
                 </span>
             </div>
+            </>)}
+
+            {/* ═══ TAB: ROLE SETTINGS ═══ */}
+            {activeTab === 'roles' && (
+                permDbError ? (
+                    <div style={{ background: colors.card, border: `1px solid rgba(245,158,11,0.4)`, borderRadius: '16px', padding: '28px' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '18px' }}>
+                            <div style={{ fontSize: '28px' }}>⚠️</div>
+                            <div>
+                                <div style={{ fontWeight: '700', color: colors.text, fontSize: '15px' }}>{t('Tabelul role_permissions lipsește', 'Table role_permissions missing')}</div>
+                                <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>{t('Rulați SQL-ul în Supabase → SQL Editor', 'Run SQL in Supabase → SQL Editor')}</div>
+                            </div>
+                            <button onClick={() => navigator.clipboard.writeText(PERM_SQL)} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>📋 {t('Copiază SQL', 'Copy SQL')}</button>
+                        </div>
+                        <pre style={{ background: isDark ? 'rgba(0,0,0,0.4)' : '#f8f9fa', borderRadius: '10px', padding: '16px', fontSize: '11px', fontFamily: 'monospace', color: isDark ? '#a5f3fc' : '#0f172a', overflowX: 'auto', margin: 0, lineHeight: 1.6 }}>{PERM_SQL}</pre>
+                    </div>
+                ) : permLoading ? (
+                    <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, fontSize: '13px' }}>{t('Se încarcă...', 'Loading...')}</div>
+                ) : (
+                    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', overflow: 'hidden' }}>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '900px' }}>
+                                <thead>
+                                    <tr>
+                                        <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '700', color: colors.textSecondary, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, position: 'sticky', left: 0, background: isDark ? colors.card : '#fff', zIndex: 2, minWidth: '200px' }}>
+                                            {t('Pagină', 'Page')}
+                                        </th>
+                                        {ROLES.map(r => (
+                                            <th key={r.value} style={{ padding: '14px 8px', textAlign: 'center', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, minWidth: '90px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: '800', color: r.color, padding: '2px 8px', borderRadius: '6px', background: `${r.color}15` }}>{r.label}</span>
+                                                    <span style={{ fontSize: '10px', color: colors.textSecondary }}>
+                                                        {r.value === 'admin' ? ALL_PAGES.length : (Array.isArray(permissions[r.value]) ? permissions[r.value].length : 0)}/{ALL_PAGES.length}
+                                                    </span>
+                                                    {r.value !== 'admin' && (
+                                                        <button onClick={() => toggleAllForRole(r.value)} style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                            {(Array.isArray(permissions[r.value]) ? permissions[r.value].length : 0) === ALL_PAGES.length ? t('Deselectează', 'Uncheck') : t('Selectează tot', 'Check all')}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {ALL_PAGES.map((page, idx) => (
+                                        <tr key={page.path} style={{ borderBottom: idx < ALL_PAGES.length - 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none' }}
+                                            onMouseOver={e => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'}
+                                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+                                            <td style={{ padding: '10px 16px', fontWeight: '600', color: colors.text, position: 'sticky', left: 0, background: isDark ? colors.card : '#fff', zIndex: 1 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '16px' }}>{page.icon}</span>
+                                                    <div>
+                                                        <div style={{ fontSize: '13px' }}>{page.label}</div>
+                                                        <div style={{ fontSize: '10px', color: colors.textSecondary, fontFamily: 'monospace' }}>{page.path}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            {ROLES.map(r => {
+                                                const allowed = isPageAllowed(r.value, page.path)
+                                                const isAdmin = r.value === 'admin'
+                                                return (
+                                                    <td key={r.value} style={{ padding: '10px 8px', textAlign: 'center' }}>
+                                                        <button onClick={() => togglePage(r.value, page.path)} disabled={isAdmin}
+                                                            style={{ width: 32, height: 32, borderRadius: '8px', border: 'none', cursor: isAdmin ? 'default' : 'pointer', background: allowed ? `${r.color}18` : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'), color: allowed ? r.color : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'), fontSize: '16px', lineHeight: 1, transition: 'all 0.15s', opacity: isAdmin ? 0.6 : 1 }}>
+                                                            {allowed ? '✓' : '—'}
+                                                        </button>
+                                                    </td>
+                                                )
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )
+            )}
 
             {/* ══════════════════════════════════════════════════════════════
                 EDIT USER SLIDEOUT

@@ -3,9 +3,10 @@ import { supabase } from '../lib/supabaseClient'
 import { useTheme } from '../lib/ThemeContext'
 import toast, { Toaster } from 'react-hot-toast'
 import { TableSkeleton, CardSkeleton } from '../components/LoadingSkeleton'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
 
 export default function Reports() {
-    const { colors } = useTheme()
+    const { colors, isDark } = useTheme()
     const [activeTab, setActiveTab] = useState('stops')
     const [loading, setLoading] = useState(true)
 
@@ -45,7 +46,7 @@ export default function Reports() {
         try {
             setLoading(true)
             const [stopsRes, radiusRes, ratingRes, productRes] = await Promise.all([
-                supabase.from('stop_events').select('*, restaurants (name, city)')
+                supabase.from('stop_events').select('*, restaurants:restaurant_id (name, city)')
                     .gte('stopped_at', dateFrom).order('stopped_at', { ascending: false }).limit(500),
                 supabase.from('radius_history').select('*, restaurants:restaurant_id (name, city)')
                     .gte('recorded_at', dateFrom).order('recorded_at', { ascending: false }).limit(500),
@@ -146,6 +147,78 @@ export default function Reports() {
             .map(([id, data]) => ({ id, ...data }))
             .sort((a, b) => b.totalLoss - a.totalLoss)
     }, [stopEvents])
+
+    // Charts Data
+    const stopsTimelineData = useMemo(() => {
+        const grouped = {}
+        filteredStops.forEach(e => {
+            const date = new Date(e.stopped_at).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })
+            if (!grouped[date]) grouped[date] = { date, loss: 0, duration: 0 }
+            grouped[date].loss += parseFloat(e.estimated_loss_amount || 0)
+            grouped[date].duration += e.duration_minutes || 0
+        })
+        return Object.values(grouped).reverse()
+    }, [filteredStops])
+
+    const platformLossData = useMemo(() => {
+        const pieData = [
+            { name: 'Glovo', value: 0, color: '#f59e0b' },
+            { name: 'Wolt', value: 0, color: '#0ea5e9' },
+            { name: 'Bolt', value: 0, color: '#10b981' }
+        ]
+        filteredStops.forEach(e => {
+            const loss = parseFloat(e.estimated_loss_amount || 0)
+            const p = pieData.find(x => x.name.toLowerCase() === e.platform?.toLowerCase())
+            if (p) p.value += loss
+        })
+        return pieData.filter(x => x.value > 0)
+    }, [filteredStops])
+
+    const topRestaurantsLossData = useMemo(() => {
+        return comparisonData.map(c => ({
+            name: c.name,
+            Stops: c.totalStops,
+            Loss: c.totalLoss
+        })).slice(0, 10)
+    }, [comparisonData])
+
+    const productsByPlatformData = useMemo(() => {
+        const grouped = { glovo: 0, wolt: 0, bolt: 0 }
+        filteredProducts.forEach(p => {
+            if (p.platform) grouped[p.platform] = (grouped[p.platform] || 0) + 1
+        })
+        return [
+            { name: 'Glovo', ProduseOprite: grouped.glovo, fill: '#f59e0b' },
+            { name: 'Wolt', ProduseOprite: grouped.wolt, fill: '#0ea5e9' },
+            { name: 'Bolt', ProduseOprite: grouped.bolt, fill: '#10b981' }
+        ]
+    }, [filteredProducts])
+
+    const marketingRatingTimeline = useMemo(() => {
+        const grouped = {}
+        filteredRating.forEach(r => {
+            const date = new Date(r.recorded_at).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })
+            if (!grouped[date]) grouped[date] = { date, count: 0, avg: 0, total: 0 }
+            grouped[date].total += parseFloat(r.rating || 0)
+            grouped[date].count += 1
+            grouped[date].avg = Number((grouped[date].total / grouped[date].count).toFixed(2))
+        })
+        return Object.values(grouped).reverse()
+    }, [filteredRating])
+
+    const marketingRadiusPie = useMemo(() => {
+        const changes = { increase: 0, decrease: 0, neutral: 0 }
+        filteredRadius.forEach(r => {
+            if (r.change_type === 'increase') changes.increase++
+            else if (r.change_type === 'decrease') changes.decrease++
+            else changes.neutral++
+        })
+        return [
+            { name: 'Creșteri', value: changes.increase, color: '#10b981' },
+            { name: 'Scăderi', value: changes.decrease, color: '#ef4444' },
+            { name: 'Neschimbat', value: changes.neutral, color: '#64748b' }
+        ].filter(x => x.value > 0)
+    }, [filteredRadius])
 
     // Export CSV
     function exportCSV() {
@@ -394,6 +467,57 @@ export default function Reports() {
                         </div>
                     </div>
 
+                    {/* CHARTS ROW 1 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '24px' }}>
+                        {/* Timeline Chart */}
+                        <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Evoluție Pierderi & Downtime</h3>
+                            {stopsTimelineData.length > 0 ? (
+                            <div style={{ width: '100%', height: 280 }}>
+                                <ResponsiveContainer>
+                                    <LineChart data={stopsTimelineData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
+                                        <XAxis dataKey="date" stroke={colors.textSecondary} fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis yAxisId="left" stroke={colors.textSecondary} fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `${v}RON`} />
+                                        <YAxis yAxisId="right" orientation="right" stroke={colors.textSecondary} fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `${v}m`} />
+                                        <RechartsTooltip cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                                        <Line yAxisId="left" type="monotone" name="Pierderi (RON)" dataKey="loss" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                        <Line yAxisId="right" type="monotone" name="Downtime (min)" dataKey="duration" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                            ) : <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt date pentru istoric pierderi.</div>}
+                        </div>
+
+                        {/* Pie Chart */}
+                        <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Pierderi Per Platformă</h3>
+                            {platformLossData.length > 0 ? (
+                            <div style={{ width: '100%', height: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                <ResponsiveContainer width="100%" height="80%">
+                                    <PieChart>
+                                        <Pie data={platformLossData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                            {platformLossData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip formatter={(value) => `${Number(value).toFixed(0)} RON`} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                                    {platformLossData.map((p, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: colors.textSecondary }}>
+                                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: p.color }} />
+                                            <span>{p.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            ) : <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt pierderi estimate înregistrate.</div>}
+                        </div>
+                    </div>
+
                     {/* STOP Events Table */}
                     <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', overflow: 'hidden' }}>
                         <div style={{ padding: '16px 20px', borderBottom: `0.5px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -505,6 +629,72 @@ export default function Reports() {
                             <div style={labelStyle}>Product Stops</div>
                             <div style={bigNumStyle(colors.orange)}>{marketingStats.productStops}</div>
                             <div style={subtitleStyle}>{marketingStats.productsUnauthorized} unauthorized</div>
+                        </div>
+                    </div>
+
+                    {/* MARKETING CHARTS ROW */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
+                        {/* Rating Timeline */}
+                        <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Evoluție Rating (Medie)</h3>
+                            {marketingRatingTimeline.length > 0 ? (
+                            <div style={{ width: '100%', height: 220 }}>
+                                <ResponsiveContainer>
+                                    <LineChart data={marketingRatingTimeline}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
+                                        <XAxis dataKey="date" stroke={colors.textSecondary} fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis domain={['auto', 'auto']} stroke={colors.textSecondary} fontSize={10} tickLine={false} axisLine={false} />
+                                        <RechartsTooltip cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                        <Line type="monotone" name="Avg Rating" dataKey="avg" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                            ) : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt date despre rating.</div>}
+                        </div>
+
+                        {/* Radius Pie */}
+                        <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Modificări Rază Livrare</h3>
+                            {marketingRadiusPie.length > 0 ? (
+                            <div style={{ width: '100%', height: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                <ResponsiveContainer width="100%" height="80%">
+                                    <PieChart>
+                                        <Pie data={marketingRadiusPie} innerRadius={50} outerRadius={70} paddingAngle={2} dataKey="value">
+                                            {marketingRadiusPie.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip formatter={(value) => `${value} events`} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                    {marketingRadiusPie.map((p, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: colors.textSecondary }}>
+                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+                                            <span>{p.name} ({p.value})</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            ) : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt modificări recente.</div>}
+                        </div>
+
+                        {/* Products Stop Bar */}
+                        <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Produse Oprite / Platformă</h3>
+                            {productsByPlatformData.some(p => p.ProduseOprite > 0) ? (
+                            <div style={{ width: '100%', height: 220 }}>
+                                <ResponsiveContainer>
+                                    <BarChart data={productsByPlatformData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
+                                        <XAxis dataKey="name" stroke={colors.textSecondary} fontSize={11} tickLine={false} axisLine={false} />
+                                        <YAxis stroke={colors.textSecondary} fontSize={11} tickLine={false} axisLine={false} />
+                                        <RechartsTooltip cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                        <Bar dataKey="ProduseOprite" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            ) : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt produse oprite.</div>}
                         </div>
                     </div>
 
@@ -655,6 +845,24 @@ export default function Reports() {
 
             {activeTab === 'comparison' && (
                 <>
+                    {/* COMPARISON CHART */}
+                    <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Top Restaurante cu cele mai mari pierderi (RON)</h3>
+                        {topRestaurantsLossData.length > 0 ? (
+                        <div style={{ width: '100%', height: 320 }}>
+                            <ResponsiveContainer>
+                                <BarChart data={topRestaurantsLossData} layout="vertical" margin={{ left: 50 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke={colors.border} horizontal={false} />
+                                    <XAxis type="number" stroke={colors.textSecondary} fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => `${v}RON`} />
+                                    <YAxis type="category" dataKey="name" stroke={colors.textSecondary} fontSize={11} tickLine={false} axisLine={false} width={120} />
+                                    <RechartsTooltip cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text }} />
+                                    <Bar dataKey="Loss" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={24} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                        ) : <div style={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: 13 }}>Nu sunt date pentru comparație.</div>}
+                    </div>
+
                     <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', overflow: 'hidden' }}>
                         <div style={{ padding: '16px 20px', borderBottom: `0.5px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>Restaurant Comparison</span>

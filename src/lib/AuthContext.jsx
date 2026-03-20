@@ -3,26 +3,27 @@ import { supabase } from './supabaseClient'
 
 const AuthContext = createContext()
 
-// ─── Access matrix: role → allowed base paths ───
-const ROLE_ACCESS = {
-    admin: '*', // all
-    manager: ['/', '/monitoring', '/stop-control', '/marketing', '/competitors', '/brands',
+// ─── Hardcoded fallback: role → allowed base paths ───
+const FALLBACK_ROLE_ACCESS = {
+    admin: '*',
+    manager: ['/', '/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/marketing', '/marketing-analytics', '/marketing-promotions', '/competitors', '/competitor-products', '/brands',
         '/restaurants', '/alerts', '/events', '/reports', '/delivery-zone'],
-    operational: ['/', '/monitoring', '/stop-control', '/restaurants', '/alerts', '/events', '/rules', '/delivery-zone'],
-    marketing: ['/marketing', '/competitors', '/brands'],
-    area_manager: ['/', '/monitoring', '/stop-control', '/restaurants', '/alerts', '/events', '/reports', '/delivery-zone'],
-    manager_restaurant: ['/', '/monitoring', '/stop-control', '/alerts', '/events'],
-    analyst: ['/', '/monitoring', '/competitors', '/brands', '/restaurants', '/alerts', '/reports', '/delivery-zone'],
-    viewer: ['/', '/alerts'],
+    operational: ['/', '/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/restaurants', '/alerts', '/events', '/rules', '/delivery-zone'],
+    marketing: ['/marketing', '/marketing-analytics', '/marketing-promotions', '/competitors', '/competitor-products', '/brands'],
+    area_manager: ['/', '/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/restaurants', '/alerts', '/events', '/reports', '/delivery-zone'],
+    manager_restaurant: ['/', '/dashboard', '/monitoring', '/stop-control', '/stop-preturi', '/stop-istoric', '/alerts', '/events'],
+    analyst: ['/', '/dashboard', '/monitoring', '/competitors', '/competitor-products', '/brands', '/restaurants', '/alerts', '/reports', '/delivery-zone'],
+    viewer: ['/', '/dashboard', '/alerts'],
 }
 
-export function hasRoleAccess(role, path) {
+export function hasRoleAccess(role, path, roleAccess = null) {
     if (!role) return false
-    const allowed = ROLE_ACCESS[role]
+    const access = roleAccess || FALLBACK_ROLE_ACCESS
+    const allowed = access[role]
     if (allowed === '*') return true
     const base = '/' + path.replace(/^\//, '').split('/')[0].split('?')[0]
     const normalized = base === '/' ? '/' : base
-    return (allowed || []).some(p => normalized === p || (normalized === '/' && p === '/'))
+    return (allowed || []).some(p => normalized === p || normalized === '/' + p.replace(/^\//, '').split('/')[0])
 }
 
 export function AuthProvider({ children }) {
@@ -30,8 +31,33 @@ export function AuthProvider({ children }) {
     const [role, setRole] = useState(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isLoadingAuth, setIsLoadingAuth] = useState(true)
+    const [roleAccess, setRoleAccess] = useState(null)
 
     const [dbUser, setDbUser] = useState(null)
+
+    const loadPermissions = useCallback(async () => {
+        try {
+            const { data, error } = await supabase
+                .from('role_permissions')
+                .select('role, allowed_paths')
+            if (error || !data || data.length === 0) {
+                setRoleAccess(null)
+                return
+            }
+            const perms = {}
+            data.forEach(row => {
+                if (row.role === 'admin') {
+                    perms.admin = '*'
+                } else {
+                    perms[row.role] = row.allowed_paths || []
+                }
+            })
+            setRoleAccess(perms)
+        } catch (err) {
+            console.warn('[Auth] Could not load role_permissions:', err.message)
+            setRoleAccess(null)
+        }
+    }, [])
 
     const loadRole = useCallback(async (userId) => {
         if (!userId) { setRole(null); setDbUser(null); return }
@@ -49,6 +75,8 @@ export function AuthProvider({ children }) {
     }, [])
 
     useEffect(() => {
+        loadPermissions()
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
             setIsAuthenticated(!!session)
@@ -64,7 +92,7 @@ export function AuthProvider({ children }) {
         })
 
         return () => subscription.unsubscribe()
-    }, [loadRole])
+    }, [loadRole, loadPermissions])
 
     const login = async (email, password) => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -78,10 +106,12 @@ export function AuthProvider({ children }) {
         setRole(null)
     }
 
-    const hasAccess = (path) => hasRoleAccess(role, path)
+    const hasAccess = (path) => hasRoleAccess(role, path, roleAccess)
+
+    const refreshPermissions = loadPermissions
 
     return (
-        <AuthContext.Provider value={{ user, dbUser, updateDbUser, role, isAuthenticated, isLoadingAuth, login, logout, hasAccess }}>
+        <AuthContext.Provider value={{ user, dbUser, updateDbUser, role, isAuthenticated, isLoadingAuth, login, logout, hasAccess, refreshPermissions }}>
             {children}
         </AuthContext.Provider>
     )
