@@ -1087,37 +1087,46 @@ export default function Marketing() {
                                 const latestAppearance = (brandStats.appearances || []).find(a => a.url && a.platform === detailCompetitor.platform) || (brandStats.appearances || []).find(a => a.url)
                                 const restaurantId = latestAppearance?.id || detailCompetitor.id || null
                                 const defaultUrl = detailCompetitor.url || latestAppearance?.url || ''
-
-                                if (!defaultUrl) return (
-                                    <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: colors.textSecondary }}>
-                                        Niciun meniu disponibil. Rulează o căutare din pagina de rezultate pentru a obține link-ul.
-                                    </div>
-                                )
+                                const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
 
                                 return (
-                                    <div style={{ padding: '24px', textAlign: 'center' }}>
-                                        <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '14px' }}>Niciun produs descărcat încă.</div>
-                                        <button onClick={async () => {
-                                            if (fetchingProducts) return
-                                            setFetchingProducts(true)
-                                            try {
-                                                const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ url: defaultUrl, name: detailCompetitor.name, restaurantId })
-                                                })
-                                                const data = await res.json()
-                                                if (data.success && data.count > 0) {
-                                                    await loadBrandStats(detailCompetitor.name, detailCompetitor.city)
-                                                }
-                                            } catch (e) { console.error(e) }
-                                            finally { setFetchingProducts(false) }
-                                        }} disabled={fetchingProducts}
-                                        style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', cursor: fetchingProducts ? 'not-allowed' : 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                            {fetchingProducts
-                                                ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Se descarcă…</>
-                                                : '🔄 Refresh produse'}
-                                        </button>
+                                    <div style={{ padding: '28px', border: `1px dashed ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`, borderRadius: '12px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                                        <div style={{ fontSize: '28px', flexShrink: 0 }}>🍽️</div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: '600', color: colors.text, marginBottom: '6px', fontSize: '14px' }}>{lang==='en'?'No menu information':'Nicio informație despre meniu'}</div>
+                                            <div style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: '1.6', marginBottom: '14px' }}>
+                                                {lang==='en'
+                                                    ? 'Products are automatically extracted for the first 25 restaurants from Wolt results. You can force extraction manually by pressing the button below.'
+                                                    : <>Produsele se extrag automat pentru <strong>primele 25 restaurante</strong> din rezultatele Wolt.<br />Poți forța extragerea manual apăsând butonul de mai jos.</>}
+                                            </div>
+                                            {defaultUrl ? (
+                                                <button onClick={async () => {
+                                                    if (fetchingProducts) return
+                                                    setFetchingProducts(true)
+                                                    try {
+                                                        const res = await fetch(`${workerUrl}/api/competitive/scrape-restaurant`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ url: defaultUrl, name: detailCompetitor.name, restaurantId })
+                                                        })
+                                                        const data = await res.json()
+                                                        if (data.success && data.count > 0) {
+                                                            await loadBrandStats(detailCompetitor.name, detailCompetitor.city)
+                                                        } else {
+                                                            alert('Fetch eșuat: ' + (data.error || 'fără produse găsite'))
+                                                        }
+                                                    } catch (e) { alert('Eroare: ' + e.message) }
+                                                    finally { setFetchingProducts(false) }
+                                                }} disabled={fetchingProducts}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 18px', borderRadius: '9px', border: 'none', cursor: fetchingProducts ? 'not-allowed' : 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', opacity: fetchingProducts ? 0.7 : 1, transition: 'opacity 0.2s' }}>
+                                                    {fetchingProducts
+                                                        ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Fetching produse...</>
+                                                        : <><span style={{ fontSize: '16px' }}>🔍</span> Fetch produse acum</>}
+                                                </button>
+                                            ) : (
+                                                <div style={{ fontSize: '12px', color: '#ef4444' }}>⚠️ URL Wolt lipsă — rulează o căutare pentru a obține URL-ul restaurantului.</div>
+                                            )}
+                                        </div>
                                     </div>
                                 )
                             })()}
