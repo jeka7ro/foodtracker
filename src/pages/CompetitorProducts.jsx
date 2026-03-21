@@ -8,18 +8,33 @@ const PLATFORM_COLORS = { glovo: '#FFA500', wolt: '#009de0', bolt: '#34D399' }
 const PLATFORM_ICONS = {
     glovo: '🟠', wolt: '🔵', bolt: '🟢'
 }
+const WORKER_URL = import.meta.env.VITE_WORKER_URL || null
 
 function ProductCard({ p, colors, isDark, onOpenModal }) {
     const [imgError, setImgError] = useState(false)
     const [imgLoaded, setImgLoaded] = useState(false)
+    const [useProxy, setUseProxy] = useState(false)
 
     const platformColor = PLATFORM_COLORS[p.platform] || '#8B5CF6'
     const hasImage = p.image_url && !imgError
-    const proxyImage = p.image_url ? `http://localhost:3001/api/img?url=${encodeURIComponent(p.image_url)}` : null
+    // Use direct URL first; if it fails and worker exists, try proxy
+    const directUrl = p.image_url || null
+    const proxyUrl = (p.image_url && WORKER_URL) ? `${WORKER_URL}/api/img?url=${encodeURIComponent(p.image_url)}` : null
+    const imageSrc = useProxy ? proxyUrl : directUrl
+
+    const handleImgError = () => {
+        if (!useProxy && proxyUrl) {
+            // Direct failed, try proxy
+            setUseProxy(true)
+        } else {
+            // Both failed
+            setImgError(true)
+        }
+    }
 
     return (
         <div 
-            onClick={() => onOpenModal(p, proxyImage)}
+            onClick={() => onOpenModal(p, imageSrc)}
             style={{
                 borderRadius: '16px',
                 overflow: 'hidden',
@@ -41,10 +56,11 @@ function ProductCard({ p, colors, isDark, onOpenModal }) {
                             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', opacity: 0.15 }}>🍽️</div>
                         )}
                         <img
-                            src={proxyImage}
+                            src={imageSrc}
                             alt={p.product_name}
-                            onError={() => setImgError(true)}
+                            onError={handleImgError}
                             onLoad={() => setImgLoaded(true)}
+                            referrerPolicy="no-referrer"
                             style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
                         />
                     </>
@@ -365,7 +381,7 @@ export default function CompetitorProducts() {
                     <div style={{ position: 'relative', width: '100%', maxWidth: '500px', background: isDark ? '#1e1e20' : '#ffffff', borderRadius: '24px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
                         {selectedProduct.proxyImage && (
                             <div style={{ position: 'relative', width: '100%', height: '260px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }}>
-                                <img src={selectedProduct.proxyImage} alt={selectedProduct.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <img src={selectedProduct.proxyImage} alt={selectedProduct.product_name} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.6) 100%)' }}></div>
                             </div>
                         )}

@@ -2,7 +2,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 
 /* eslint-disable */
 function getWorkerUrl() { try { return (new Function('return import.meta.env.VITE_WORKER_URL'))() || 'http://localhost:3001' } catch(_) { return 'http://localhost:3001' } }
@@ -44,7 +44,38 @@ const Icon = {
     history: (c='currentColor',s=16) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     home: (c='currentColor',s=14) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>,
     alert: (c='currentColor',s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+    trash: (c='currentColor',s=14) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
     spin: (s=14) => <span style={{display:'inline-block',width:s,height:s,border:`2px solid rgba(255,255,255,0.3)`,borderTopColor:'#fff',borderRadius:'50%',animation:'spin 0.7s linear infinite'}} />,
+}
+
+// ─── Working Hours Helper ────────────────────────────────
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+function isOutsideWorkingHours(stoppedAt, resumedAt, workingHours) {
+    if (!workingHours || !stoppedAt) return false
+    const stopDate = new Date(stoppedAt)
+    const dayName = DAY_NAMES[stopDate.getDay()]
+    const daySchedule = workingHours[dayName]
+    if (!daySchedule || !daySchedule.open || !daySchedule.close) return false
+
+    const [openH, openM] = daySchedule.open.split(':').map(Number)
+    const [closeH, closeM] = daySchedule.close.split(':').map(Number)
+
+    // Build open/close timestamps for the day of the stop
+    const openTime = new Date(stopDate)
+    openTime.setHours(openH, openM, 0, 0)
+    const closeTime = new Date(stopDate)
+    closeTime.setHours(closeH, closeM, 0, 0)
+    // Handle overnight schedule (e.g. open 10:00, close 02:00)
+    if (closeTime <= openTime) closeTime.setDate(closeTime.getDate() + 1)
+
+    const endTime = resumedAt ? new Date(resumedAt) : new Date()
+
+    // If the stop is entirely before opening or entirely after closing → outside
+    if (endTime <= openTime) return true
+    if (stopDate >= closeTime) return true
+
+    return false
 }
 
 function AnimCounter({ value = 0, suffix = '', duration = 700 }) {
@@ -100,6 +131,9 @@ export default function StopControl() {
 
     const [selectedFilter, setSelectedFilter] = useState('all')
     const [platformFilter, setPlatformFilter] = useState('all')
+    const [hideOutsideSchedule, setHideOutsideSchedule] = useState(true)
+    const [deleteConfirm, setDeleteConfirm] = useState(null)
+    const [deleting, setDeleting] = useState(false)
 
     // ─── Product Scanner State ─────────────────────────────
     const [posDiscrepancies, setPosDiscrepancies] = useState([])
@@ -136,7 +170,7 @@ export default function StopControl() {
         queryKey: ['active-stops'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('stop_events').select('*, restaurants(name, city, revenue_per_hour)')
+                .from('stop_events').select('*, restaurants(name, city, revenue_per_hour, working_hours)')
                 .is('resumed_at', null).order('stopped_at', { ascending: false })
             if (error) throw error
             return data || []
@@ -148,8 +182,8 @@ export default function StopControl() {
         queryKey: ['stop-events'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('stop_events').select('*, restaurants(name, city, revenue_per_hour)')
-                .order('stopped_at', { ascending: false }).limit(100)
+                .from('stop_events').select('*, restaurants(name, city, revenue_per_hour, working_hours)')
+                .order('stopped_at', { ascending: false }).limit(200)
             if (error) throw error
             return data || []
         },
@@ -165,11 +199,40 @@ export default function StopControl() {
         onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['active-stops'] }); queryClient.invalidateQueries({ queryKey: ['stop-events'] }) }
     })
 
+    const handleDeleteStop = async () => {
+        if (!deleteConfirm) return
+        setDeleting(true)
+        try {
+            const { error } = await supabase.from('stop_events').delete().eq('id', deleteConfirm)
+            if (error) throw error
+            queryClient.invalidateQueries({ queryKey: ['active-stops'] })
+            queryClient.invalidateQueries({ queryKey: ['stop-events'] })
+        } catch (e) {
+            console.error('Delete stop error:', e)
+        }
+        setDeleting(false)
+        setDeleteConfirm(null)
+    }
+
     // ─── Computed ──────────────────────────────────────────
     const now = new Date()
     const todayStr = now.toISOString().split('T')[0]
-    const todayEvents = stopEvents.filter(e => e.stopped_at?.startsWith(todayStr))
-    const totalActiveLoss = activeStops.reduce((s, e) => {
+
+    // Mark each event with outside_schedule flag
+    const eventsWithSchedule = useMemo(() => stopEvents.map(e => ({
+        ...e,
+        _outsideSchedule: isOutsideWorkingHours(e.stopped_at, e.resumed_at, e.restaurants?.working_hours)
+    })), [stopEvents])
+
+    const activeStopsWithSchedule = useMemo(() => activeStops.map(e => ({
+        ...e,
+        _outsideSchedule: isOutsideWorkingHours(e.stopped_at, e.resumed_at, e.restaurants?.working_hours)
+    })), [activeStops])
+
+    // Filter out outside-schedule from KPI counts
+    const inScheduleActive = activeStopsWithSchedule.filter(e => !e._outsideSchedule)
+    const todayEvents = eventsWithSchedule.filter(e => e.stopped_at?.startsWith(todayStr) && !e._outsideSchedule)
+    const totalActiveLoss = inScheduleActive.reduce((s, e) => {
         const rph = e.restaurants?.revenue_per_hour || 0
         const mins = (Date.now() - new Date(e.stopped_at).getTime()) / 60000
         return s + (rph * mins / 60)
@@ -181,8 +244,11 @@ export default function StopControl() {
         return s + (rph * (endT - startT) / 3600000)
     }, 0)
 
-    const filteredEvents = selectedFilter === 'active' ? activeStops
-        : selectedFilter === 'resolved' ? stopEvents.filter(e => e.resumed_at) : stopEvents
+    const outsideCount = eventsWithSchedule.filter(e => e._outsideSchedule).length
+
+    let filteredEvents = selectedFilter === 'active' ? activeStopsWithSchedule
+        : selectedFilter === 'resolved' ? eventsWithSchedule.filter(e => e.resumed_at) : eventsWithSchedule
+    if (hideOutsideSchedule) filteredEvents = filteredEvents.filter(e => !e._outsideSchedule)
     const displayEvents = platformFilter === 'all' ? filteredEvents
         : filteredEvents.filter(e => e.platform === platformFilter)
 
@@ -205,16 +271,16 @@ export default function StopControl() {
     const kpiCards = [
         {
             label: lang === 'en' ? 'Active Stops' : 'Restaurante Oprite (Total)',
-            value: activeStops.length,
-            sub: activeStops.length > 0 ? (lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'en' ? 'all good' : 'totul funcționează'),
-            color: activeStops.length > 0 ? '#FF453A' : '#34C759',
-            bg: activeStops.length > 0 ? 'rgba(255,69,58,0.12)' : 'rgba(52,199,89,0.12)',
-            icon: Icon.stop(activeStops.length > 0 ? '#FF453A' : '#34C759', 20),
+            value: inScheduleActive.length,
+            sub: inScheduleActive.length > 0 ? (lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'en' ? 'all good' : 'totul funcționează'),
+            color: inScheduleActive.length > 0 ? '#FF453A' : '#34C759',
+            bg: inScheduleActive.length > 0 ? 'rgba(255,69,58,0.12)' : 'rgba(52,199,89,0.12)',
+            icon: Icon.stop(inScheduleActive.length > 0 ? '#FF453A' : '#34C759', 20),
         },
         {
-            label: lang === 'en' ? 'Stops Today' : 'Opriri Azi (Istoric)',
+            label: lang === 'en' ? 'Stops Today' : 'Opriri Azi (în program)',
             value: todayEvents.length,
-            sub: lang === 'en' ? 'in the last 24h' : 'în ultimele 24h',
+            sub: lang === 'en' ? 'during working hours' : 'în timpul programului de lucru',
             color: '#8B5CF6',
             bg: 'rgba(139,92,246,0.12)',
             icon: Icon.clock('#8B5CF6', 20),
@@ -379,6 +445,38 @@ export default function StopControl() {
                 </div>
             )}
 
+            {/* ══ DELETE CONFIRMATION MODAL ══ */}
+            {deleteConfirm && (
+                <>
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 1000 }} onClick={() => !deleting && setDeleteConfirm(null)} />
+                    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 1001, ...glass, padding: '28px 32px', width: '400px', maxWidth: '90vw' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <div style={{ width: 40, height: 40, borderRadius: '12px', background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {Icon.trash('#ef4444', 18)}
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '16px', fontWeight: '800', color: colors.text }}>
+                                    {lang === 'en' ? 'Delete stop event?' : 'Șterge evenimentul de oprire?'}
+                                </div>
+                                <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '2px' }}>
+                                    {lang === 'en' ? 'This action cannot be undone' : 'Această acțiune nu poate fi anulată'}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setDeleteConfirm(null)} disabled={deleting}
+                                style={{ ...btnBase, padding: '10px 20px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: colors.textSecondary, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}` }}>
+                                {lang === 'en' ? 'Cancel' : 'Anulează'}
+                            </button>
+                            <button onClick={handleDeleteStop} disabled={deleting}
+                                style={{ ...btnBase, padding: '10px 20px', background: deleting ? 'rgba(239,68,68,0.4)' : 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff', boxShadow: '0 4px 14px rgba(239,68,68,0.35)' }}>
+                                {deleting ? (lang === 'en' ? 'Deleting...' : 'Se șterge...') : (lang === 'en' ? 'Delete' : 'Șterge')}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
             {/* ══ EVENTS TABLE ══ */}
             <div style={{ ...glass, animation: 'fadeUp 0.3s ease 0.35s both' }}>
                 {/* Filters */}
@@ -388,6 +486,15 @@ export default function StopControl() {
                             <button key={v} onClick={() => setSelectedFilter(v)} style={filterBtn(selectedFilter === v)}>{l}</button>
                         ))}
                     </div>
+                    {/* Outside Schedule toggle */}
+                    <button onClick={() => setHideOutsideSchedule(h => !h)}
+                        style={{ ...btnBase, padding: '6px 14px', fontSize: '12px', borderRadius: '8px',
+                            background: hideOutsideSchedule ? (isDark ? 'rgba(255,149,0,0.15)' : 'rgba(255,149,0,0.1)') : 'transparent',
+                            color: hideOutsideSchedule ? '#FF9500' : colors.textSecondary,
+                            border: hideOutsideSchedule ? '1px solid rgba(255,149,0,0.3)' : `1px solid transparent`,
+                            fontWeight: hideOutsideSchedule ? '700' : '500' }}>
+                        🕐 {lang === 'en' ? `Hide outside schedule (${outsideCount})` : `Ascunde în afara programului (${outsideCount})`}
+                    </button>
                     <div style={{ flex: 1 }} />
                     <div style={{ display: 'flex', gap: '4px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', padding: '3px', borderRadius: '10px' }}>
                         {[['all', lang === 'en' ? 'All' : 'Toate'], ['glovo', 'Glovo'], ['wolt', 'Wolt'], ['bolt', 'Bolt']].map(([v, l]) => (
@@ -416,24 +523,28 @@ export default function StopControl() {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                                {['Restaurant', lang === 'en' ? 'Platform' : 'Platforma', lang === 'en' ? 'Type' : 'Tip', lang === 'en' ? 'Started' : 'Inceput', lang === 'en' ? 'Duration' : 'Durata', 'Status'].map(h => (
-                                    <th key={h} style={{ padding: '12px 20px', textAlign: h === 'Restaurant' ? 'left' : 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
+                                {['Restaurant', lang === 'en' ? 'Platform' : 'Platforma', lang === 'en' ? 'Type' : 'Tip', lang === 'en' ? 'Started' : 'Inceput', lang === 'en' ? 'Duration' : 'Durata', 'Status', ''].map((h, hi) => (
+                                    <th key={hi} style={{ padding: '12px 20px', textAlign: h === 'Restaurant' ? 'left' : 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', width: h === '' ? '40px' : 'auto' }}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
                             {displayEvents.map((e, i) => {
                                 const isActive = !e.resumed_at
+                                const isOutside = e._outsideSchedule
                                 const startT2 = new Date(e.stopped_at).getTime()
                                 const endT2 = e.resumed_at ? new Date(e.resumed_at).getTime() : now.getTime()
                                 const mins = (endT2 - startT2) / 60000
                                 const rph = e.restaurants?.revenue_per_hour || 0
                                 const loss = rph * mins / 60
                                 return (
-                                    <tr key={e.id} className="sc-row" style={{ borderBottom: i < displayEvents.length - 1 ? `0.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none' }}>
+                                    <tr key={e.id} className="sc-row" style={{ borderBottom: i < displayEvents.length - 1 ? `0.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none', opacity: isOutside ? 0.5 : 1 }}>
                                         <td style={{ padding: '13px 20px' }}>
                                             <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{e.restaurants?.name || '—'}</div>
-                                            <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{e.restaurants?.city}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                <span style={{ fontSize: '11px', color: colors.textSecondary }}>{e.restaurants?.city}</span>
+                                                {isOutside && <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,149,0,0.12)', color: '#FF9500', whiteSpace: 'nowrap' }}>ÎN AFARA PROGRAMULUI</span>}
+                                            </div>
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
                                             {e.platform ? (
@@ -453,10 +564,18 @@ export default function StopControl() {
                                             {formatDuration(mins)}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', background: isActive ? 'rgba(255,69,58,0.1)' : 'rgba(52,199,89,0.1)', color: isActive ? '#FF453A' : '#34C759' }}>
-                                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#FF453A' : '#34C759', display: 'inline-block', animation: isActive ? 'pulse-dot 2s ease infinite' : 'none' }} />
-                                                {isActive ? (lang === 'en' ? 'Active' : 'Activ') : (lang === 'en' ? 'Resolved' : 'Rezolvat')}
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', background: isOutside ? 'rgba(255,149,0,0.1)' : isActive ? 'rgba(255,69,58,0.1)' : 'rgba(52,199,89,0.1)', color: isOutside ? '#FF9500' : isActive ? '#FF453A' : '#34C759' }}>
+                                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOutside ? '#FF9500' : isActive ? '#FF453A' : '#34C759', display: 'inline-block', animation: isActive && !isOutside ? 'pulse-dot 2s ease infinite' : 'none' }} />
+                                                {isOutside ? (lang === 'en' ? 'Outside' : 'Afara prog.') : isActive ? (lang === 'en' ? 'Active' : 'Activ') : (lang === 'en' ? 'Resolved' : 'Rezolvat')}
                                             </span>
+                                        </td>
+                                        <td style={{ padding: '13px 8px', textAlign: 'center' }}>
+                                            <button className="btn-h" onClick={() => setDeleteConfirm(e.id)} title={lang === 'en' ? 'Delete' : 'Șterge'}
+                                                style={{ background: 'none', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, borderRadius: '8px', padding: '5px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, transition: 'all 0.15s' }}
+                                                onMouseOver={ev => { ev.currentTarget.style.color = '#ef4444'; ev.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; ev.currentTarget.style.background = 'rgba(239,68,68,0.06)' }}
+                                                onMouseOut={ev => { ev.currentTarget.style.color = colors.textSecondary; ev.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; ev.currentTarget.style.background = 'none' }}>
+                                                {Icon.trash(undefined, 13)}
+                                            </button>
                                         </td>
                                     </tr>
                                 )

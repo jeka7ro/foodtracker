@@ -40,7 +40,17 @@ export function AuthProvider({ children }) {
             const { data, error } = await supabase
                 .from('role_permissions')
                 .select('role, allowed_paths')
-            if (error || !data || data.length === 0) {
+            if (error) {
+                // Table doesn't exist yet — silently fall back to hardcoded defaults
+                if (error.code === '42P01' || error.message?.includes('Not Found') || error.code === 'PGRST116') {
+                    setRoleAccess(null)
+                    return
+                }
+                console.warn('[Auth] role_permissions error:', error.message)
+                setRoleAccess(null)
+                return
+            }
+            if (!data || data.length === 0) {
                 setRoleAccess(null)
                 return
             }
@@ -54,7 +64,7 @@ export function AuthProvider({ children }) {
             })
             setRoleAccess(perms)
         } catch (err) {
-            console.warn('[Auth] Could not load role_permissions:', err.message)
+            // Network or unexpected error — fall back silently
             setRoleAccess(null)
         }
     }, [])
