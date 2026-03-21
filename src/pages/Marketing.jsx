@@ -1083,12 +1083,44 @@ export default function Marketing() {
                                 )
                             })()}
 
-                            {Object.keys(brandStats.priceHistory || {}).length === 0 && (
-                                <div style={{ padding: '28px', textAlign: 'center', fontSize: '13px', color: colors.textSecondary }}>
-                                    <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px', opacity: 0.3 }}>📋</span>
-                                    {lang === 'en' ? 'No menu data yet.' : 'Niciun produs disponibil.'}
-                                </div>
-                            )}
+                            {Object.keys(brandStats.priceHistory || {}).length === 0 && (() => {
+                                const latestAppearance = (brandStats.appearances || []).find(a => a.url && a.platform === detailCompetitor.platform) || (brandStats.appearances || []).find(a => a.url)
+                                const restaurantId = latestAppearance?.id || detailCompetitor.id || null
+                                const defaultUrl = detailCompetitor.url || latestAppearance?.url || ''
+
+                                if (!defaultUrl) return (
+                                    <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: colors.textSecondary }}>
+                                        Niciun meniu disponibil. Rulează o căutare din pagina de rezultate pentru a obține link-ul.
+                                    </div>
+                                )
+
+                                return (
+                                    <div style={{ padding: '24px', textAlign: 'center' }}>
+                                        <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '14px' }}>Niciun produs descărcat încă.</div>
+                                        <button onClick={async () => {
+                                            if (fetchingProducts) return
+                                            setFetchingProducts(true)
+                                            try {
+                                                const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ url: defaultUrl, name: detailCompetitor.name, restaurantId })
+                                                })
+                                                const data = await res.json()
+                                                if (data.success && data.count > 0) {
+                                                    await loadBrandStats(detailCompetitor.name, detailCompetitor.city)
+                                                }
+                                            } catch (e) { console.error(e) }
+                                            finally { setFetchingProducts(false) }
+                                        }} disabled={fetchingProducts}
+                                        style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', cursor: fetchingProducts ? 'not-allowed' : 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                            {fetchingProducts
+                                                ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Se descarcă…</>
+                                                : '🔄 Refresh produse'}
+                                        </button>
+                                    </div>
+                                )
+                            })()}
                         </>)}
 
                         {!loadingStats && !brandStats && (
