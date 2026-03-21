@@ -204,7 +204,7 @@ export default function OwnProducts() {
     const sel = { padding: '7px 10px', borderRadius: '8px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: colors.text, fontSize: '12px', cursor: 'pointer' }
 
     return (
-        <div style={{ padding: '24px 28px', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>

@@ -664,7 +664,7 @@ export default function Marketing() {
     // ─── Early return: show ONLY detail panel when competitor is selected ───
     if (detailCompetitor) {
         return (
-            <div style={{ padding: '0', fontFamily: '-apple-system, BlinkMacSystemFont, \"Inter\", system-ui, sans-serif', minHeight: '100vh', background: isDark ? '#111113' : '#f5f5f7', animation: 'fadeUp 0.2s ease' }}>
+            <div style={{ padding: '0', minHeight: '100vh', background: isDark ? '#111113' : '#f5f5f7', animation: 'fadeUp 0.2s ease' }}>
                 <style>{`
                     @keyframes spin { to { transform: rotate(360deg); } }
                     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -1195,7 +1195,7 @@ export default function Marketing() {
 
 
     return (
-        <div style={{ padding: '24px 32px', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 32px', minHeight: '100vh' }}>
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
                 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

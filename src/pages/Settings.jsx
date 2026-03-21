@@ -247,7 +247,7 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
     }
 
     return (
-        <div style={{ padding: '24px 28px', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>

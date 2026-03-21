@@ -210,7 +210,7 @@ export default function Restaurants() {
     }
 
     return (
-        <div style={{ padding: '24px 32px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+        <div style={{ padding: '24px 32px', }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <div>

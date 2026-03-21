@@ -197,7 +197,7 @@ export default function Discovery() {
     const unsavedCount = results.filter(r => !isUrlAlreadySaved(r.url) && !savedUrls[r.url]).length
 
     return (
-        <div style={{ padding: '24px 32px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+        <div style={{ padding: '24px 32px', }}>
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: colors.text, letterSpacing: '-0.5px' }}>

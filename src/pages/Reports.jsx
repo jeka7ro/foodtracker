@@ -328,7 +328,7 @@ export default function Reports() {
     }
 
     return (
-        <div style={{ padding: '24px 32px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+        <div style={{ padding: '24px 32px', }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>

@@ -328,7 +328,7 @@ export default function Monitoring() {
     return (
         <div style={{
             padding: '24px 32px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
+            
         }}>
             {/* ═══════ GLOBAL CSS ═══════ */}
             <style>{`

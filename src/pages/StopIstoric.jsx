@@ -42,7 +42,7 @@ export default function StopIstoric() {
     }
 
     return (
-        <div style={{ padding: '24px 28px', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>

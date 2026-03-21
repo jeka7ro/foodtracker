@@ -118,7 +118,7 @@ export default function StopPrices() {
     const sel = { padding: '7px 12px', borderRadius: '8px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: colors.text, fontSize: '12px', cursor: 'pointer' }
 
     return (
-        <div style={{ padding: '24px 28px', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
             <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
                     💰 Comparație Prețuri

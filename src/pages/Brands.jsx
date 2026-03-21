@@ -100,13 +100,13 @@ export default function Brands() {
     }
 
     if (loading) return (
-        <div style={{ padding: '32px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+        <div style={{ padding: '32px', }}>
             <div style={{ height: 24, width: 120, borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : '#eee', animation: 'pulse 1.5s ease infinite' }} />
         </div>
     )
 
     return (
-        <div style={{ padding: '28px 32px', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+        <div style={{ padding: '28px 32px', }}>
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
                 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }

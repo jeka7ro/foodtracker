@@ -440,7 +440,7 @@ export default function DeliveryZone() {
         }, {})
 
     return (
-        <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto', }}>
             <style>{`
                 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} } 
                 @keyframes spin { to{transform:rotate(360deg)} }

@@ -290,7 +290,7 @@ export default function StopControl() {
     return (
         <div style={{
             padding: '24px 32px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif',
+            
         }}>
             <style>{`
                 @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }

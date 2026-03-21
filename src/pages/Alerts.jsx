@@ -78,7 +78,7 @@ export default function Alerts() {
     const criticalCount = alerts.filter(a => a.severity === 'critical' && !a.is_resolved).length
 
     return (
-        <div style={{ padding: '24px 32px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+        <div style={{ padding: '24px 32px', }}>
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: colors.text, letterSpacing: '-0.5px' }}>
