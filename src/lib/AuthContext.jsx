@@ -41,12 +41,7 @@ export function AuthProvider({ children }) {
                 .from('role_permissions')
                 .select('role, allowed_paths')
             if (error) {
-                // Table doesn't exist yet — silently fall back to hardcoded defaults
-                if (error.code === '42P01' || error.message?.includes('Not Found') || error.code === 'PGRST116') {
-                    setRoleAccess(null)
-                    return
-                }
-                console.warn('[Auth] role_permissions error:', error.message)
+                // Table doesn't exist yet — silently fall back to defaults
                 setRoleAccess(null)
                 return
             }
