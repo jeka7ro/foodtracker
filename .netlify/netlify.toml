@@ -16,6 +16,7 @@ command = "npm run build"
 NODE_VERSION = "18"
 VITE_SUPABASE_URL = "https://arzxvzjyiwmkxgoagjcq.supabase.co"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyenh2emp5aXdta3hnb2FnamNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTU3NjMsImV4cCI6MjA4ODczMTc2M30.bGsx8wA1EDSXuuQs0keCDOx4L4PPY9Ar3LhVJer7DGM"
+VITE_WORKER_URL = "https://foodtrackerfoodtracker-worker.onrender.com"
 
 [build.processing]
 

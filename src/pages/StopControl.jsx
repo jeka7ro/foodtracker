@@ -5,8 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
 /* eslint-disable */
-function getWorkerUrl() { try { return (new Function('return import.meta.env.VITE_WORKER_URL'))() || 'http://localhost:3001' } catch(_) { return 'http://localhost:3001' } }
-const WORKER_URL = getWorkerUrl()
+const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
 const IS_LOCAL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 const PLATFORM_COLORS = { wolt: '#009de0', glovo: '#FFC244', bolt: '#34D186' }
 
