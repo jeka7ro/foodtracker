@@ -9,7 +9,7 @@ import { SimpleChecker } from './checkers/simple-checker.js'
 import { LossCalculator } from './services/loss-calculator.js'
 import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import { OwnBrandScraper } from './scrapers/own-brand-scraper.js'
-import { getSmartSearchWords } from '../../src/lib/searchUtils.js'
+import { getSmartSearchWords } from './utils/searchUtils.js'
 import { IikoClient } from './services/iiko-client.js'
 
 const ownBrandScraper = new OwnBrandScraper()
