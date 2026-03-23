@@ -155,9 +155,15 @@ export default function StopControl() {
                 const totalDiscrepant = resArray.filter(r => r.discrepancies.length > 0).length
                 const totalProdsStop = resArray.reduce((acc, r) => acc + r.pos_stopped_count, 0)
                 
-                setProductScanMsg({ ok: true, text: lang === 'en'
-                    ? `✅ POS check complete: ${totalRest} restaurants scanned | ${totalProdsStop} products stopped in kitchens | ${totalDiscrepant === 0 ? 'No platform discrepancies!' : `${totalDiscrepant} restaurants with platform errors ⚠️`}`
-                    : `✅ Verificare POS completă: ${totalRest} restaurante scanate | ${totalProdsStop} produse oprite în bucătării | ${totalDiscrepant === 0 ? 'Nicio discrepanță cu platformele!' : `${totalDiscrepant} restaurante cu erori platformă ⚠️`}` })
+                if (totalRest === 0) {
+                    setProductScanMsg({ ok: false, text: lang === 'en'
+                        ? '⚠️ No POS records found. Please configure iiko/Syrve credentials for your restaurants.'
+                        : '⚠️ Niciun restaurant configurat. Adaugă datele de conexiune POS (iiko/Syrve) în pagina Restaurante.' })
+                } else {
+                    setProductScanMsg({ ok: true, text: lang === 'en'
+                        ? `✅ POS scan: ${totalRest} restaurants checked | ${totalProdsStop} products stopped in POS | ${totalDiscrepant === 0 ? 'No platform discrepancies!' : `${totalDiscrepant} errors found ⚠️`}`
+                        : `✅ Scanare POS: ${totalRest} restaurante verificate | ${totalProdsStop} produse oprite în casă | ${totalDiscrepant === 0 ? 'Nicio discrepanță pe platforme!' : `${totalDiscrepant} erori găsite ⚠️`}` })
+                }
             } else {
                 setProductScanMsg({ ok: false, text: data.error || data.message || (lang === 'en' ? 'POS check error' : 'Eroare la verificare POS') })
             }
