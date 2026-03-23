@@ -369,8 +369,8 @@ export default function StopControl() {
                 ))}
             </div>
 
-            {/* ══ PRODUCT AVAILABILITY SCANNER (only on localhost) ══ */}
-            {IS_LOCAL && <div style={{ ...glass, marginBottom: '24px', overflow: 'hidden', animation: 'fadeUp 0.3s ease 0.25s both' }}>
+            {/* ══ PRODUCT AVAILABILITY SCANNER ══ */}
+            <div style={{ ...glass, marginBottom: '24px', overflow: 'hidden', animation: 'fadeUp 0.3s ease 0.25s both' }}>
                 {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 24px', borderBottom: `1px solid ${isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)'}`, background: isDark ? 'rgba(99,102,241,0.05)' : 'rgba(99,102,241,0.03)' }}>
                     <div style={{ width: 38, height: 38, borderRadius: '11px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -433,7 +433,7 @@ export default function StopControl() {
                         })}
                     </div>
                 )}
-            </div>}
+            </div>
 
             {/* ══ ACTIVE STOPS BANNER ══ */}
             {activeStops.length > 0 && (
