@@ -155,12 +155,16 @@ export default function StopControl() {
                 const totalDiscrepant = resArray.filter(r => r.discrepancies.length > 0).length
                 const totalProdsStop = resArray.reduce((acc, r) => acc + r.pos_stopped_count, 0)
                 
-                setProductScanMsg({ ok: true, text: `✅ Verificare POS completă: ${totalRest} restaurante scanate | ${totalProdsStop} produse oprite în bucătării | ${totalDiscrepant === 0 ? 'Nicio discrepanță cu platformele!' : `${totalDiscrepant} restaurante cu erori platformă ⚠️`}` })
+                setProductScanMsg({ ok: true, text: lang === 'en'
+                    ? `✅ POS check complete: ${totalRest} restaurants scanned | ${totalProdsStop} products stopped in kitchens | ${totalDiscrepant === 0 ? 'No platform discrepancies!' : `${totalDiscrepant} restaurants with platform errors ⚠️`}`
+                    : `✅ Verificare POS completă: ${totalRest} restaurante scanate | ${totalProdsStop} produse oprite în bucătării | ${totalDiscrepant === 0 ? 'Nicio discrepanță cu platformele!' : `${totalDiscrepant} restaurante cu erori platformă ⚠️`}` })
             } else {
-                setProductScanMsg({ ok: false, text: data.error || data.message || 'Eroare la verificare POS' })
+                setProductScanMsg({ ok: false, text: data.error || data.message || (lang === 'en' ? 'POS check error' : 'Eroare la verificare POS') })
             }
         } catch (e) {
-            setProductScanMsg({ ok: false, text: e.message })
+            setProductScanMsg({ ok: false, text: lang === 'en'
+                ? '⚠️ Worker server not available. This feature requires the local worker (localhost:3001) to be running.'
+                : '⚠️ Serverul worker nu este disponibil. Această funcție necesită workerul local (localhost:3001) pornit.' })
         }
         finally { setScanningPos(false); setProductScanned(true) }
     }, [])
@@ -373,15 +377,15 @@ export default function StopControl() {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '15px', fontWeight: '700', color: colors.text, marginBottom: '2px' }}>
-                            Sincronizare Meniu (POS vs Platforme)
+                            {lang === 'en' ? 'Menu Sync (POS vs Platforms)' : 'Sincronizare Meniu (POS vs Platforme)'}
                         </div>
                         <div style={{ fontSize: '12px', color: colors.textSecondary }}>
-                            Compară automat produsele oprite direct în casa de marcat (Syrve) cu disponibilitatea lor pe Glovo, Wolt și Bolt.
+                            {lang === 'en' ? 'Automatically compare products stopped in POS (Syrve) with their availability on Glovo, Wolt and Bolt.' : 'Compară automat produsele oprite direct în casa de marcat (Syrve) cu disponibilitatea lor pe Glovo, Wolt și Bolt.'}
                         </div>
                     </div>
                     <button className="btn-h" onClick={verifyPos} disabled={scanningPos}
                         style={{ ...btnBase, padding: '11px 22px', background: scanningPos ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', boxShadow: scanningPos ? 'none' : '0 4px 16px rgba(99,102,241,0.35)', whiteSpace: 'nowrap', flexShrink: 0, cursor: scanningPos ? 'wait' : 'pointer' }}>
-                        {scanningPos ? <>{Icon.spin(14)} Se verifică bucătăriile...</> : <>{Icon.scan('#fff', 14)} Lansați Scanarea Completă</>}
+                        {scanningPos ? <>{Icon.spin(14)} {lang === 'en' ? 'Checking kitchens...' : 'Se verifică bucătăriile...'}</> : <>{Icon.scan('#fff', 14)} {lang === 'en' ? 'Launch Full Scan' : 'Lansați Scanarea Completă'}</>}
                     </button>
                 </div>
 
@@ -404,9 +408,9 @@ export default function StopControl() {
                                         {p.restaurant}
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginBottom: '10px' }}>
-                                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>Stare Casa (Syrve):</span>
+                                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>{lang === 'en' ? 'POS Status (Syrve):' : 'Stare Casa (Syrve):'}</span>
                                         <span style={{ fontSize: '12px', fontWeight: '800', color: p.pos_stopped_count > 0 ? '#f97316' : '#22c55e' }}>
-                                            {p.pos_stopped_count === 0 ? 'Totul Activ' : `${p.pos_stopped_count} oprite`}
+                                            {p.pos_stopped_count === 0 ? (lang === 'en' ? 'All Active' : 'Totul Activ') : `${p.pos_stopped_count} ${lang === 'en' ? 'stopped' : 'oprite'}`}
                                         </span>
                                     </div>
                                     {hasErrors ? (
@@ -420,7 +424,7 @@ export default function StopControl() {
                                         </div>
                                     ) : (
                                         <div style={{ textAlign: 'center', padding: '10px 0', color: '#22c55e' }}>
-                                            ✅ <span style={{ fontSize: '12px', fontWeight: '700' }}>Sincronizare Perfectă</span>
+                                            ✅ <span style={{ fontSize: '12px', fontWeight: '700' }}>{lang === 'en' ? 'Perfect Sync' : 'Sincronizare Perfectă'}</span>
                                         </div>
                                     )}
                                 </div>
@@ -449,12 +453,12 @@ export default function StopControl() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         {stop.platform && <PlatformBadge platform={stop.platform} size={14} />}
                                         <span style={{ fontSize: '11px', color: colors.textSecondary }}>{stop.restaurants?.city}</span>
-                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type === 'full' ? 'TOT RESTAURANTUL OPRIT (ÎNCHIS)' : stop.stop_type === 'radius' ? 'RAZĂ LIVRARE REDUSĂ' : stop.stop_type}</span>}
+                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type === 'full' ? (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET') : stop.stop_type === 'radius' ? (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ') : stop.stop_type}</span>}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '2px' }}>A fost închis pe <strong style={{color: colors.text}}>{new Date(stop.stopped_at).toLocaleString('ro-RO', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong></div>
-                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>Timp scurs: {formatDuration(mins)}</div>
+                                    <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '2px' }}>{lang === 'en' ? 'Stopped on' : 'A fost închis pe'} <strong style={{color: colors.text}}>{new Date(stop.stopped_at).toLocaleString(lang === 'en' ? 'en-US' : 'ro-RO', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong></div>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>{lang === 'en' ? 'Elapsed:' : 'Timp scurs:'} {formatDuration(mins)}</div>
                                 </div>
                                 {!stop.authorized && (
                                     <button className="btn-h" onClick={() => authorizeMutation.mutate(stop.id)}
@@ -532,7 +536,7 @@ export default function StopControl() {
                 {loadingEvents ? (
                     <div style={{ padding: '48px', textAlign: 'center', color: colors.textSecondary }}>
                         <div style={{ width: 28, height: 28, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 12px' }} />
-                        <div style={{ fontSize: '13px' }}>Se incarca...</div>
+                        <div style={{ fontSize: '13px' }}>{lang === 'en' ? 'Loading...' : 'Se incarca...'}</div>
                     </div>
                 ) : displayEvents.length === 0 ? (
                     <div style={{ padding: '48px', textAlign: 'center' }}>
@@ -566,7 +570,7 @@ export default function StopControl() {
                                             <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{e.restaurants?.name || '—'}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                                 <span style={{ fontSize: '11px', color: colors.textSecondary }}>{e.restaurants?.city}</span>
-                                                {isOutside && <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,149,0,0.12)', color: '#FF9500', whiteSpace: 'nowrap' }}>ÎN AFARA PROGRAMULUI</span>}
+                                                {isOutside && <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,149,0,0.12)', color: '#FF9500', whiteSpace: 'nowrap' }}>{lang === 'en' ? 'OUTSIDE SCHEDULE' : 'ÎN AFARA PROGRAMULUI'}</span>}
                                             </div>
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
@@ -578,7 +582,7 @@ export default function StopControl() {
                                             ) : '—'}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
-                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type === 'full' ? 'ÎNCHIS COMPLET' : e.stop_type === 'radius' ? 'RAZĂ LIVRARE REDUSĂ' : e.stop_type}</span>}
+                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type === 'full' ? (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET') : e.stop_type === 'radius' ? (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ') : e.stop_type}</span>}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center', fontSize: '12px', color: colors.textSecondary, whiteSpace: 'nowrap' }}>
                                             {new Date(e.stopped_at).toLocaleString('ro-RO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}

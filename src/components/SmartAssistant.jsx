@@ -5,6 +5,8 @@ import { useLanguage } from '../lib/LanguageContext'
 export default function SmartAssistant() {
     const { colors, isDark } = useTheme()
     const { lang } = useLanguage()
+    const ro = lang !== 'en'
+    const workerUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WORKER_URL) || 'http://localhost:3001'
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState([
         { role: 'assistant', text: lang === 'en' ? "Hello! I'm your AI business analyst. How can I help you today? You can ask me about competitor prices, platform analytics, or simply how to use the app." : 'Salut! Sunt asistentul tău de analiză business. Cum te pot ajuta azi? Mă poți întreba despre prețurile concurenților, analize sau doar cum să folosești platforma.' }
@@ -32,7 +34,7 @@ export default function SmartAssistant() {
         setIsTyping(true)
 
         try {
-            const res = await fetch('http://localhost:3001/api/ai-chat', {
+            const res = await fetch(`${workerUrl}/api/ai-chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: textToUse, lang })
@@ -46,7 +48,7 @@ export default function SmartAssistant() {
         }
     }
 
-    const ro = lang !== 'en'
+
 
 
     return (
