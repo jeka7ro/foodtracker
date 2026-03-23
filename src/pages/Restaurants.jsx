@@ -720,6 +720,85 @@ export default function Restaurants() {
                                         Active monitoring
                                     </label>
                                 </div>
+
+                                {/* ── Working Hours Schedule ── */}
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '10px' }}>
+                                        Program de lucru
+                                    </label>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        {[
+                                            { key: 'monday', label: 'Luni' },
+                                            { key: 'tuesday', label: 'Marți' },
+                                            { key: 'wednesday', label: 'Miercuri' },
+                                            { key: 'thursday', label: 'Joi' },
+                                            { key: 'friday', label: 'Vineri' },
+                                            { key: 'saturday', label: 'Sâmbătă' },
+                                            { key: 'sunday', label: 'Duminică' },
+                                        ].map(day => {
+                                            const dayData = formData.working_hours?.[day.key] || {}
+                                            const isClosed = dayData.closed === true
+                                            return (
+                                                <div key={day.key} style={{
+                                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                                    padding: '6px 10px', borderRadius: '8px',
+                                                    background: isClosed ? (colors.bg) : 'transparent',
+                                                    opacity: isClosed ? 0.5 : 1,
+                                                }}>
+                                                    <span style={{ width: '72px', fontSize: '12px', fontWeight: '600', color: colors.text }}>{day.label}</span>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.open || '10:00'}
+                                                        disabled={isClosed}
+                                                        onChange={(e) => {
+                                                            const wh = { ...formData.working_hours }
+                                                            wh[day.key] = { ...wh[day.key], open: e.target.value }
+                                                            setFormData({ ...formData, working_hours: wh })
+                                                        }}
+                                                        style={{
+                                                            padding: '5px 8px', borderRadius: '6px', fontSize: '12px',
+                                                            border: `1px solid ${colors.border}`, background: colors.bg,
+                                                            color: colors.text, outline: 'none', width: '95px',
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '11px', color: colors.textSecondary }}>—</span>
+                                                    <input
+                                                        type="time"
+                                                        value={dayData.close || '23:00'}
+                                                        disabled={isClosed}
+                                                        onChange={(e) => {
+                                                            const wh = { ...formData.working_hours }
+                                                            wh[day.key] = { ...wh[day.key], close: e.target.value }
+                                                            setFormData({ ...formData, working_hours: wh })
+                                                        }}
+                                                        style={{
+                                                            padding: '5px 8px', borderRadius: '6px', fontSize: '12px',
+                                                            border: `1px solid ${colors.border}`, background: colors.bg,
+                                                            color: colors.text, outline: 'none', width: '95px',
+                                                        }}
+                                                    />
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', cursor: 'pointer', fontSize: '11px', color: colors.textSecondary, whiteSpace: 'nowrap' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isClosed}
+                                                            onChange={(e) => {
+                                                                const wh = { ...formData.working_hours }
+                                                                if (e.target.checked) {
+                                                                    wh[day.key] = { closed: true }
+                                                                } else {
+                                                                    wh[day.key] = { open: '10:00', close: '23:00' }
+                                                                }
+                                                                setFormData({ ...formData, working_hours: wh })
+                                                            }}
+                                                            style={{ width: '13px', height: '13px', accentColor: '#6366F1' }}
+                                                        />
+                                                        Închis
+                                                    </label>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
