@@ -188,7 +188,7 @@ export default function Monitoring() {
         setCheckingId(restaurantId)
         setCheckModal({ open: true, restaurantName: restaurant.name, results: [], progress: 0, total: plats.length, done: false, error: null })
         try {
-            const response = await fetch('http://localhost:3001/api/check-restaurant', {
+            const response = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/check-restaurant`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ restaurantId })
             })
@@ -201,7 +201,7 @@ export default function Monitoring() {
                 setCheckModal(prev => ({ ...prev, done: true, error: (lang === 'en' ? 'Check failed. Status: ' : 'Verificarea a eșuat. Status: ') + response.status }))
             }
         } catch {
-            setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează (localhost:3001)' }))
+            setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează' }))
         } finally { setCheckingId(null) }
     }
 
@@ -209,7 +209,7 @@ export default function Monitoring() {
         setCheckingAll(true)
         setCheckModal({ open: true, restaurantName: 'Toate restaurantele', results: [], progress: 0, total: restaurants.length * 3, done: false, error: null })
         try {
-            const response = await fetch('http://localhost:3001/api/check-all', {
+            const response = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/check-all`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }
             })
             if (response.ok) {
@@ -221,7 +221,7 @@ export default function Monitoring() {
                 setCheckModal(prev => ({ ...prev, done: true, error: 'Verificarea a eșuat.' }))
             }
         } catch {
-            setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează (localhost:3001)' }))
+            setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează' }))
         } finally { setCheckingAll(false) }
     }
 

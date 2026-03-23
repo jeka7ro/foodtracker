@@ -52,7 +52,7 @@ export default function Discovery() {
         setProgress('Starting URL discovery...')
 
         try {
-            const response = await fetch('http://localhost:3001/api/discover-urls', {
+            const response = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/discover-urls`, {
                 method: 'POST'
             })
 

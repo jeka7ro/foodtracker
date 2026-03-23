@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 
-const API = 'http://localhost:3001'
+const API = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
 
 const PLATFORM_COLORS = { wolt: '#009DE0', glovo: '#FFC244', bolt: '#7FBA00' }
 

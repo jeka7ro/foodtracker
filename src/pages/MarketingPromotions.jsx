@@ -117,7 +117,7 @@ export default function MarketingPromotions() {
                         newPrice: currentPrice,
                         oldPrice,
                         discountPercent: simulatedDiscount,
-                        image: p.image_url ? `http://localhost:3001/api/img?url=${encodeURIComponent(p.image_url)}` : null,
+                        image: p.image_url ? `${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/img?url=${encodeURIComponent(p.image_url)}` : null,
                         weight, pieces,
                         date: p.snapshot_date,
                         platformUrl: p.competitor_restaurants?.url || null

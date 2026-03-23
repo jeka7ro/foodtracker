@@ -493,7 +493,7 @@ export default function Marketing() {
 
         try {
             // 1. Fire the search (POST)
-            const resp = await fetch('http://localhost:3001/api/competitive/run-search', {
+            const resp = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/run-search`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ searchId })
@@ -504,7 +504,7 @@ export default function Marketing() {
             const totalSteps = startData.totalSteps || 1
 
             // 2. Open SSE stream for progress
-            const es = new EventSource(`http://localhost:3001/api/competitive/progress/${searchId}`)
+            const es = new EventSource(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/progress/${searchId}`)
 
             es.onmessage = (e) => {
                 try {
@@ -592,7 +592,7 @@ export default function Marketing() {
         if (runningSearch) { showToast('O căutare este deja în curs…', 'info'); return }
         setRunningSearch('all')
         try {
-            const resp = await fetch('http://localhost:3001/api/competitive/run-all', { method: 'POST' })
+            const resp = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/run-all`, { method: 'POST' })
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
             // Use SSE if available, otherwise poll
             searches.forEach(s => {
@@ -910,7 +910,7 @@ export default function Marketing() {
                                                     <button onClick={async () => {
                                                         setFetchingProducts(true)
                                                         try {
-                                                            const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
+                                                            const res = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/scrape-restaurant`, {
                                                                 method: 'POST',
                                                                 headers: { 'Content-Type': 'application/json' },
                                                                 body: JSON.stringify({ url: latestApp.url, name: detailCompetitor.name, restaurantId: latestApp.id })
@@ -1973,7 +1973,7 @@ export default function Marketing() {
                                                         if (fetchingProducts) return
                                                         setFetchingProducts(true)
                                                         try {
-                                                            const res = await fetch('http://localhost:3001/api/competitive/scrape-restaurant', {
+                                                            const res = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/scrape-restaurant`, {
                                                                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                                                                 body: JSON.stringify({ url: b.latestUrl, name: b.name, restaurantId: null })
                                                             })

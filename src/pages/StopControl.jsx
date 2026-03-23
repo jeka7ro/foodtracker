@@ -164,8 +164,8 @@ export default function StopControl() {
             }
         } catch (e) {
             setProductScanMsg({ ok: false, text: lang === 'en'
-                ? '⚠️ Worker server not available. This feature requires the local worker (localhost:3001) to be running.'
-                : '⚠️ Serverul worker nu este disponibil. Această funcție necesită workerul local (localhost:3001) pornit.' })
+                ? '⚠️ Worker server not available. Please try again later.'
+                : '⚠️ Serverul worker nu este disponibil. Încercați din nou mai târziu.' })
         }
         finally { setScanningPos(false); setProductScanned(true) }
     }, [])
