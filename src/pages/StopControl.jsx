@@ -321,6 +321,29 @@ export default function StopControl() {
                 </div>
             </div>
 
+            {/* ══ WARNING: NO WORKING HOURS ══ */}
+            {activeStops.length > 0 && activeStops.every(e => !e.restaurants?.working_hours || Object.keys(e.restaurants.working_hours).length === 0) && (
+                <div style={{
+                    ...glass, padding: '16px 24px', marginBottom: '20px',
+                    border: `1px solid rgba(255,149,0,0.25)`,
+                    background: isDark ? 'rgba(255,149,0,0.06)' : 'rgba(255,149,0,0.04)',
+                    display: 'flex', alignItems: 'center', gap: '14px',
+                    animation: 'fadeUp 0.3s ease',
+                }}>
+                    {Icon.alert('#FF9500', 22)}
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500', marginBottom: '2px' }}>
+                            {lang === 'en' ? 'Working hours not configured' : 'Programul de lucru nu este setat'}
+                        </div>
+                        <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: '1.5' }}>
+                            {lang === 'en'
+                                ? 'Without working hours, all stops are treated as during business hours. Set schedules in Restaurants to accurately filter outside-hours stops and calculate losses.'
+                                : 'Fără program de lucru setat, toate opririle sunt considerate în program. Setează programul la fiecare restaurant din pagina Restaurante pentru a putea diferenția opririle reale de cele din afara programului.'}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ══ KPI CARDS ══ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '16px', marginBottom: '24px' }}>
                 {kpiCards.map((k, i) => (

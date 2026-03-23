@@ -10,7 +10,6 @@ headers = []
 publish = "/Users/eugeniucazmal/dev/aggregator-monitor-fba2535a/dist"
 publishOrigin = "config"
 commandOrigin = "config"
-base = "/Users/eugeniucazmal/dev/aggregator-monitor-fba2535a"
 command = "npm run build"
 
 [build.environment]
