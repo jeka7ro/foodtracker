@@ -115,7 +115,8 @@ export class IikoClient {
                     is_available: !product.isDeleted,
                     sku: product.code,
                     weight: product.weight,
-                    measure_unit: product.measureUnit
+                    measure_unit: product.measureUnit,
+                    image: product.imageLinks?.[0] || null
                 })
             }
 

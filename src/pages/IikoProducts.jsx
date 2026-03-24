@@ -9,24 +9,40 @@ const SpinIcon = () => (
     <span style={{ display: 'inline-block', width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
 )
 
+const SpinIconSmall = () => (
+    <span style={{ display: 'inline-block', width: 10, height: 10, border: '2px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+)
+
 export default function IikoProducts() {
     const { colors, isDark } = useTheme()
     const { lang } = useLanguage()
     
     const [brands, setBrands] = useState([])
     const [restaurants, setRestaurants] = useState([])
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [errorMsg, setErrorMsg] = useState(null)
     
+    // Read initial products from localStorage
+    const [products, setProducts] = useState(() => {
+        try {
+            const cached = localStorage.getItem('iiko_products_cache')
+            return cached ? JSON.parse(cached) : []
+        } catch(e) { return [] }
+    })
+    
+    // Background sync state
+    const [isSyncing, setIsSyncing] = useState(false)
+    const [errorMsg, setErrorMsg] = useState(null)
+    const [lastSync, setLastSync] = useState(() => {
+        return localStorage.getItem('iiko_products_last_sync') || null
+    })
+
     // Filters
     const [selectedBrand, setSelectedBrand] = useState('all')
     const [selectedCity, setSelectedCity] = useState('all')
     const [search, setSearch] = useState('')
     
-    // UI state
-    const [collapsedCities, setCollapsedCities] = useState({})
-    const [collapsedRestaurants, setCollapsedRestaurants] = useState({})
+    // Pagination
+    const [pageSize, setPageSize] = useState(50)
+    const [currentPage, setCurrentPage] = useState(1)
 
     useEffect(() => {
         Promise.all([
@@ -40,37 +56,58 @@ export default function IikoProducts() {
 
     const cities = useMemo(() => [...new Set(restaurants.map(r => r.city).filter(Boolean))].sort(), [restaurants])
 
-    const loadProducts = useCallback(async () => {
-        setLoading(true)
-        setErrorMsg(null)
+    const loadProducts = useCallback(async (background = false) => {
+        setIsSyncing(true)
+        if (!background) setErrorMsg(null)
         try {
-            const params = new URLSearchParams()
-            if (selectedCity !== 'all') params.append('city', selectedCity)
-            if (selectedBrand !== 'all') {
-                const brand = brands.find(b => b.id === selectedBrand)
-                if (brand) params.append('brand', brand.name)
-            }
-            
-            const res = await fetch(`${WORKER_URL}/api/pos/products?${params.toString()}`)
+            // Fetch everything and filter locally for better UX
+            const res = await fetch(`${WORKER_URL}/api/pos/products`)
             const data = await res.json()
             if (!data.success) throw new Error(data.error || data.message || 'Eroare la preluarea datelor')
             
             setProducts(data.results || [])
+            localStorage.setItem('iiko_products_cache', JSON.stringify(data.results || []))
+            
+            const now = new Date().toLocaleString()
+            setLastSync(now)
+            localStorage.setItem('iiko_products_last_sync', now)
         } catch (err) {
-            setErrorMsg(err.message)
-            setProducts([])
+            if (!background) setErrorMsg(err.message)
         } finally {
-            setLoading(false)
+            setIsSyncing(false)
         }
-    }, [selectedCity, selectedBrand, brands])
+    }, [])
 
     useEffect(() => {
-        loadProducts()
-    }, [loadProducts])
+        const cached = localStorage.getItem('iiko_products_cache')
+        if (!cached || JSON.parse(cached).length === 0) {
+            loadProducts(false)
+        } else {
+            loadProducts(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [selectedBrand, selectedCity, search, pageSize])
 
-    // Grouping
-    const grouped = useMemo(() => {
+    // Filter products
+    const filteredProducts = useMemo(() => {
         let list = products
+        
+        if (selectedCity !== 'all') {
+            list = list.filter(p => p.city === selectedCity)
+        }
+        
+        if (selectedBrand !== 'all') {
+            const brand = brands.find(b => b.id === selectedBrand)
+            if (brand) {
+                list = list.filter(p => p.brand_name === brand.name)
+            }
+        }
+        
         if (search) {
             const q = search.toLowerCase().trim()
             list = list.filter(p => 
@@ -80,43 +117,91 @@ export default function IikoProducts() {
             )
         }
         
-        const byCity = {}
-        list.forEach(p => {
-            const city = p.city || 'Necunoscut'
-            const rid = p.restaurant_id
-            if (!byCity[city]) byCity[city] = {}
-            if (!byCity[city][rid]) byCity[city][rid] = { name: p.restaurant_name, brand: p.brand_name, items: [] }
-            byCity[city][rid].items.push(p)
+        // Sort by brand
+        return list.sort((a, b) => {
+            const bA = a.brand_name || ''
+            const bB = b.brand_name || ''
+            if (bA !== bB) return bA.localeCompare(bB)
+            
+            const cA = a.city || ''
+            const cB = b.city || ''
+            if (cA !== cB) return cA.localeCompare(cB)
+            
+            const rA = a.restaurant_name || ''
+            const rB = b.restaurant_name || ''
+            if (rA !== rB) return rA.localeCompare(rB)
+            
+            return (a.name || '').localeCompare(b.name || '')
         })
-        
-        return Object.entries(byCity).sort(([a], [b]) => a.localeCompare(b)).map(([city, restMap]) => ({
-            city,
-            restaurants: Object.entries(restMap).map(([rid, info]) => ({
-                rid,
-                name: info.name,
-                brand: info.brand,
-                items: info.items.sort((a,b) => (a.category || '').localeCompare(b.category || '') || (a.name || '').localeCompare(b.name || ''))
-            })).sort((a,b) => a.name.localeCompare(b.name))
-        }))
-    }, [products, search])
+    }, [products, search, selectedCity, selectedBrand, brands])
 
-    const toggleCity = (city) => setCollapsedCities(prev => ({ ...prev, [city]: !prev[city] }))
-    const toggleRest = (rid) => setCollapsedRestaurants(prev => ({ ...prev, [rid]: !prev[rid] }))
+    const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1
+    const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
-    const sel = { padding: '7px 10px', borderRadius: '8px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: colors.text, fontSize: '12px', cursor: 'pointer' }
+    const sel = { padding: '7px 10px', borderRadius: '8px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: colors.text, fontSize: '13px', cursor: 'pointer', outline: 'none' }
+    
+    // Brand filter rendering
+    const BrandFilter = () => {
+        return (
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+                <button 
+                    onClick={() => setSelectedBrand('all')}
+                    style={{
+                        padding: '8px 16px', borderRadius: '12px', border: `1px solid ${selectedBrand === 'all' ? '#6366f1' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                        background: selectedBrand === 'all' ? (isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.1)') : (isDark ? 'rgba(255,255,255,0.03)' : '#fff'),
+                        color: selectedBrand === 'all' ? '#6366f1' : colors.textSecondary,
+                        fontWeight: selectedBrand === 'all' ? '700' : '500', cursor: 'pointer', whiteSpace: 'nowrap',
+                        display: 'flex', alignItems: 'center'
+                    }}
+                >
+                    {lang === 'ru' ? 'Все бренды' : lang === 'en' ? 'All brands' : 'Toate brandurile'}
+                </button>
+                {brands.map(b => (
+                    <button 
+                        key={b.id} 
+                        onClick={() => setSelectedBrand(b.id)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '6px 14px', borderRadius: '12px', 
+                            border: `1px solid ${selectedBrand === b.id ? '#6366f1' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                            background: selectedBrand === b.id ? (isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.1)') : (isDark ? 'rgba(255,255,255,0.03)' : '#fff'),
+                            color: selectedBrand === b.id ? '#6366f1' : colors.textSecondary,
+                            fontWeight: selectedBrand === b.id ? '700' : '500', cursor: 'pointer', whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {b.logo_url ? (
+                            <img src={b.logo_url} alt={b.name} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+                        )}
+                        {b.name}
+                    </button>
+                ))}
+            </div>
+        )
+    }
 
     return (
-        <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 28px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>{lang === 'ru' ? 'Продукты POS (iiko)' : lang === 'en' ? 'POS Products (iiko)' : 'Produse POS (iiko)'}</h1>
+                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {lang === 'ru' ? 'Продукты POS (iiko)' : lang === 'en' ? 'POS Products (iiko)' : 'Produse POS (iiko)'}
+                        {isSyncing && (
+                            <div style={{ fontSize: '11px', fontWeight: '500', color: '#6366f1', background: 'rgba(99,102,241,0.1)', padding: '4px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <SpinIconSmall />
+                                {lang === 'ru' ? 'Синхронизация...' : lang === 'en' ? 'Syncing...' : 'Sincronizare în fundal...'}
+                            </div>
+                        )}
+                    </h1>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
-                        Sincronizare în timp real a meniului direct din sistemul POS.
+                        {lang === 'ru' ? 'Синхронизация в реальном времени из iiko. ' : lang === 'en' ? 'Realtime sync from iiko. ' : 'Sincronizare în timp real din iiko. '}
+                        {lastSync && `Ultima sincronizare: ${lastSync}`}
                     </p>
                 </div>
-                <button onClick={loadProducts} disabled={loading}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', border: 'none', background: loading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: loading ? 'wait' : 'pointer', boxShadow: loading ? 'none' : '0 3px 12px rgba(99,102,241,0.35)' }}>
-                    {loading ? <><SpinIcon /> Se sincronizează...</> : 'Sincronizează Acum'}
+                <button onClick={() => loadProducts(false)} disabled={isSyncing}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', border: 'none', background: isSyncing ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: isSyncing ? 'wait' : 'pointer', boxShadow: isSyncing ? 'none' : '0 3px 12px rgba(99,102,241,0.35)' }}>
+                    {isSyncing ? <><SpinIcon /> Se sincronizează...</> : 'Forțează Sincronizarea'}
                 </button>
             </div>
 
@@ -126,114 +211,152 @@ export default function IikoProducts() {
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px', padding: '10px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}` }}>
-                <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={sel}>
-                    <option value="all">{lang === 'ru' ? 'Все бренды' : lang === 'en' ? 'All brands' : 'Toate brandurile'}</option>
-                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-                <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} style={sel}>
-                    <option value="all">{lang === 'ru' ? 'Все города' : lang === 'en' ? 'All cities' : 'Toate orașele'}</option>
-                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={lang === 'ru' ? 'Поиск продукта или кода...' : lang === 'en' ? 'Search product or code...' : 'Caută produs sau cod...'} style={{ ...sel, minWidth: '200px' }} />
+            <BrandFilter />
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '12px 16px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}` }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} style={sel}>
+                        <option value="all">{lang === 'ru' ? 'Все города' : lang === 'en' ? 'All cities' : 'Toate orașele'}</option>
+                        {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder={lang === 'ru' ? 'Поиск продукта или кода...' : lang === 'en' ? 'Search product or code...' : 'Caută produs sau cod...'} style={{ ...sel, minWidth: '220px' }} />
+                </div>
                 
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <button onClick={() => setCollapsedCities({})} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Развернуть всё' : lang === 'en' ? 'Expand all' : 'Extinde tot'}</button>
-                    <button onClick={() => {
-                        const all = {}
-                        grouped.forEach(g => { all[g.city] = true; g.restaurants.forEach(r => { all[r.rid] = true }) })
-                        setCollapsedCities(all); setCollapsedRestaurants(all)
-                    }} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Свернуть всё' : lang === 'en' ? 'Collapse all' : 'Restrânge tot'}</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '13px', color: colors.textSecondary, fontWeight: '500' }}>
+                        Total: {filteredProducts.length} produse
+                    </span>
+                    <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} style={{ ...sel, padding: '5px 8px' }}>
+                        <option value={10}>10 / pagină</option>
+                        <option value={20}>20 / pagină</option>
+                        <option value={50}>50 / pagină</option>
+                        <option value={100}>100 / pagină</option>
+                        <option value={500}>500 / pagină</option>
+                    </select>
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>
-                    <div style={{ width: 36, height: 36, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 16px' }} />
-                    <div>{lang === 'ru' ? 'Загрузка продуктов из iiko...' : lang === 'en' ? 'Loading products from iiko...' : 'Se încarcă produsele din iiko...'}</div>
+            {products.length === 0 && !isSyncing ? (
+                <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '14px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
+                    Apasă pe "Forțează Sincronizarea" pentru a aduce produsele.
                 </div>
-            ) : grouped.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '14px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
                     Nu au fost găsite produse pentru filtrele selectate.
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {grouped.map(({ city, restaurants }) => {
-                        const cityCollapsed = collapsedCities[city]
-                        const totalProds = restaurants.reduce((sum, r) => sum + r.items.length, 0)
-                        
-                        return (
-                            <div key={city}>
-                                <button onClick={() => toggleCity(city)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.07)', border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)'}`, borderRadius: cityCollapsed ? '10px' : '10px 10px 0 0', cursor: 'pointer', textAlign: 'left' }}>
-                                    <span style={{ fontSize: '11px', color: '#6366F1', transform: cityCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.15s', display: 'inline-block', lineHeight: 1 }}>▶</span>
-                                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#6366F1', flex: 1 }}>{city}</span>
-                                    <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: '10px' }}>
-                                        {restaurants.length} {lang === 'ru' ? 'ресторанов ' : lang === 'en' ? 'restaurants ' : 'restaurante '}· {totalProds} produse
-                                    </span>
+                <div style={{ flex: 1, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '14px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                            <thead style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+                                <tr>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary, width: '60px', textAlign: 'center' }}>Nr.</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary, width: '70px', textAlign: 'center' }}>{lang === 'ru' ? 'Фото' : lang === 'en' ? 'Photo' : 'Poză'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'ru' ? 'Бренд / Ресторан' : lang === 'en' ? 'Brand / Restaurant' : 'Brand / Restaurant'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'ru' ? 'Продукт' : lang === 'en' ? 'Product' : 'Produs'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'ru' ? 'Категория' : lang === 'en' ? 'Category' : 'Categorie'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'ru' ? 'SKU' : 'SKU / Cod'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'ru' ? 'Размер' : lang === 'en' ? 'Size' : 'Mărime'}</th>
+                                    <th style={{ padding: '12px 16px', fontWeight: '600', color: colors.textSecondary, textAlign: 'right' }}>{lang === 'ru' ? 'Цена POS' : lang === 'en' ? 'POS Price' : 'Preț POS'}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedProducts.map((p, idx) => {
+                                    const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                                    const brandInfo = brands.find(b => b.name === p.brand_name);
+                                    
+                                    return (
+                                        <tr key={`${p.iiko_id}-${p.restaurant_id}-${idx}`} style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, transition: 'background 0.2s' }}>
+                                            <td style={{ padding: '10px 16px', color: colors.textSecondary, textAlign: 'center', fontWeight: '500' }}>
+                                                {rowNum}
+                                            </td>
+                                            <td style={{ padding: '10px 16px', textAlign: 'center' }}>
+                                                {p.image ? (
+                                                    <img src={p.image} alt={p.name} style={{ width: 44, height: 44, borderRadius: '8px', objectFit: 'cover', background: '#fff' }} />
+                                                ) : (
+                                                    <div style={{ width: 44, height: 44, borderRadius: '8px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, fontSize: '10px', margin: '0 auto' }}>-</div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '10px 16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                    {brandInfo?.logo_url && <img src={brandInfo.logo_url} alt="" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} />}
+                                                    <span style={{ fontWeight: '700', color: colors.text }}>{p.brand_name || '-'}</span>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: colors.textSecondary }}>{p.city} • {p.restaurant_name}</div>
+                                            </td>
+                                            <td style={{ padding: '10px 16px', color: colors.text, fontWeight: '600' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.is_available ? '#10b981' : '#ef4444' }} title={p.is_available ? 'Disponibil' : 'Stop-list'} />
+                                                    {p.name}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '10px 16px', color: colors.textSecondary }}>{p.category}</td>
+                                            <td style={{ padding: '10px 16px', color: colors.textSecondary, fontFamily: 'monospace' }}>{p.sku || '-'}</td>
+                                            <td style={{ padding: '10px 16px', color: colors.textSecondary }}>{p.weight ? `${p.weight} ${p.measure_unit || ''}` : '-'}</td>
+                                            <td style={{ padding: '10px 16px', color: colors.text, fontWeight: '800', textAlign: 'right', whiteSpace: 'nowrap' }}>{p.price ? `${p.price.toFixed(2)} RON` : '-'}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.01)' }}>
+                            <div style={{ fontSize: '12px', color: colors.textSecondary }}>
+                                Se afișează {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, filteredProducts.length)} din {filteredProducts.length}
+                            </div>
+                            
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: currentPage === 1 ? colors.textSecondary : colors.text, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                >
+                                    &lt;
                                 </button>
                                 
-                                {!cityCollapsed && (
-                                    <div style={{ border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)'}`, borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
-                                        {restaurants.map((rest, ri) => {
-                                            const restCollapsed = collapsedRestaurants[rest.rid]
-                                            const isLast = ri === restaurants.length - 1
-                                            
-                                            return (
-                                                <div key={rest.rid} style={{ borderBottom: isLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
-                                                    <button onClick={() => toggleRest(rest.rid)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                                                        <span style={{ fontSize: '10px', color: colors.textSecondary, transform: restCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.15s', display: 'inline-block' }}>▶</span>
-                                                        <div style={{ flex: 1 }}>
-                                                            <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{rest.name}</div>
-                                                            <div style={{ fontSize: '11px', color: colors.textSecondary, display: 'flex', gap: '6px', marginTop: '2px' }}>
-                                                                <span style={{ color: '#8b5cf6', fontWeight: '600' }}>{rest.brand}</span>
-                                                            </div>
-                                                        </div>
-                                                        <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '8px' }}>
-                                                            {rest.items.length} produse
-                                                        </span>
-                                                    </button>
-                                                    
-                                                    {!restCollapsed && (
-                                                        <div style={{ padding: '0', background: isDark ? 'rgba(255,255,255,0.01)' : '#fff' }}>
-                                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                                                                <thead>
-                                                                    <tr style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', color: colors.textSecondary, textAlign: 'left' }}>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '30%' }}>{lang === 'ru' ? 'Продукт' : lang === 'en' ? 'Product' : 'Produs'}</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '25%' }}>{lang === 'ru' ? 'Категория' : lang === 'en' ? 'Category' : 'Categorie'}</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>{lang === 'ru' ? 'SKU / Код' : lang === 'en' ? 'SKU / Code' : 'SKU / Cod'}</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>{lang === 'ru' ? 'Размер' : lang === 'en' ? 'Size' : 'Mărime'}</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', textAlign: 'right', width: '15%' }}>{lang === 'ru' ? 'Цена POS' : lang === 'en' ? 'POS Price' : 'Preț POS'}</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {rest.items.map((it, idx) => (
-                                                                        <tr key={it.iiko_id + idx} style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
-                                                                            <td style={{ padding: '8px 16px', color: colors.text, fontWeight: '500' }}>
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: it.is_available ? '#10b981' : '#ef4444' }} title={it.is_available ? 'Доступно' : 'Стоп-лист'} />
-                                                                                    {it.name}
-                                                                                </div>
-                                                                            </td>
-                                                                            <td style={{ padding: '8px 16px', color: colors.textSecondary }}>{it.category}</td>
-                                                                            <td style={{ padding: '8px 16px', color: colors.textSecondary, fontFamily: 'monospace' }}>{it.sku || '-'}</td>
-                                                                            <td style={{ padding: '8px 16px', color: colors.textSecondary }}>{it.weight ? `${it.weight} ${it.measure_unit || ''}` : '-'}</td>
-                                                                            <td style={{ padding: '8px 16px', color: colors.text, fontWeight: '700', textAlign: 'right' }}>{it.price ? `${it.price.toFixed(2)} RON` : '-'}</td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                )}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum = currentPage;
+                                    if (totalPages <= 5) pageNum = i + 1;
+                                    else if (currentPage <= 3) pageNum = i + 1;
+                                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                    else pageNum = currentPage - 2 + i;
+                                    
+                                    if (pageNum > totalPages || pageNum < 1) return null;
+
+                                    return (
+                                        <button 
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            style={{ 
+                                                padding: '6px 12px', borderRadius: '6px', 
+                                                border: `1px solid ${currentPage === pageNum ? '#6366f1' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, 
+                                                background: currentPage === pageNum ? '#6366f1' : isDark ? 'rgba(255,255,255,0.05)' : '#fff', 
+                                                color: currentPage === pageNum ? '#fff' : colors.text, 
+                                                fontWeight: currentPage === pageNum ? '700' : '500',
+                                                cursor: 'pointer' 
+                                            }}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    )
+                                })}
+                                
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: currentPage === totalPages ? colors.textSecondary : colors.text, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                >
+                                    &gt;
+                                </button>
                             </div>
-                        )
-                    })}
+                        </div>
+                    )}
                 </div>
             )}
+            
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     )
