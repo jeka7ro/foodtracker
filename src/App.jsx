@@ -28,6 +28,7 @@ import SmartAssistant from './components/SmartAssistant'
 import MarketingPromotions from './pages/MarketingPromotions'
 import MarketingAnalyticsCity from './pages/MarketingAnalyticsCity'
 import RoleSettings from './pages/RoleSettings'
+import IikoProducts from './pages/IikoProducts'
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -80,7 +81,7 @@ function Layout({ children }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const location = useLocation()
 
-    const isOwnProductsActive = location.pathname === '/own-products' || location.pathname === '/brands' || location.pathname === '/restaurants'
+    const isOwnProductsActive = location.pathname === '/own-products' || location.pathname === '/brands' || location.pathname === '/restaurants' || location.pathname === '/iiko-products'
     const [ownProductsOpen, setOwnProductsOpen] = useState(isOwnProductsActive)
 
     const isMarketingActive = location.pathname.startsWith('/marketing') || location.pathname === '/competitors' || location.pathname === '/competitor-products'
@@ -107,7 +108,8 @@ function Layout({ children }) {
         { path: '/stop-istoric', label: lang === 'en' ? 'History' : 'Istoric', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
     ]
     const ownProductsSubItems = [
-        { path: '/own-products', label: lang === 'en' ? 'Own Products' : 'Produse Proprii', icon: NAV_ICONS.ownproducts },
+        { path: '/own-products', label: lang === 'en' ? 'Own Products (Apps)' : 'Produse (Aplicații)', icon: NAV_ICONS.ownproducts },
+        { path: '/iiko-products', label: lang === 'en' ? 'POS Products (iiko)' : 'Meniu POS (iiko)', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
         { path: '/brands', label: t('nav_brands'), icon: NAV_ICONS.brands },
         { path: '/restaurants', label: t('nav_restaurants'), icon: NAV_ICONS.restaurants },
     ]
@@ -657,6 +659,7 @@ export default function App() {
                                     <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
                                     <Route path="/role-settings" element={<ProtectedRoute><Layout><RoleSettings /></Layout></ProtectedRoute>} />
                                     <Route path="/own-products" element={<ProtectedRoute><Layout><OwnProducts /></Layout></ProtectedRoute>} />
+                                    <Route path="/iiko-products" element={<ProtectedRoute><Layout><IikoProducts /></Layout></ProtectedRoute>} />
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Routes>
                             </UserProfileProvider>

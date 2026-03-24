@@ -1202,6 +1202,50 @@ app.post('/api/delivery-zone/check', async (req, res) => {
     }
 })
 
+// ─── POS Products (Fetch menu nomenclature from iiko) ───
+app.get('/api/pos/products', async (req, res) => {
+    try {
+        const { city, brand, restaurant_id } = req.query
+        
+        let query = supabase.from('restaurants').select('id, name, city, brand:brand_id(name), iiko_config').not('iiko_config', 'is', null).eq('is_active', true)
+        
+        if (restaurant_id) query = query.eq('id', restaurant_id)
+        else {
+            if (city && city !== 'all') query = query.eq('city', city)
+            if (brand && brand !== 'all') {
+                const { data: brandData } = await supabase.from('brands').select('id').eq('name', brand).single()
+                if (brandData) query = query.eq('brand_id', brandData.id)
+            }
+        }
+        
+        const { data: restaurants, error: dbErr } = await query
+        if (dbErr) throw dbErr
+        if (!restaurants || restaurants.length === 0) {
+            return res.json({ success: true, results: [], message: 'No POS records found for selected filters' })
+        }
+        
+        const results = []
+        for (const rest of restaurants) {
+            const client = new IikoClient(rest)
+            const products = await client.getProducts()
+            products.forEach(p => {
+                results.push({
+                    restaurant_id: rest.id,
+                    restaurant_name: rest.name,
+                    city: rest.city,
+                    brand_name: rest.brand?.name || '',
+                    ...p
+                })
+            })
+        }
+        res.json({ success: true, results })
+    } catch (err) {
+        console.error('[API] Error fetching pos products:', err)
+        res.status(500).json({ success: false, error: err.message })
+    }
+})
+
+
 // ─── POS Discrepancies (Syrve/iiko vs Aggregators) ───
 app.get('/api/pos/discrepancies', async (req, res) => {
     try {
