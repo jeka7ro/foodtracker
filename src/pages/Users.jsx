@@ -207,10 +207,19 @@ export default function Users() {
             const { data, error } = await supabase.auth.signUp({ email: inviteEmail, password: invitePassword })
             if (error) throw error
             if (data.user) {
-                await supabase.from('user_roles').insert({
-                    user_id: data.user.id, email: inviteEmail, full_name: fullName,
-                    role: inviteRole, created_by: currentUser?.id, is_active: true
+                const { error: insertError } = await supabase.from('user_roles').insert({
+                    user_id: data.user.id, 
+                    email: inviteEmail, 
+                    full_name: fullName,
+                    role: inviteRole, 
+                    is_active: true
                 })
+                
+                if (insertError) {
+                    console.error('Failed to create user_role:', insertError)
+                    throw new Error('Eroare la adăugarea rolului în baza de date: ' + insertError.message)
+                }
+
                 setUsers(prev => [{
                     id: `new_${Date.now()}`, user_id: data.user.id, email: inviteEmail,
                     full_name: fullName, role: inviteRole, is_active: true, created_at: new Date().toISOString()
