@@ -84,7 +84,7 @@ export default function Competitors() {
                     Concurenți
                 </h1>
                 <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>
-                    {competitors.length} {lang === 'en' ? 'competitor restaurants from all searches' : 'restaurante concurente din toate căutările'}
+                    {competitors.length} {(lang === 'ru' ? 'restaurante concurente din toate căutările' : (lang === 'en' ? 'competitor restaurants from all searches' : 'restaurante concurente din toate căutările'))}
                 </p>
             </div>
 
@@ -94,14 +94,14 @@ export default function Competitors() {
                 <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
                     <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                     <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={lang === 'en' ? 'Search restaurant...' : 'Caută restaurant...'}
+                        placeholder={(lang === 'ru' ? 'Caută restaurant...' : (lang === 'en' ? 'Search restaurant...' : 'Caută restaurant...'))}
                         style={{ width: '100%', paddingLeft: 36, padding: '9px 12px 9px 36px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
 
                 {/* Platform */}
                 <select value={filterPlatform} onChange={e => setFilterPlatform(e.target.value)}
                     style={{ padding: '9px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', cursor: 'pointer' }}>
-                    <option value="">{lang === 'en' ? 'All platforms' : 'Toate platformele'}</option>
+                    <option value="">{(lang === 'ru' ? 'Toate platformele' : (lang === 'en' ? 'All platforms' : 'Toate platformele'))}</option>
                     <option value="wolt">Wolt</option>
                     <option value="glovo">Glovo</option>
                     <option value="bolt">Bolt</option>
@@ -117,10 +117,10 @@ export default function Competitors() {
                 {/* Sort */}
                 <select value={sortBy} onChange={e => setSortBy(e.target.value)}
                     style={{ padding: '9px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', cursor: 'pointer' }}>
-                    <option value="rank">{lang === 'en' ? 'Sort: Best rank' : 'Sortare: Best rank'}</option>
-                    <option value="appearances">{lang === 'en' ? 'Sort: Appearances' : 'Sortare: Apariții'}</option>
-                    <option value="rating">{lang === 'en' ? 'Sort: Rating' : 'Sortare: Rating'}</option>
-                    <option value="name">{lang === 'en' ? 'Sort: Name' : 'Sortare: Nume'}</option>
+                    <option value="rank">{(lang === 'ru' ? 'Sortare: Best rank' : (lang === 'en' ? 'Sort: Best rank' : 'Sortare: Best rank'))}</option>
+                    <option value="appearances">{(lang === 'ru' ? 'Sortare: Apariții' : (lang === 'en' ? 'Sort: Appearances' : 'Sortare: Apariții'))}</option>
+                    <option value="rating">{(lang === 'ru' ? 'Sortare: Rating' : (lang === 'en' ? 'Sort: Rating' : 'Sortare: Rating'))}</option>
+                    <option value="name">{(lang === 'ru' ? 'Sortare: Nume' : (lang === 'en' ? 'Sort: Name' : 'Sortare: Nume'))}</option>
                 </select>
 
                 {/* View toggle */}

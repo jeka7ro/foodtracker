@@ -585,16 +585,16 @@ export default function MarketingAnalytics() {
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: '800', color: colors.text, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-                        {lang === 'en' ? 'Market Analytics' : 'Analize & KPI Piață'}
+                        {(lang === 'ru' ? 'Аналитика рынка' : (lang === 'en' ? 'Market Analytics' : 'Analize & KPI Piață'))}
                     </h1>
                     <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>
-                        {lang === 'en' ? 'Compare product prices, study trends, and track competitiveness.' : 'Date extrase real-time din baza de date pentru gramaje și produse.'}
+                        {(lang === 'ru' ? 'Сравнивайте цены, изучайте тренды и отслеживайте конкурентоспособность.' : (lang === 'en' ? 'Compare product prices, study trends, and track competitiveness.' : 'Date extrase real-time din baza de date pentru gramaje și produse.'))}
                     </p>
                 </div>
                 <button onClick={() => setRefreshKey(k => k + 1)}
                     style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#10B981', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-13.51l5.25 5.12"/></svg>
-                    {lang === 'en' ? 'Refresh Data' : 'Actualizare Date'}
+                    {(lang === 'ru' ? 'Обновить данные' : (lang === 'en' ? 'Refresh Data' : 'Actualizare Date'))}
                 </button>
             </div>
 
@@ -637,7 +637,7 @@ export default function MarketingAnalytics() {
                 <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '4px', alignItems: 'center' }}>
                     <select value={filterCity} onChange={e => setFilterCity(e.target.value)}
                         style={{ flexShrink: 0, minWidth: '120px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer' }}>
-                        <option value="">{lang === 'en' ? 'All Cities' : 'Toate Orașele'}</option>
+                        <option value="">{(lang === 'ru' ? 'Все города' : (lang === 'en' ? 'All Cities' : 'Toate Orașele'))}</option>
                         {cities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', padding: '4px 8px', borderRadius: '8px', border: `1px solid ${colors.border}`, flexShrink: 0 }}>
@@ -646,16 +646,16 @@ export default function MarketingAnalytics() {
                         <span style={{ color: colors.textSecondary }}>-</span>
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: '6px', border: 'none', background: 'transparent', color: colors.text, fontSize: '12px', outline: 'none' }} />
                     </div>
-                    <input placeholder={lang === 'en' ? 'Search product...' : 'Caută produs...'} value={search} onChange={e => setSearch(e.target.value)}
+                    <input placeholder={(lang === 'ru' ? 'Поиск продукта...' : (lang === 'en' ? 'Search product...' : 'Caută produs...'))} value={search} onChange={e => setSearch(e.target.value)}
                         style={{ flexShrink: 0, width: '150px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', color: colors.text, fontSize: '13px', outline: 'none' }} />
                     <select value={filterOwnBrand} onChange={e => setFilterOwnBrand(e.target.value)}
                         style={{ flexShrink: 0, minWidth: '120px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer' }}>
-                        <option value="">{lang === 'en' ? 'My Brands' : 'Brandurile Mele'}</option>
+                        <option value="">{(lang === 'ru' ? 'Мои бренды' : (lang === 'en' ? 'My Brands' : 'Brandurile Mele'))}</option>
                         {ownBrands.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                     <select value={filterCompBrand} onChange={e => setFilterCompBrand(e.target.value)}
                         style={{ flexShrink: 0, minWidth: '120px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', color: colors.text, fontSize: '13px', outline: 'none', cursor: 'pointer' }}>
-                        <option value="">{lang === 'en' ? 'Competitors' : 'Concurenți'}</option>
+                        <option value="">{(lang === 'ru' ? 'Конкуренты' : (lang === 'en' ? 'Competitors' : 'Concurenți'))}</option>
                         {compBrands.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                     {(search || filterCity || filterOwnBrand || filterCompBrand || selectedCategory) && (
@@ -674,11 +674,11 @@ export default function MarketingAnalytics() {
                     {/* KPIs */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                         {[
-                            { title: lang === 'en' ? 'Average Price Difference' : 'Diferență Medie Preț', val: `${avgDiff > 0 ? '+' : ''}${avgDiff.toFixed(1)}%`, sub: lang === 'en' ? 'vs selected competition' : 'vs concurența selectată', color: avgDiff <= 0 ? '#10B981' : '#EF4444' },
-                            { title: lang === 'en' ? 'Competitive Category' : 'Categorie Competitivă', val: realData[0]?.category || 'Sushi', sub: lang === 'en' ? 'Auto extracted from period' : 'Extragere automată din perioadă', color: '#6366F1' },
-                            { title: lang === 'en' ? 'Price Index' : 'Index Preț', val: (100 + avgDiff).toFixed(1), sub: lang === 'en' ? 'Below market average (100)' : 'Sub media pieței (100)', color: '#F59E0B' },
-                            { title: lang === 'en' ? 'Analyzed Products' : 'Produse Analizate', val: realData.length.toString(), sub: lang === 'en' ? 'From competitors menu' : 'Din meniul concurenței', color: '#8B5CF6' },
-                            { title: lang === 'en' ? 'Cities' : 'Orașe', val: Object.keys(byCityData).length.toString(), sub: lang === 'en' ? 'With available data' : 'Cu date disponibile', color: '#EC4899' },
+                            { title: (lang === 'ru' ? 'Средняя разница в цене' : (lang === 'en' ? 'Average Price Difference' : 'Diferență Medie Preț')), val: `${avgDiff > 0 ? '+' : ''}${avgDiff.toFixed(1)}%`, sub: (lang === 'ru' ? 'против выбранных' : (lang === 'en' ? 'vs selected competition' : 'vs concurența selectată')), color: avgDiff <= 0 ? '#10B981' : '#EF4444' },
+                            { title: (lang === 'ru' ? 'Конкурентная категория' : (lang === 'en' ? 'Competitive Category' : 'Categorie Competitivă')), val: realData[0]?.category || 'Sushi', sub: (lang === 'ru' ? 'Автоматически извлечено за период' : (lang === 'en' ? 'Auto extracted from period' : 'Extragere automată din perioadă')), color: '#6366F1' },
+                            { title: (lang === 'ru' ? 'Индекс цен' : (lang === 'en' ? 'Price Index' : 'Index Preț')), val: (100 + avgDiff).toFixed(1), sub: (lang === 'ru' ? 'Ниже среднего по рынку (100)' : (lang === 'en' ? 'Below market average (100)' : 'Sub media pieței (100)')), color: '#F59E0B' },
+                            { title: (lang === 'ru' ? 'Проанализировано продуктов' : (lang === 'en' ? 'Analyzed Products' : 'Produse Analizate')), val: realData.length.toString(), sub: (lang === 'ru' ? 'Из меню конкурентов' : (lang === 'en' ? 'From competitors menu' : 'Din meniul concurenței')), color: '#8B5CF6' },
+                            { title: (lang === 'ru' ? 'Города' : (lang === 'en' ? 'Cities' : 'Orașe')), val: Object.keys(byCityData).length.toString(), sub: (lang === 'ru' ? 'С доступными данными' : (lang === 'en' ? 'With available data' : 'Cu date disponibile')), color: '#EC4899' },
                         ].map((kpi, i) => (
                             <div key={i} style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', padding: '20px', border: `1px solid ${colors.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{kpi.title}</div>
@@ -754,8 +754,8 @@ export default function MarketingAnalytics() {
                     <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                             <div>
-                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>📊 {lang === 'en' ? 'Market Prices: Min / Avg / Max vs Us' : 'Prețuri Piață: Min / Mediu / Max vs Noi'}</h3>
-                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>{lang === 'en' ? 'Each category shows competitor price range vs your average (red bar).' : 'Fiecare categorie arată intervalul de preț competitor comparat cu media voastră (bara roșie).'}</p>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>📊 {(lang === 'ru' ? 'Рыночные цены: Мин / Ср / Макс против нас' : (lang === 'en' ? 'Market Prices: Min / Avg / Max vs Us' : 'Prețuri Piață: Min / Mediu / Max vs Noi'))}</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>{(lang === 'ru' ? 'Каждая категория показывает ценовой диапазон конкурентов в сравнении с вашим средним значением (красная полоса).' : (lang === 'en' ? 'Each category shows competitor price range vs your average (red bar).' : 'Fiecare categorie arată intervalul de preț competitor comparat cu media voastră (bara roșie).'))}</p>
                             </div>
                             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                                 {[['#94A3B8', 'Min Piață'], ['#6366F1', 'Mediu Piață'], ['#1E3A5F', 'Max Piață'], ['#EF4444', 'Noi (avg)']].map(([c, l]) => (

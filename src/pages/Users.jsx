@@ -452,7 +452,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
 
                             {/* Date added */}
                             <span style={{ fontSize: '12px', color: colors.textSecondary }}>
-                                {new Date(u.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ro-RO')}
+                                {new Date(u.created_at).toLocaleDateString((lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-GB' : 'ro-RO')))}
                             </span>
 
                             {/* Status */}

@@ -16,10 +16,10 @@ export default function Rules() {
             <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                     <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: colors.text, letterSpacing: '-0.5px' }}>
-                        {lang === 'en' ? 'Centralized Rules' : 'Reguli Centralizate'}
+                        {(lang === 'ru' ? 'Централизованные правила' : (lang === 'en' ? 'Centralized Rules' : 'Reguli Centralizate'))}
                     </h1>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '4px' }}>
-                        {lang === 'en' ? 'Configure all business constraints and automatic scanning schedules' : 'Configurează regulile de business și orarele de scanare automată'}
+                        {(lang === 'ru' ? 'Настройте все бизнес-ограничения и расписания автоматического сканирования' : (lang === 'en' ? 'Configure all business constraints and automatic scanning schedules' : 'Configurează regulile de business și orarele de scanare automată'))}
                     </p>
                 </div>
             </div>
@@ -36,7 +36,7 @@ export default function Rules() {
                         boxShadow: activeTab === 'stop_control' ? '0 4px 12px rgba(99,102,241,0.3)' : 'none'
                     }}
                 >
-                    {lang === 'en' ? 'Stop Control Schedules' : 'Scanări Stop Control'}
+                    {(lang === 'ru' ? 'Расписания стоп-контроля' : (lang === 'en' ? 'Stop Control Schedules' : 'Scanări Stop Control'))}
                 </button>
                 <button
                     onClick={() => setActiveTab('delivery_zone')}
@@ -48,7 +48,7 @@ export default function Rules() {
                         boxShadow: activeTab === 'delivery_zone' ? '0 4px 12px rgba(236,72,153,0.3)' : 'none'
                     }}
                 >
-                    {lang === 'en' ? 'Delivery Zone Schedules' : 'Scanări Delivery Zone'}
+                    {(lang === 'ru' ? 'Расписания зон доставки' : (lang === 'en' ? 'Delivery Zone Schedules' : 'Scanări Delivery Zone'))}
                 </button>
                 <button
                     onClick={() => setActiveTab('business_rules')}
@@ -60,7 +60,7 @@ export default function Rules() {
                         boxShadow: activeTab === 'business_rules' ? '0 4px 12px rgba(16,185,129,0.3)' : 'none'
                     }}
                 >
-                    {lang === 'en' ? 'Business Rules' : 'Reguli de Operare (Business)'}
+                    {(lang === 'ru' ? 'Бизнес-правила' : (lang === 'en' ? 'Business Rules' : 'Reguli de Operare (Business)'))}
                 </button>
             </div>
 

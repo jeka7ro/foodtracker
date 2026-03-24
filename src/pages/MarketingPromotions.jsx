@@ -162,15 +162,15 @@ export default function MarketingPromotions() {
             <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: '800', color: colors.text, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-                        {lang === 'en' ? 'Promotions Radar' : 'Radar Promoții'}
+                        {(lang === 'ru' ? 'Radar Promoții' : (lang === 'en' ? 'Promotions Radar' : 'Radar Promoții'))}
                     </h1>
                     <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>
-                        {lang === 'en' ? 'Competitor promotions grouped by city.' : 'Ofertele concurenței grupate pe orașe — Glovo, Wolt și Bolt.'}
+                        {(lang === 'ru' ? 'Акции конкурентов, сгруппированные по городам.' : (lang === 'en' ? 'Competitor promotions grouped by city.' : 'Ofertele concurenței grupate pe orașe — Glovo, Wolt și Bolt.'))}
                     </p>
                 </div>
                 {/* Date range */}
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', padding: '6px', borderRadius: '12px', border: `1px solid ${colors.border}` }}>
-                    <div style={{ fontSize: '12px', color: colors.textSecondary, padding: '0 8px', fontWeight: '600' }}>{lang === 'en' ? 'Period:' : 'Perioada:'}</div>
+                    <div style={{ fontSize: '12px', color: colors.textSecondary, padding: '0 8px', fontWeight: '600' }}>{(lang === 'ru' ? 'Период:' : (lang === 'en' ? 'Period:' : 'Perioada:'))}</div>
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                         style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: isDark ? 'rgba(0,0,0,0.2)' : '#f4f4f5', color: colors.text, fontSize: '13px', outline: 'none' }} />
                     <span style={{ color: colors.textSecondary }}>—</span>
@@ -192,7 +192,7 @@ export default function MarketingPromotions() {
                                 fontSize: '13px', fontWeight: '700', cursor: 'pointer', flexShrink: 0,
                                 boxShadow: isActive ? '0 4px 12px rgba(239,68,68,0.3)' : 'none', transition: 'all 0.2s'
                             }}>
-                                {cat === '' ? (lang === 'en' ? 'All' : 'Toate') : cat}
+                                {cat === '' ? ((lang === 'ru' ? 'Все' : (lang === 'en' ? 'All' : 'Toate'))) : cat}
                             </button>
                         )
                     })}
@@ -240,10 +240,10 @@ export default function MarketingPromotions() {
             {!loading && promotions.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '28px' }}>
                     {[
-                        { label: lang === 'en' ? 'Total Products' : 'Total Produse', value: stats.total, color: '#EF4444' },
-                        { label: lang === 'en' ? 'Cities' : 'Orașe', value: stats.cities, color: '#2bbec8' },
-                        { label: lang === 'en' ? 'Avg Discount' : 'Reducere Medie', value: `-${stats.avgDiscount}%`, color: '#10B981' },
-                        { label: lang === 'en' ? 'Top Category' : 'Top Categorie', value: stats.topCategory, color: '#F59E0B' },
+                        { label: (lang === 'ru' ? 'Всего продуктов' : (lang === 'en' ? 'Total Products' : 'Total Produse')), value: stats.total, color: '#EF4444' },
+                        { label: (lang === 'ru' ? 'Города' : (lang === 'en' ? 'Cities' : 'Orașe')), value: stats.cities, color: '#2bbec8' },
+                        { label: (lang === 'ru' ? 'Средняя скидка' : (lang === 'en' ? 'Avg Discount' : 'Reducere Medie')), value: `-${stats.avgDiscount}%`, color: '#10B981' },
+                        { label: (lang === 'ru' ? 'Топ категория' : (lang === 'en' ? 'Top Category' : 'Top Categorie')), value: stats.topCategory, color: '#F59E0B' },
                     ].map(s => (
                         <div key={s.label} style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '14px', padding: '14px 18px', border: `1px solid ${colors.border}` }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, marginBottom: '4px' }}>{s.label}</div>
@@ -289,7 +289,7 @@ export default function MarketingPromotions() {
                                         <div style={{ fontSize: '18px', fontWeight: '800', color: colors.text, letterSpacing: '-0.3px' }}>{city}</div>
                                         <div style={{ display: 'flex', gap: '8px', marginTop: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
                                             <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '600' }}>
-                                                {cityPromos.length} {lang === 'en' ? 'products' : 'produse'}
+                                                {cityPromos.length} {(lang === 'ru' ? 'продукты' : (lang === 'en' ? 'products' : 'produse'))}
                                             </span>
                                             {platforms.map(plat => (
                                                 <span key={plat} style={{

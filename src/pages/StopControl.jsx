@@ -165,7 +165,7 @@ export default function StopControl() {
                         : `✅ Scanare POS: ${totalRest} restaurante verificate | ${totalProdsStop} produse oprite în casă | ${totalDiscrepant === 0 ? 'Nicio discrepanță pe platforme!' : `${totalDiscrepant} erori găsite ⚠️`}` })
                 }
             } else {
-                setProductScanMsg({ ok: false, text: data.error || data.message || (lang === 'en' ? 'POS check error' : 'Eroare la verificare POS') })
+                setProductScanMsg({ ok: false, text: data.error || data.message || ((lang === 'ru' ? 'Ошибка проверки POS' : (lang === 'en' ? 'POS check error' : 'Eroare la verificare POS'))) })
             }
         } catch (e) {
             setProductScanMsg({ ok: false, text: lang === 'en'
@@ -280,17 +280,17 @@ export default function StopControl() {
 
     const kpiCards = [
         {
-            label: lang === 'en' ? 'Active Stops' : 'Restaurante Oprite (Total)',
+            label: (lang === 'ru' ? 'Активные остановки' : (lang === 'en' ? 'Active Stops' : 'Restaurante Oprite (Total)')),
             value: inScheduleActive.length,
-            sub: inScheduleActive.length > 0 ? (lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'en' ? 'all good' : 'totul funcționează'),
+            sub: inScheduleActive.length > 0 ? ((lang === 'ru' ? 'требует внимания!' : (lang === 'en' ? 'needs attention!' : 'necesită atenție!'))) : ((lang === 'ru' ? 'все отлично' : (lang === 'en' ? 'all good' : 'totul funcționează'))),
             color: inScheduleActive.length > 0 ? '#FF453A' : '#34C759',
             bg: inScheduleActive.length > 0 ? 'rgba(255,69,58,0.12)' : 'rgba(52,199,89,0.12)',
             icon: Icon.stop(inScheduleActive.length > 0 ? '#FF453A' : '#34C759', 20),
         },
         {
-            label: lang === 'en' ? 'Stops Today' : 'Opriri Azi (în program)',
+            label: (lang === 'ru' ? 'Остановки сегодня' : (lang === 'en' ? 'Stops Today' : 'Opriri Azi (în program)')),
             value: todayEvents.length,
-            sub: lang === 'en' ? 'during working hours' : 'în timpul programului de lucru',
+            sub: (lang === 'ru' ? 'в рабочее время' : (lang === 'en' ? 'during working hours' : 'în timpul programului de lucru')),
             color: '#8B5CF6',
             bg: 'rgba(139,92,246,0.12)',
             icon: Icon.clock('#8B5CF6', 20),
@@ -326,7 +326,7 @@ export default function StopControl() {
                         </h1>
                     </div>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: '2px 0 0 48px' }}>
-                        {lang === 'en' ? 'Monitor complete restaurant stops' : 'Monitorizare opriri complete (restaurant închis pe platformă)'} · {now.toLocaleTimeString('ro-RO')}
+                        {(lang === 'ru' ? 'Отслеживание полных остановок ресторанов' : (lang === 'en' ? 'Monitor complete restaurant stops' : 'Monitorizare opriri complete (restaurant închis pe platformă)'))} · {now.toLocaleTimeString('ro-RO')}
                     </p>
                 </div>
             </div>
@@ -343,7 +343,7 @@ export default function StopControl() {
                     {Icon.alert('#FF9500', 22)}
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500', marginBottom: '2px' }}>
-                            {lang === 'en' ? 'Working hours not configured' : 'Programul de lucru nu este setat'}
+                            {(lang === 'ru' ? 'Рабочие часы не настроены' : (lang === 'en' ? 'Working hours not configured' : 'Programul de lucru nu este setat'))}
                         </div>
                         <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: '1.5' }}>
                             {lang === 'en'
@@ -383,15 +383,15 @@ export default function StopControl() {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '15px', fontWeight: '700', color: colors.text, marginBottom: '2px' }}>
-                            {lang === 'en' ? 'Menu Sync (POS vs Platforms)' : 'Sincronizare Meniu (POS vs Platforme)'}
+                            {(lang === 'ru' ? 'Синхронизация меню (POS -> Платформы)' : (lang === 'en' ? 'Menu Sync (POS vs Platforms)' : 'Sincronizare Meniu (POS vs Platforme)'))}
                         </div>
                         <div style={{ fontSize: '12px', color: colors.textSecondary }}>
-                            {lang === 'en' ? 'Automatically compare products stopped in POS (Syrve) with their availability on Glovo, Wolt and Bolt.' : 'Compară automat produsele oprite direct în casa de marcat (Syrve) cu disponibilitatea lor pe Glovo, Wolt și Bolt.'}
+                            {(lang === 'ru' ? 'Автоматическое сравнение продуктов, остановленных в POS (Syrve), с их доступностью в агрегаторах.' : (lang === 'en' ? 'Automatically compare products stopped in POS (Syrve) with their availability on Glovo, Wolt and Bolt.' : 'Compară automat produsele oprite direct în casa de marcat (Syrve) cu disponibilitatea lor pe Glovo, Wolt și Bolt.'))}
                         </div>
                     </div>
                     <button className="btn-h" onClick={verifyPos} disabled={scanningPos}
                         style={{ ...btnBase, padding: '11px 22px', background: scanningPos ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', boxShadow: scanningPos ? 'none' : '0 4px 16px rgba(99,102,241,0.35)', whiteSpace: 'nowrap', flexShrink: 0, cursor: scanningPos ? 'wait' : 'pointer' }}>
-                        {scanningPos ? <>{Icon.spin(14)} {lang === 'en' ? 'Checking kitchens...' : 'Se verifică bucătăriile...'}</> : <>{Icon.scan('#fff', 14)} {lang === 'en' ? 'Launch Full Scan' : 'Lansați Scanarea Completă'}</>}
+                        {scanningPos ? <>{Icon.spin(14)} {(lang === 'ru' ? 'Проверка кухонь...' : (lang === 'en' ? 'Checking kitchens...' : 'Se verifică bucătăriile...'))}</> : <>{Icon.scan('#fff', 14)} {(lang === 'ru' ? 'Запустить полное сканирование' : (lang === 'en' ? 'Launch Full Scan' : 'Lansați Scanarea Completă'))}</>}
                     </button>
                 </div>
 
@@ -414,9 +414,9 @@ export default function StopControl() {
                                         {p.restaurant}
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginBottom: '10px' }}>
-                                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>{lang === 'en' ? 'POS Status (Syrve):' : 'Stare Casa (Syrve):'}</span>
+                                        <span style={{ fontSize: '12px', color: colors.textSecondary }}>{(lang === 'ru' ? 'Статус POS (Syrve):' : (lang === 'en' ? 'POS Status (Syrve):' : 'Stare Casa (Syrve):'))}</span>
                                         <span style={{ fontSize: '12px', fontWeight: '800', color: p.pos_stopped_count > 0 ? '#f97316' : '#22c55e' }}>
-                                            {p.pos_stopped_count === 0 ? (lang === 'en' ? 'All Active' : 'Totul Activ') : `${p.pos_stopped_count} ${lang === 'en' ? 'stopped' : 'oprite'}`}
+                                            {p.pos_stopped_count === 0 ? ((lang === 'ru' ? 'Все активно' : (lang === 'en' ? 'All Active' : 'Totul Activ'))) : `${p.pos_stopped_count} ${(lang === 'ru' ? 'остановлено' : (lang === 'en' ? 'stopped' : 'oprite'))}`}
                                         </span>
                                     </div>
                                     {hasErrors ? (
@@ -430,7 +430,7 @@ export default function StopControl() {
                                         </div>
                                     ) : (
                                         <div style={{ textAlign: 'center', padding: '10px 0', color: '#22c55e' }}>
-                                            ✅ <span style={{ fontSize: '12px', fontWeight: '700' }}>{lang === 'en' ? 'Perfect Sync' : 'Sincronizare Perfectă'}</span>
+                                            ✅ <span style={{ fontSize: '12px', fontWeight: '700' }}>{(lang === 'ru' ? 'Идеальная синхронизация' : (lang === 'en' ? 'Perfect Sync' : 'Sincronizare Perfectă'))}</span>
                                         </div>
                                     )}
                                 </div>
@@ -446,7 +446,7 @@ export default function StopControl() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 24px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, background: isDark ? 'rgba(255,69,58,0.08)' : 'rgba(255,69,58,0.04)' }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF453A', boxShadow: '0 0 8px rgba(255,69,58,0.6)', animation: 'pulse-dot 2s ease infinite' }} />
                         <span style={{ fontSize: '14px', fontWeight: '700', color: '#FF453A', flex: 1 }}>
-                            {activeStops.length} {activeStops.length === 1 ? (lang === 'en' ? 'Active Stop' : 'Oprire Activa de Restaurant') : (lang === 'en' ? 'Active Stops' : 'Restaurante Oprite')}
+                            {activeStops.length} {activeStops.length === 1 ? ((lang === 'ru' ? 'Активная остановка' : (lang === 'en' ? 'Active Stop' : 'Oprire Activa de Restaurant'))) : ((lang === 'ru' ? 'Активные остановки' : (lang === 'en' ? 'Active Stops' : 'Restaurante Oprite')))}
                         </span>
                     </div>
                     {activeStops.map((stop, i) => {
@@ -459,17 +459,17 @@ export default function StopControl() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         {stop.platform && <PlatformBadge platform={stop.platform} size={14} />}
                                         <span style={{ fontSize: '11px', color: colors.textSecondary }}>{stop.restaurants?.city}</span>
-                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type === 'full' ? (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET') : stop.stop_type === 'radius' ? (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ') : stop.stop_type}</span>}
+                                        {stop.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,69,58,0.1)', color: '#FF453A' }}>{stop.stop_type === 'full' ? ((lang === 'ru' ? 'ПОЛНОСТЬЮ ЗАКРЫТО' : (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET'))) : stop.stop_type === 'radius' ? ((lang === 'ru' ? 'УМЕНЬШЕН РАДИУС ДОСТАВКИ' : (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ'))) : stop.stop_type}</span>}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '2px' }}>{lang === 'en' ? 'Stopped on' : 'A fost închis pe'} <strong style={{color: colors.text}}>{new Date(stop.stopped_at).toLocaleString(lang === 'en' ? 'en-US' : 'ro-RO', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong></div>
-                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>{lang === 'en' ? 'Elapsed:' : 'Timp scurs:'} {formatDuration(mins)}</div>
+                                    <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '2px' }}>{(lang === 'ru' ? 'Остановлено на' : (lang === 'en' ? 'Stopped on' : 'A fost închis pe'))} <strong style={{color: colors.text}}>{new Date(stop.stopped_at).toLocaleString((lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')), { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong></div>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF9500' }}>{(lang === 'ru' ? 'Прошло:' : (lang === 'en' ? 'Elapsed:' : 'Timp scurs:'))} {formatDuration(mins)}</div>
                                 </div>
                                 {!stop.authorized && (
                                     <button className="btn-h" onClick={() => authorizeMutation.mutate(stop.id)}
                                         style={{ ...btnBase, padding: '8px 14px', fontSize: '12px', background: 'rgba(52,199,89,0.12)', color: '#34C759', border: '1px solid rgba(52,199,89,0.25)' }}>
-                                        {Icon.authorize('#34C759', 12)} {lang === 'en' ? 'Authorize' : 'Autorizeaza'}
+                                        {Icon.authorize('#34C759', 12)} {(lang === 'ru' ? 'Авторизовать' : (lang === 'en' ? 'Authorize' : 'Autorizeaza'))}
                                     </button>
                                 )}
                             </div>
@@ -489,21 +489,21 @@ export default function StopControl() {
                             </div>
                             <div>
                                 <div style={{ fontSize: '16px', fontWeight: '800', color: colors.text }}>
-                                    {lang === 'en' ? 'Delete stop event?' : 'Șterge evenimentul de oprire?'}
+                                    {(lang === 'ru' ? 'Удалить событие остановки?' : (lang === 'en' ? 'Delete stop event?' : 'Șterge evenimentul de oprire?'))}
                                 </div>
                                 <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '2px' }}>
-                                    {lang === 'en' ? 'This action cannot be undone' : 'Această acțiune nu poate fi anulată'}
+                                    {(lang === 'ru' ? 'Это действие нельзя отменить' : (lang === 'en' ? 'This action cannot be undone' : 'Această acțiune nu poate fi anulată'))}
                                 </div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button onClick={() => setDeleteConfirm(null)} disabled={deleting}
                                 style={{ ...btnBase, padding: '10px 20px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: colors.textSecondary, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}` }}>
-                                {lang === 'en' ? 'Cancel' : 'Anulează'}
+                                {(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}
                             </button>
                             <button onClick={handleDeleteStop} disabled={deleting}
                                 style={{ ...btnBase, padding: '10px 20px', background: deleting ? 'rgba(239,68,68,0.4)' : 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff', boxShadow: '0 4px 14px rgba(239,68,68,0.35)' }}>
-                                {deleting ? (lang === 'en' ? 'Deleting...' : 'Se șterge...') : (lang === 'en' ? 'Delete' : 'Șterge')}
+                                {deleting ? ((lang === 'ru' ? 'Удаление...' : (lang === 'en' ? 'Deleting...' : 'Se șterge...'))) : ((lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge')))}
                             </button>
                         </div>
                     </div>
@@ -515,7 +515,7 @@ export default function StopControl() {
                 {/* Filters */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 24px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '4px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', padding: '3px', borderRadius: '10px' }}>
-                        {[['all', lang === 'en' ? 'All' : 'Toate'], ['active', lang === 'en' ? 'Active' : 'Active'], ['resolved', lang === 'en' ? 'Resolved' : 'Rezolvate']].map(([v, l]) => (
+                        {[['all', (lang === 'ru' ? 'Все' : (lang === 'en' ? 'All' : 'Toate'))], ['active', (lang === 'ru' ? 'Active' : (lang === 'en' ? 'Active' : 'Active'))], ['resolved', (lang === 'ru' ? 'Решено' : (lang === 'en' ? 'Resolved' : 'Rezolvate'))]].map(([v, l]) => (
                             <button key={v} onClick={() => setSelectedFilter(v)} style={filterBtn(selectedFilter === v)}>{l}</button>
                         ))}
                     </div>
@@ -530,7 +530,7 @@ export default function StopControl() {
                     </button>
                     <div style={{ flex: 1 }} />
                     <div style={{ display: 'flex', gap: '4px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', padding: '3px', borderRadius: '10px' }}>
-                        {[['all', lang === 'en' ? 'All' : 'Toate'], ['glovo', 'Glovo'], ['wolt', 'Wolt'], ['bolt', 'Bolt']].map(([v, l]) => (
+                        {[['all', (lang === 'ru' ? 'Все' : (lang === 'en' ? 'All' : 'Toate'))], ['glovo', 'Glovo'], ['wolt', 'Wolt'], ['bolt', 'Bolt']].map(([v, l]) => (
                             <button key={v} onClick={() => setPlatformFilter(v)} style={filterBtn(platformFilter === v)}>
                                 {v !== 'all' && <PlatformBadge platform={v} size={12} />}{l}
                             </button>
@@ -542,21 +542,21 @@ export default function StopControl() {
                 {loadingEvents ? (
                     <div style={{ padding: '48px', textAlign: 'center', color: colors.textSecondary }}>
                         <div style={{ width: 28, height: 28, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 12px' }} />
-                        <div style={{ fontSize: '13px' }}>{lang === 'en' ? 'Loading...' : 'Se incarca...'}</div>
+                        <div style={{ fontSize: '13px' }}>{(lang === 'ru' ? 'Загрузка...' : (lang === 'en' ? 'Loading...' : 'Se incarca...'))}</div>
                     </div>
                 ) : displayEvents.length === 0 ? (
                     <div style={{ padding: '48px', textAlign: 'center' }}>
                         <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(52,199,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                             {Icon.check('#34C759', 20)}
                         </div>
-                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#34C759' }}>{lang === 'en' ? 'No stop registered' : 'Nicio oprire inregistrata'}</div>
-                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>{lang === 'en' ? 'Everything is running normally' : 'Totul functioneaza normal'}</div>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#34C759' }}>{(lang === 'ru' ? 'Нет зарегистрированных остановок' : (lang === 'en' ? 'No stop registered' : 'Nicio oprire inregistrata'))}</div>
+                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>{(lang === 'ru' ? 'Все работает нормально' : (lang === 'en' ? 'Everything is running normally' : 'Totul functioneaza normal'))}</div>
                     </div>
                 ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                                {['Restaurant', lang === 'en' ? 'Platform' : 'Platforma', lang === 'en' ? 'Type' : 'Tip', lang === 'en' ? 'Started' : 'Inceput', lang === 'en' ? 'Duration' : 'Durata', 'Status', ''].map((h, hi) => (
+                                {['Restaurant', (lang === 'ru' ? 'Платформа' : (lang === 'en' ? 'Platform' : 'Platforma')), (lang === 'ru' ? 'Тип' : (lang === 'en' ? 'Type' : 'Tip')), (lang === 'ru' ? 'Начато' : (lang === 'en' ? 'Started' : 'Inceput')), (lang === 'ru' ? 'Длительность' : (lang === 'en' ? 'Duration' : 'Durata')), 'Status', ''].map((h, hi) => (
                                     <th key={hi} style={{ padding: '12px 20px', textAlign: h === 'Restaurant' ? 'left' : 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', width: h === '' ? '40px' : 'auto' }}>{h}</th>
                                 ))}
                             </tr>
@@ -576,7 +576,7 @@ export default function StopControl() {
                                             <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{e.restaurants?.name || '—'}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                                 <span style={{ fontSize: '11px', color: colors.textSecondary }}>{e.restaurants?.city}</span>
-                                                {isOutside && <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,149,0,0.12)', color: '#FF9500', whiteSpace: 'nowrap' }}>{lang === 'en' ? 'OUTSIDE SCHEDULE' : 'ÎN AFARA PROGRAMULUI'}</span>}
+                                                {isOutside && <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,149,0,0.12)', color: '#FF9500', whiteSpace: 'nowrap' }}>{(lang === 'ru' ? 'ВНЕ ГРАФИКА' : (lang === 'en' ? 'OUTSIDE SCHEDULE' : 'ÎN AFARA PROGRAMULUI'))}</span>}
                                             </div>
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
@@ -588,7 +588,7 @@ export default function StopControl() {
                                             ) : '—'}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
-                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type === 'full' ? (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET') : e.stop_type === 'radius' ? (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ') : e.stop_type}</span>}
+                                            {e.stop_type && <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,69,58,0.1)', color: '#FF453A', textTransform: 'uppercase' }}>{e.stop_type === 'full' ? ((lang === 'ru' ? 'ПОЛНОСТЬЮ ЗАКРЫТО' : (lang === 'en' ? 'FULLY CLOSED' : 'ÎNCHIS COMPLET'))) : e.stop_type === 'radius' ? ((lang === 'ru' ? 'УМЕНЬШЕН РАДИУС ДОСТАВКИ' : (lang === 'en' ? 'REDUCED DELIVERY RADIUS' : 'RAZĂ LIVRARE REDUSĂ'))) : e.stop_type}</span>}
                                         </td>
                                         <td style={{ padding: '13px 20px', textAlign: 'center', fontSize: '12px', color: colors.textSecondary, whiteSpace: 'nowrap' }}>
                                             {new Date(e.stopped_at).toLocaleString('ro-RO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -599,11 +599,11 @@ export default function StopControl() {
                                         <td style={{ padding: '13px 20px', textAlign: 'center' }}>
                                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', background: isOutside ? 'rgba(255,149,0,0.1)' : isActive ? 'rgba(255,69,58,0.1)' : 'rgba(52,199,89,0.1)', color: isOutside ? '#FF9500' : isActive ? '#FF453A' : '#34C759' }}>
                                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOutside ? '#FF9500' : isActive ? '#FF453A' : '#34C759', display: 'inline-block', animation: isActive && !isOutside ? 'pulse-dot 2s ease infinite' : 'none' }} />
-                                                {isOutside ? (lang === 'en' ? 'Outside' : 'Afara prog.') : isActive ? (lang === 'en' ? 'Active' : 'Activ') : (lang === 'en' ? 'Resolved' : 'Rezolvat')}
+                                                {isOutside ? ((lang === 'ru' ? 'Вне граф.' : (lang === 'en' ? 'Outside' : 'Afara prog.'))) : isActive ? ((lang === 'ru' ? 'Activ' : (lang === 'en' ? 'Active' : 'Activ'))) : ((lang === 'ru' ? 'Решено' : (lang === 'en' ? 'Resolved' : 'Rezolvat')))}
                                             </span>
                                         </td>
                                         <td style={{ padding: '13px 8px', textAlign: 'center' }}>
-                                            <button className="btn-h" onClick={() => setDeleteConfirm(e.id)} title={lang === 'en' ? 'Delete' : 'Șterge'}
+                                            <button className="btn-h" onClick={() => setDeleteConfirm(e.id)} title={(lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge'))}
                                                 style={{ background: 'none', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, borderRadius: '8px', padding: '5px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, transition: 'all 0.15s' }}
                                                 onMouseOver={ev => { ev.currentTarget.style.color = '#ef4444'; ev.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; ev.currentTarget.style.background = 'rgba(239,68,68,0.06)' }}
                                                 onMouseOut={ev => { ev.currentTarget.style.color = colors.textSecondary; ev.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; ev.currentTarget.style.background = 'none' }}>

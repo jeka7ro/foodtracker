@@ -769,7 +769,7 @@ export default function Marketing() {
                             {/* ── Stat cards ── */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '32px' }}>
                                 {[
-                                    { label: lang === 'en' ? 'Products' : 'Produse', value: Object.keys(brandStats.priceHistory || {}).length || '—' },
+                                    { label: (lang === 'ru' ? 'Продукты' : (lang === 'en' ? 'Products' : 'Produse')), value: Object.keys(brandStats.priceHistory || {}).length || '—' },
                                     { label: 'Rating mediu', value: brandStats.avgRating ? `${brandStats.avgRating} / 10` : '—' },
                                     { label: 'Prima apariție', value: brandStats.firstSeen || '—' },
                                     { label: 'Ultima apariție', value: brandStats.lastSeen || '—' },
@@ -1271,11 +1271,11 @@ export default function Marketing() {
                                 }
                                 <div>
                                     <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>
-                                        {prog.done ? `${lang === 'en' ? 'Done' : 'Finalizat'}${searchTerm ? `: "${searchTerm}"` : ''}` : label}
+                                        {prog.done ? `${(lang === 'ru' ? 'Готово' : (lang === 'en' ? 'Done' : 'Finalizat'))}${searchTerm ? `: "${searchTerm}"` : ''}` : label}
                                     </div>
                                     {!prog.done && (prog.step || prog.totalSteps) && (
                                         <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>
-                                            {lang === 'en' ? 'Step' : 'Pas'} {prog.step || 0}/{prog.totalSteps || '?'}
+                                            {(lang === 'ru' ? 'Шаг' : (lang === 'en' ? 'Step' : 'Pas'))} {prog.step || 0}/{prog.totalSteps || '?'}
                                         </div>
                                     )}
                                 </div>
@@ -1323,7 +1323,7 @@ export default function Marketing() {
                         {runningSearch === 'all'
                             ? <svg style={{ animation: 'spin 1s linear infinite' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
                             : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>}
-                        {runningSearch === 'all' ? (lang === 'en' ? 'Running…' : 'Se rulează…') : t('run_all')}
+                        {runningSearch === 'all' ? ((lang === 'ru' ? 'Выполняется…' : (lang === 'en' ? 'Running…' : 'Se rulează…'))) : t('run_all')}
                     </button>
                     <button className="mkt-btn" onClick={() => { setShowForm(true); setEditingSearch(null) }}
                         style={{ ...glass, padding: '7px 14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: colors.text }}>
@@ -1423,7 +1423,7 @@ export default function Marketing() {
                                         {(search.cities || []).slice(0, 4).map(c => (
                                             <span key={c} style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: colors.textSecondary }}>{c}</span>
                                         ))}
-                                        {(search.cities || []).length > 4 && <span style={{ fontSize: '11px', color: colors.textSecondary, padding: '2px 6px' }}>+{(search.cities || []).length - 4} {lang === "en" ? "cities" : "orașe"}</span>}
+                                        {(search.cities || []).length > 4 && <span style={{ fontSize: '11px', color: colors.textSecondary, padding: '2px 6px' }}>+{(search.cities || []).length - 4} {(lang === 'ru' ? "города" : (lang === 'en' ? "cities" : "orașe"))}</span>}
                                     </div>
                                 </div>
                                 {/* Actions */}
@@ -1481,21 +1481,21 @@ export default function Marketing() {
                         )}
                         {searches.length === 0 ? (
                             <div style={{ ...glass, padding: '48px', textAlign: 'center' }}>
-                                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>{lang === "en" ? "Add a search from Config tab first" : "Adaugă o căutare din tab-ul Configurații mai întâi"}</p>
+                                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>{(lang === 'ru' ? "Сначала добавьте поиск на вкладке Конфигурация" : (lang === 'en' ? "Add a search from Config tab first" : "Adaugă o căutare din tab-ul Configurații mai întâi"))}</p>
                             </div>
                         ) : loading ? (
                             <div style={{ ...glass, padding: '48px', textAlign: 'center' }}>
                                 <svg style={{ animation: 'spin 1s linear infinite', color: '#2bbec8' }} width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                                <p style={{ color: colors.textSecondary, marginTop: '16px' }}>{lang === "en" ? "Loading..." : "Se încarcă..."}</p>
+                                <p style={{ color: colors.textSecondary, marginTop: '16px' }}>{(lang === 'ru' ? "Загрузка..." : (lang === 'en' ? "Loading..." : "Se încarcă..."))}</p>
                             </div>
                         ) : (
                             <>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                                     <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: colors.text }}>
-                                        {lang === "en" ? "Competition for \"" : "Concurență pentru \""}{selectedSearch.search_term}"
+                                        {lang === 'ru' ? 'Конкуренция за "' : lang === 'en' ? 'Competition for "' : 'Concurență pentru "'}{selectedSearch.search_term}"
                                     </h2>
                                     <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', background: isDark ? 'rgba(43,190,200,0.15)' : 'rgba(43,190,200,0.08)', color: '#2bbec8' }}>
-                                        {totalCompetitors} {lang === "en" ? "competitors" : "concurenți"} · {sortedCities.length} orașe
+                                        {totalCompetitors} {(lang === 'ru' ? "конкуренты" : (lang === 'en' ? "competitors" : "concurenți"))} · {sortedCities.length} orașe
                                     </span>
                                     <button className="mkt-btn" onClick={() => handleRunSearch(selectedSearch.id, selectedSearch.search_term)}
                                         style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1508,7 +1508,7 @@ export default function Marketing() {
                                 <div style={{ position: 'relative', marginBottom: '16px' }}>
                                     <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                                     <input value={resultsFilter} onChange={e => setResultsFilter(e.target.value)}
-                                        placeholder={lang === "en" ? "Quick filter... (competitor name)" : "Filtrare rapidă… (nume concurent)"}
+                                        placeholder={(lang === 'ru' ? "Быстрый фильтр... (имя конкурента)" : (lang === 'en' ? "Quick filter... (competitor name)" : "Filtrare rapidă… (nume concurent)"))}
                                         style={{ width: '100%', paddingLeft: 36, padding: '8px 12px 8px 36px', borderRadius: '9px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#fff', color: colors.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                                     {resultsFilter && (
                                         <button onClick={() => setResultsFilter('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: colors.textSecondary, fontSize: '16px', lineHeight: 1 }}>×</button>
@@ -1518,10 +1518,10 @@ export default function Marketing() {
                                 {sortedCities.length === 0 ? (
                                     <div style={{ ...glass, padding: '48px', textAlign: 'center' }}>
                                         <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                                        <p style={{ color: colors.textSecondary }}>{lang === "en" ? "No results. Run the search first." : "Nu există rezultate. Rulează căutarea mai întâi."}</p>
+                                        <p style={{ color: colors.textSecondary }}>{(lang === 'ru' ? "Нет результатов. Сначала выполните поиск." : (lang === 'en' ? "No results. Run the search first." : "Nu există rezultate. Rulează căutarea mai întâi."))}</p>
                                         <button className="mkt-btn" onClick={() => handleRunSearch(selectedSearch.id, selectedSearch.search_term)}
                                             style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #2bbec8, #17a2b8)', color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer', marginTop: '12px' }}>
-                                            ▶ {lang === "en" ? "Run Now" : "Rulează Acum"}
+                                            ▶ {(lang === 'ru' ? "Запустить сейчас" : (lang === 'en' ? "Run Now" : "Rulează Acum"))}
                                         </button>
                                     </div>
                                 ) : (
@@ -1577,7 +1577,7 @@ export default function Marketing() {
                                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                                         <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '7px' }}>
                                                                             {name}
-                                                                            {hasProducts && <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: isDark ? 'rgba(43,190,200,0.15)' : 'rgba(43,190,200,0.08)', color: '#2bbec8', fontWeight: '700' }}>{lang === "en" ? "menu" : "meniu"}</span>}
+                                                                            {hasProducts && <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: isDark ? 'rgba(43,190,200,0.15)' : 'rgba(43,190,200,0.08)', color: '#2bbec8', fontWeight: '700' }}>{(lang === 'ru' ? "меню" : (lang === 'en' ? "menu" : "meniu"))}</span>}
                                                                         </div>
                                                                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                                                             {[...new Set(appearances.map(a => a.platform))].map(p => (
@@ -1589,7 +1589,7 @@ export default function Marketing() {
                                                                     {latest.rating && (
                                                                         <span style={{ fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{latest.rating}/10</span>
                                                                     )}
-                                                                    <span style={{ fontSize: '12px', color: '#2bbec8', fontWeight: '600' }}>{lang === 'ro' ? 'Detalii →' : 'Details →'}</span>
+                                                                    <span style={{ fontSize: '12px', color: '#2bbec8', fontWeight: '600' }}>{(lang === 'ru' ? 'Подробнее →' : (lang === 'ro' ? 'Detalii →' : 'Details →'))}</span>
                                                                 </div>
                                                             )
                                                         })}
@@ -2190,7 +2190,7 @@ export default function Marketing() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '14px', fontWeight: '700', color: colors.text }}>{dateLabel}</span>
                                                     <span style={{ fontSize: '12px', color: colors.textSecondary }}>
-                                                        {totalCount} {lang === "en" ? "competitors" : "concurenți"} · {uniqueCities} {uniqueCities === 1 ? 'locație' : 'locații'} · {platforms.join(', ')}
+                                                        {totalCount} {(lang === 'ru' ? "конкуренты" : (lang === 'en' ? "competitors" : "concurenți"))} · {uniqueCities} {uniqueCities === 1 ? 'locație' : 'locații'} · {platforms.join(', ')}
                                                     </span>
                                                 </div>
                                                 <span style={{ fontSize: '11px', color: colors.textSecondary }}>
@@ -2238,7 +2238,7 @@ export default function Marketing() {
                                                     <span style={{ fontSize: '12px', color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.city} · {r.platform}</span>
                                                     <span style={{ fontSize: '12px', color: r.rank_position <= 3 ? '#2bbec8' : colors.textSecondary, fontWeight: r.rank_position <= 3 ? '700' : '400' }}>{r.rank_position ? `#${r.rank_position}` : '—'}</span>
                                                     <span style={{ fontSize: '12px', color: colors.textSecondary }}>{r.rating ? `${r.rating}/10` : '—'}</span>
-                                                    <span style={{ fontSize: '12px', color: '#2bbec8', fontWeight: '600', textAlign: 'right' }}>{lang === 'ro' ? 'Detalii →' : 'Details →'}</span>
+                                                    <span style={{ fontSize: '12px', color: '#2bbec8', fontWeight: '600', textAlign: 'right' }}>{(lang === 'ru' ? 'Подробнее →' : (lang === 'ro' ? 'Detalii →' : 'Details →'))}</span>
                                                 </div>
                                             ))}
 

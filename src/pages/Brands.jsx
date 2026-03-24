@@ -60,11 +60,11 @@ export default function Brands() {
             if (editingBrand) {
                 const { error } = await supabase.from('brands').update(payload).eq('id', editingBrand.id)
                 if (error) throw error
-                toast.success(lang === 'en' ? 'Brand updated' : 'Brand actualizat')
+                toast.success((lang === 'ru' ? 'Brand actualizat' : (lang === 'en' ? 'Brand updated' : 'Brand actualizat')))
             } else {
                 const { error } = await supabase.from('brands').insert([payload])
                 if (error) throw error
-                toast.success(lang === 'en' ? 'Brand added' : 'Brand adăugat')
+                toast.success((lang === 'ru' ? 'Brand adăugat' : (lang === 'en' ? 'Brand added' : 'Brand adăugat')))
             }
             setShowModal(false); setEditingBrand(null); resetForm(); fetchData()
         } catch (err) {
@@ -76,7 +76,7 @@ export default function Brands() {
         try {
             const { error } = await supabase.from('brands').delete().eq('id', deleteConfirm.brand.id)
             if (error) throw error
-            toast.success(lang === 'en' ? 'Brand deleted' : 'Brand șters')
+            toast.success((lang === 'ru' ? 'Brand șters' : (lang === 'en' ? 'Brand deleted' : 'Brand șters')))
             fetchData()
         } catch (err) {
             toast.error('Error: ' + err.message)
@@ -121,17 +121,17 @@ export default function Brands() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', animation: 'fadeUp 0.3s ease' }}>
                 <div>
                     <h1 style={{ fontSize: '22px', fontWeight: '700', margin: 0, color: colors.text, letterSpacing: '-0.4px' }}>
-                        {lang === 'en' ? 'Brands' : 'Branduri'}
+                        {(lang === 'ru' ? 'Branduri' : (lang === 'en' ? 'Brands' : 'Branduri'))}
                     </h1>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: '3px 0 0' }}>
-                        {brands.length} {lang === 'en' ? 'brands' : 'branduri'} · {restaurants.length} {lang === 'en' ? 'restaurants total' : 'restaurante totale'}
+                        {brands.length} {(lang === 'ru' ? 'branduri' : (lang === 'en' ? 'brands' : 'branduri'))} · {restaurants.length} {(lang === 'ru' ? 'restaurante totale' : (lang === 'en' ? 'restaurants total' : 'restaurante totale'))}
                     </p>
                 </div>
                 <button onClick={openAdd} style={{ padding: '8px 16px', background: '#6366F1', color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(99,102,241,0.35)', transition: 'opacity 0.15s' }}
                     onMouseOver={e => e.currentTarget.style.opacity = '0.88'}
                     onMouseOut={e => e.currentTarget.style.opacity = '1'}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                    {lang === 'en' ? 'Add Brand' : 'Adaugă Brand'}
+                    {(lang === 'ru' ? 'Adaugă Brand' : (lang === 'en' ? 'Add Brand' : 'Adaugă Brand'))}
                 </button>
             </div>
 
@@ -139,8 +139,8 @@ export default function Brands() {
             {brands.length === 0 ? (
                 <div style={{ padding: '60px', textAlign: 'center', border: `1px dashed ${colors.border}`, borderRadius: '16px' }}>
                     <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
-                    <div style={{ fontWeight: '600', color: colors.text }}>{lang === 'en' ? 'No brands yet' : 'Niciun brand'}</div>
-                    <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '4px' }}>{lang === 'en' ? 'Add your first brand to start monitoring' : 'Adaugă primul brand pentru a începe monitorizarea'}</div>
+                    <div style={{ fontWeight: '600', color: colors.text }}>{(lang === 'ru' ? 'Niciun brand' : (lang === 'en' ? 'No brands yet' : 'Niciun brand'))}</div>
+                    <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '4px' }}>{(lang === 'ru' ? 'Adaugă primul brand pentru a începe monitorizarea' : (lang === 'en' ? 'Add your first brand to start monitoring' : 'Adaugă primul brand pentru a începe monitorizarea'))}</div>
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '14px' }}>
@@ -181,13 +181,13 @@ export default function Brands() {
                                     </div>
                                     {/* Actions — icon buttons only */}
                                     <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                                        <button className="icon-btn" onClick={() => openEdit(brand)} title={lang === 'en' ? 'Edit' : 'Editează'}
+                                        <button className="icon-btn" onClick={() => openEdit(brand)} title={(lang === 'ru' ? 'Editează' : (lang === 'en' ? 'Edit' : 'Editează'))}
                                             style={{ width: 30, height: 30, borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             onMouseOver={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'; e.currentTarget.style.color = colors.text }}
                                             onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textSecondary }}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                                         </button>
-                                        <button className="icon-btn" onClick={() => setDeleteConfirm({ isOpen: true, brand })} title={lang === 'en' ? 'Delete' : 'Șterge'}
+                                        <button className="icon-btn" onClick={() => setDeleteConfirm({ isOpen: true, brand })} title={(lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge'))}
                                             style={{ width: 30, height: 30, borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             onMouseOver={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)' }}
                                             onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = colors.border }}>
@@ -199,9 +199,9 @@ export default function Brands() {
                                 {/* Stats row — clean, minimal */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
                                     {[
-                                        { label: lang === 'en' ? 'Total' : 'Total', value: stats.total, accent: false },
-                                        { label: lang === 'en' ? 'Active' : 'Active', value: stats.active, accent: '#22c55e' },
-                                        { label: lang === 'en' ? 'Inactive' : 'Inactive', value: stats.total - stats.active, accent: false },
+                                        { label: (lang === 'ru' ? 'Total' : (lang === 'en' ? 'Total' : 'Total')), value: stats.total, accent: false },
+                                        { label: (lang === 'ru' ? 'Active' : (lang === 'en' ? 'Active' : 'Active')), value: stats.active, accent: '#22c55e' },
+                                        { label: (lang === 'ru' ? 'Inactive' : (lang === 'en' ? 'Inactive' : 'Inactive')), value: stats.total - stats.active, accent: false },
                                     ].map(s => (
                                         <div key={s.label} style={{ textAlign: 'center', padding: '10px 4px', borderRadius: '9px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
                                             <div style={{ fontSize: '20px', fontWeight: '700', color: s.accent || colors.text, lineHeight: 1.1 }}>{s.value}</div>
@@ -241,12 +241,12 @@ export default function Brands() {
                     onClick={e => e.target === e.currentTarget && (setShowModal(false), resetForm())}>
                     <div style={{ background: isDark ? '#1c1c1e' : '#fff', border: `1px solid ${colors.border}`, borderRadius: '16px', padding: '28px', width: 420, maxWidth: '92vw', animation: 'modalIn 0.2s ease', boxShadow: '0 24px 64px rgba(0,0,0,0.25)' }}>
                         <h2 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px', color: colors.text }}>
-                            {editingBrand ? (lang === 'en' ? '✏ Edit Brand' : '✏ Editează Brand') : (lang === 'en' ? '＋ New Brand' : '＋ Brand Nou')}
+                            {editingBrand ? ((lang === 'ru' ? '✏ Editează Brand' : (lang === 'en' ? '✏ Edit Brand' : '✏ Editează Brand'))) : ((lang === 'ru' ? '＋ Brand Nou' : (lang === 'en' ? '＋ New Brand' : '＋ Brand Nou')))}
                         </h2>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '6px' }}>
-                                    {lang === 'en' ? 'Brand Name *' : 'Nume Brand *'}
+                                    {(lang === 'ru' ? 'Nume Brand *' : (lang === 'en' ? 'Brand Name *' : 'Nume Brand *'))}
                                 </label>
                                 <input type="text" required value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -264,7 +264,7 @@ export default function Brands() {
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px' }}>
-                                    {lang === 'en' ? 'Categories' : 'Categorii Brand'}
+                                    {(lang === 'ru' ? 'Categorii Brand' : (lang === 'en' ? 'Categories' : 'Categorii Brand'))}
                                 </label>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                     {['Sushi', 'Burger', 'Pizza', 'Asia', 'Meniu'].map(cat => {
@@ -298,11 +298,11 @@ export default function Brands() {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
                                 <button type="button" onClick={() => { setShowModal(false); resetForm() }}
                                     style={{ padding: '9px 18px', background: 'transparent', color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                                    {lang === 'en' ? 'Cancel' : 'Anulează'}
+                                    {(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}
                                 </button>
                                 <button type="submit"
                                     style={{ padding: '9px 20px', background: '#6366F1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
-                                    {editingBrand ? (lang === 'en' ? 'Update' : 'Salvează') : (lang === 'en' ? 'Create' : 'Creează')}
+                                    {editingBrand ? ((lang === 'ru' ? 'Salvează' : (lang === 'en' ? 'Update' : 'Salvează'))) : ((lang === 'ru' ? 'Creează' : (lang === 'en' ? 'Create' : 'Creează')))}
                                 </button>
                             </div>
                         </form>
@@ -314,10 +314,10 @@ export default function Brands() {
                 isOpen={deleteConfirm.isOpen}
                 onClose={() => setDeleteConfirm({ isOpen: false, brand: null })}
                 onConfirm={confirmDelete}
-                title={lang === 'en' ? 'Delete Brand' : 'Șterge Brand'}
-                message={`${lang === 'en' ? 'Delete' : 'Ștergi'} "${deleteConfirm.brand?.name}"? ${lang === 'en' ? 'All associated restaurants will also be deleted.' : 'Vor fi șterse și toate restaurantele asociate!'}`}
-                confirmText={lang === 'en' ? 'Delete' : 'Șterge'}
-                cancelText={lang === 'en' ? 'Cancel' : 'Anulează'}
+                title={(lang === 'ru' ? 'Șterge Brand' : (lang === 'en' ? 'Delete Brand' : 'Șterge Brand'))}
+                message={`${(lang === 'ru' ? 'Ștergi' : (lang === 'en' ? 'Delete' : 'Ștergi'))} "${deleteConfirm.brand?.name}"? ${(lang === 'ru' ? 'Vor fi șterse și toate restaurantele asociate!' : (lang === 'en' ? 'All associated restaurants will also be deleted.' : 'Vor fi șterse și toate restaurantele asociate!'))}`}
+                confirmText={(lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge'))}
+                cancelText={(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}
                 variant="danger"
             />
         </div>

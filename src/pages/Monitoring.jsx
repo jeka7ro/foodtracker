@@ -198,7 +198,7 @@ export default function Monitoring() {
                 setTimeout(() => fetchData(true), 1000)
                 setTimeout(() => setCheckModal(prev => ({ ...prev, open: false })), 2000)
             } else {
-                setCheckModal(prev => ({ ...prev, done: true, error: (lang === 'en' ? 'Check failed. Status: ' : 'Verificarea a eșuat. Status: ') + response.status }))
+                setCheckModal(prev => ({ ...prev, done: true, error: ((lang === 'ru' ? 'Ошибка проверки. Статус: ' : (lang === 'en' ? 'Check failed. Status: ' : 'Verificarea a eșuat. Status: '))) + response.status }))
             }
         } catch {
             setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează' }))
@@ -415,7 +415,7 @@ export default function Monitoring() {
                                 : <IconLoader size={22} color="#6366F1" />
                             }
                             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: colors.text, letterSpacing: '-0.3px' }}>
-                                {checkModal.done ? (lang === 'en' ? 'Check complete' : 'Verificare completă') : (lang === 'en' ? 'Checking' : 'Verificare în curs')}
+                                {checkModal.done ? ((lang === 'ru' ? 'Проверка завершена' : (lang === 'en' ? 'Check complete' : 'Verificare completă'))) : ((lang === 'ru' ? 'Проверка' : (lang === 'en' ? 'Checking' : 'Verificare în curs')))}
                             </h2>
                         </div>
                         <p style={{ margin: '0 0 20px 38px', fontSize: '13px', color: colors.textSecondary, fontWeight: '400' }}>
@@ -526,7 +526,7 @@ export default function Monitoring() {
                         </h1>
                     </div>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, paddingLeft: '32px' }}>
-                        {lang === 'en' ? 'Real-time status · Updated:' : 'Status real-time · Actualizat:'} {lastRefresh.toLocaleTimeString('ro-RO')}
+                        {(lang === 'ru' ? 'Статус в реальном времени · Обновлен:' : (lang === 'en' ? 'Real-time status · Updated:' : 'Status real-time · Actualizat:'))} {lastRefresh.toLocaleTimeString('ro-RO')}
                     </p>
                 </div>
 
@@ -558,10 +558,10 @@ export default function Monitoring() {
             {/* ═══════ STAT CARDS ═══════ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
                 {[
-                    { label: lang === 'en' ? 'Restaurants' : 'Restaurante', value: restaurants.length, sub: lang === 'en' ? 'Active monitoring' : 'Monitorizare activă', color: '#6366F1', icon: <IconSignal size={16} color="#6366F1" />, href: '/restaurants', hint: lang === 'en' ? 'View restaurants →' : 'Vezi restaurante →' },
-                    { label: lang === 'en' ? 'Availability' : 'Disponibilitate', value: `${uptimePercent}%`, sub: `${availableCount}/${totalChecks} disponibile`, color: uptimePercent > 90 ? '#34C759' : uptimePercent > 70 ? '#FF9500' : '#FF3B30', icon: <IconCheck size={16} color={uptimePercent > 90 ? '#34C759' : '#FF9500'} />, href: '/stop-control', hint: 'Stop Control →' },
-                    { label: lang === 'en' ? 'Checks' : 'Verificări', value: checks.length, sub: lang === 'en' ? 'Total recorded' : 'Total înregistrate', color: '#8E8E93', icon: <IconHistory size={16} color="#8E8E93" />, href: '/events', hint: lang === 'en' ? 'View events →' : 'Vezi evenimente →' },
-                    { label: lang === 'en' ? 'Issues' : 'Probleme', value: issueCount, sub: issueCount === 0 ? (lang === 'en' ? 'All OK' : 'Totul OK') : (lang === 'en' ? 'Needs attention' : 'Necesită atenție'), color: issueCount > 0 ? '#FF3B30' : '#34C759', icon: <IconWarning size={16} color={issueCount > 0 ? '#FF3B30' : '#34C759'} />, href: '/alerts', hint: lang === 'en' ? 'View alerts →' : 'Vezi alerte →' },
+                    { label: (lang === 'ru' ? 'Рестораны' : (lang === 'en' ? 'Restaurants' : 'Restaurante')), value: restaurants.length, sub: (lang === 'ru' ? 'Активный мониторинг' : (lang === 'en' ? 'Active monitoring' : 'Monitorizare activă')), color: '#6366F1', icon: <IconSignal size={16} color="#6366F1" />, href: '/restaurants', hint: (lang === 'ru' ? 'Посмотреть рестораны →' : (lang === 'en' ? 'View restaurants →' : 'Vezi restaurante →')) },
+                    { label: (lang === 'ru' ? 'Доступность' : (lang === 'en' ? 'Availability' : 'Disponibilitate')), value: `${uptimePercent}%`, sub: `${availableCount}/${totalChecks} disponibile`, color: uptimePercent > 90 ? '#34C759' : uptimePercent > 70 ? '#FF9500' : '#FF3B30', icon: <IconCheck size={16} color={uptimePercent > 90 ? '#34C759' : '#FF9500'} />, href: '/stop-control', hint: 'Stop Control →' },
+                    { label: (lang === 'ru' ? 'Проверки' : (lang === 'en' ? 'Checks' : 'Verificări')), value: checks.length, sub: (lang === 'ru' ? 'Всего записано' : (lang === 'en' ? 'Total recorded' : 'Total înregistrate')), color: '#8E8E93', icon: <IconHistory size={16} color="#8E8E93" />, href: '/events', hint: (lang === 'ru' ? 'Посмотреть события →' : (lang === 'en' ? 'View events →' : 'Vezi evenimente →')) },
+                    { label: (lang === 'ru' ? 'Проблемы' : (lang === 'en' ? 'Issues' : 'Probleme')), value: issueCount, sub: issueCount === 0 ? ((lang === 'ru' ? 'Все ОК' : (lang === 'en' ? 'All OK' : 'Totul OK'))) : ((lang === 'ru' ? 'Требует внимания' : (lang === 'en' ? 'Needs attention' : 'Necesită atenție'))), color: issueCount > 0 ? '#FF3B30' : '#34C759', icon: <IconWarning size={16} color={issueCount > 0 ? '#FF3B30' : '#34C759'} />, href: '/alerts', hint: (lang === 'ru' ? 'Посмотреть оповещения →' : (lang === 'en' ? 'View alerts →' : 'Vezi alerte →')) },
                 ].map((stat, i) => (
                     <div key={i}
                         onClick={() => navigate(stat.href)}
@@ -633,7 +633,7 @@ export default function Monitoring() {
                                     }} />
                                 </div>
                                 <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '8px' }}>
-                                    {platformAvailable}/{platformChecks.length} {lang === 'en' ? 'restaurants available' : 'restaurante disponibile'}
+                                    {platformAvailable}/{platformChecks.length} {(lang === 'ru' ? 'рестораны доступны' : (lang === 'en' ? 'restaurants available' : 'restaurante disponibile'))}
                                 </div>
                             </div>
                         )
@@ -667,7 +667,7 @@ export default function Monitoring() {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)' }}>
-                                    {[lang === 'en' ? 'Time' : 'Timp', 'Restaurant', lang === 'en' ? 'Platform' : 'Platformă', 'Status', 'Rating', 'Info'].map(h => (
+                                    {[(lang === 'ru' ? 'Время' : (lang === 'en' ? 'Time' : 'Timp')), 'Restaurant', (lang === 'ru' ? 'Платформа' : (lang === 'en' ? 'Platform' : 'Platformă')), 'Status', 'Rating', 'Info'].map(h => (
                                         <th key={h} style={{
                                             padding: '10px 14px', textAlign: h === 'Restaurant' || h === 'Timp' || h === 'Info' ? 'left' : 'center',
                                             fontSize: '11px', fontWeight: '600', color: colors.textSecondary,

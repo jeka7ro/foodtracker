@@ -9,7 +9,7 @@ export default function SmartAssistant() {
     const workerUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WORKER_URL) || 'http://localhost:3001'
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState([
-        { role: 'assistant', text: lang === 'en' ? "Hello! I'm your AI business analyst. How can I help you today? You can ask me about competitor prices, platform analytics, or simply how to use the app." : 'Salut! Sunt asistentul tău de analiză business. Cum te pot ajuta azi? Mă poți întreba despre prețurile concurenților, analize sau doar cum să folosești platforma.' }
+        { role: 'assistant', text: (lang === 'ru' ? "Salut! Sunt asistentul tău de analiză business. Cum te pot ajuta azi? Mă poți întreba despre prețurile concurenților, analize sau doar cum să folosești platforma." : (lang === 'en' ? "Hello! I'm your AI business analyst. How can I help you today? You can ask me about competitor prices, platform analytics, or simply how to use the app." : 'Salut! Sunt asistentul tău de analiză business. Cum te pot ajuta azi? Mă poți întreba despre prețurile concurenților, analize sau doar cum să folosești platforma.')) }
     ])
     const [input, setInput] = useState('')
     const messagesEndRef = useRef(null)
@@ -164,7 +164,7 @@ export default function SmartAssistant() {
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleSend()}
-                            placeholder={lang === 'en' ? 'Ask me anything...' : 'Întreabă-mă orice...'}
+                            placeholder={(lang === 'ru' ? 'Întreabă-mă orice...' : (lang === 'en' ? 'Ask me anything...' : 'Întreabă-mă orice...'))}
                             style={{ flex: 1, padding: '10px 14px', borderRadius: '12px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(0,0,0,0.2)' : '#fff', color: colors.text, fontSize: '13px', outline: 'none' }}
                         />
                         <button onClick={handleSend} style={{ width: 38, height: 38, borderRadius: '12px', background: '#2bbec8', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

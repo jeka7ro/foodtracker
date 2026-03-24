@@ -124,7 +124,7 @@ export default function StopPrices() {
                     💰 Comparație Prețuri
                 </h1>
                 <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                    {lang === 'en' ? 'Compare prices of the same product across different platforms and restaurants — identify discrepancies' : 'Compara preturile aceluiasi produs pe diferite platforme si restaurante — identifica discrepantele'}
+                    {(lang === 'ru' ? 'Сравнивайте цены на платформе и в ресторанах' : (lang === 'en' ? 'Compare prices of the same product across different platforms and restaurants — identify discrepancies' : 'Compara preturile aceluiasi produs pe diferite platforme si restaurante — identifica discrepantele'))}
                 </p>
             </div>
 
@@ -145,20 +145,20 @@ export default function StopPrices() {
             {/* Filters */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <select value={selectedBrand} onChange={e => { setSelectedBrand(e.target.value); setSelectedCity('all'); setSelectedRestaurant('all') }} style={sel}>
-                    <option value="all">{lang === 'en' ? 'All brands' : 'Toate brandurile'}</option>
+                    <option value="all">{(lang === 'ru' ? 'Все бренды' : (lang === 'en' ? 'All brands' : 'Toate brandurile'))}</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
                 <select value={selectedCity} onChange={e => { setSelectedCity(e.target.value); setSelectedRestaurant('all') }} style={sel}>
-                    <option value="all">{lang === 'en' ? 'All cities' : 'Toate orasele'}</option>
+                    <option value="all">{(lang === 'ru' ? 'Все города' : (lang === 'en' ? 'All cities' : 'Toate orasele'))}</option>
                     {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
                 <select value={selectedRestaurant} onChange={e => setSelectedRestaurant(e.target.value)} style={sel}>
-                    <option value="all">{lang === 'en' ? 'All restaurants' : 'Toate restaurantele'}</option>
+                    <option value="all">{(lang === 'ru' ? 'Все рестораны' : (lang === 'en' ? 'All restaurants' : 'Toate restaurantele'))}</option>
                     {availableRestaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={lang === 'en' ? 'Search product...' : 'Cauta produs...'} style={{ ...sel, minWidth: '200px' }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={(lang === 'ru' ? 'Поиск продукта...' : (lang === 'en' ? 'Search product...' : 'Cauta produs...'))} style={{ ...sel, minWidth: '200px' }} />
                 <span style={{ fontSize: '12px', color: colors.textSecondary, marginLeft: 'auto' }}>
-                    {priceComparison.length} produse · {totalWithDiffs} {lang === 'en' ? 'with differences' : 'cu diferente'}
+                    {priceComparison.length} produse · {totalWithDiffs} {(lang === 'ru' ? 'с отличиями' : (lang === 'en' ? 'with differences' : 'cu diferente'))}
                 </span>
             </div>
 
@@ -197,7 +197,7 @@ export default function StopPrices() {
                                         <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{item.name}</div>
                                         {item.category && <div style={{ fontSize: '10px', color: colors.textSecondary }}>{item.category}</div>}
                                     </div>
-                                    <span style={{ fontSize: '12px', color: colors.textSecondary }}>{item.entries.length} {lang === 'en' ? 'entries' : 'intrari'}</span>
+                                    <span style={{ fontSize: '12px', color: colors.textSecondary }}>{item.entries.length} {(lang === 'ru' ? 'записей' : (lang === 'en' ? 'entries' : 'intrari'))}</span>
                                     <div style={{ textAlign: 'right', minWidth: '160px' }}>
                                         <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{item.min.toFixed(2)} — {item.max.toFixed(2)} RON</div>
                                         {item.hasDiff && (() => {
@@ -220,7 +220,7 @@ export default function StopPrices() {
                                         })()}
                                     </div>
                                     {item.hasDiff
-                                        ? <span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,149,0,0.12)', color: '#FF9500' }}>{lang === 'en' ? 'DIFFERENT' : 'DIFERIT'}</span>
+                                        ? <span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,149,0,0.12)', color: '#FF9500' }}>{(lang === 'ru' ? 'ОТЛИЧИЯ' : (lang === 'en' ? 'DIFFERENT' : 'DIFERIT'))}</span>
                                         : <span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(34,197,94,0.12)', color: '#22c55e' }}>EGAL</span>}
                                 </div>
                                 {isExp && (

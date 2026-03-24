@@ -141,11 +141,11 @@ export default function StopSetari() {
         <div style={{ padding: '10px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>⚙️ {lang === 'en' ? 'Scan Settings' : 'Setări Scanare'}</h1>
-                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>{lang === 'en' ? 'Configure scanning rules — choose brand, restaurant, or all' : 'Configureaza regulile de scanare — alege brand, restaurant sau toate'}</p>
+                    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>⚙️ {(lang === 'ru' ? 'Настройки сканирования' : (lang === 'en' ? 'Scan Settings' : 'Setări Scanare'))}</h1>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>{(lang === 'ru' ? 'Настройкa правил сканирования (бренды, рестораны)' : (lang === 'en' ? 'Configure scanning rules — choose brand, restaurant, or all' : 'Configureaza regulile de scanare — alege brand, restaurant sau toate'))}</p>
                 </div>
                 <button onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
-                    + {lang === 'en' ? 'Add Rule' : 'Adaugă regulă'}
+                    + {(lang === 'ru' ? 'Добавить правило' : (lang === 'en' ? 'Add Rule' : 'Adaugă regulă'))}
                 </button>
             </div>
 
@@ -154,18 +154,18 @@ export default function StopSetari() {
                 <>
                     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100 }} onClick={() => setDeleteConfirm(null)} />
                     <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, ...g, padding: '28px 32px', width: '420px', maxWidth: '90vw' }}>
-                        <div style={{ fontSize: '16px', fontWeight: '800', color: colors.text, marginBottom: '12px' }}>⚠️ {lang === 'en' ? 'Delete Rule' : 'Șterge regula'}</div>
-                        <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '24px' }}>{lang === 'en' ? 'What do you want to delete?' : 'Ce dorești să ștergi?'}</div>
+                        <div style={{ fontSize: '16px', fontWeight: '800', color: colors.text, marginBottom: '12px' }}>⚠️ {(lang === 'ru' ? 'Удалить правило' : (lang === 'en' ? 'Delete Rule' : 'Șterge regula'))}</div>
+                        <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '24px' }}>{(lang === 'ru' ? 'Что вы хотите удалить?' : (lang === 'en' ? 'What do you want to delete?' : 'Ce dorești să ștergi?'))}</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <button onClick={() => handleDelete(deleteConfirm, false)} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', cursor: 'pointer', textAlign: 'left' }}>
-                                <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{lang === 'en' ? 'Only the rule' : 'Doar regula'}</div>
-                                <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{lang === 'en' ? 'Delete the rule but keep history results' : 'Sterge regula dar pastreaza rezultatele din istoric'}</div>
+                                <div style={{ fontSize: '13px', fontWeight: '700', color: colors.text }}>{(lang === 'ru' ? 'Только правило' : (lang === 'en' ? 'Only the rule' : 'Doar regula'))}</div>
+                                <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{(lang === 'ru' ? 'Удалить правило, но сохранить историю' : (lang === 'en' ? 'Delete the rule but keep history results' : 'Sterge regula dar pastreaza rezultatele din istoric'))}</div>
                             </button>
                             <button onClick={() => handleDelete(deleteConfirm, true)} style={{ padding: '12px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', cursor: 'pointer', textAlign: 'left' }}>
-                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#ef4444' }}>{lang === 'en' ? 'Delete also results' : 'Sterge si rezultatele'}</div>
-                                <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{lang === 'en' ? 'Delete the rule and all data from history' : 'Sterge regula si toate datele din istoric'}</div>
+                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#ef4444' }}>{(lang === 'ru' ? 'Удалить также результаты' : (lang === 'en' ? 'Delete also results' : 'Sterge si rezultatele'))}</div>
+                                <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{(lang === 'ru' ? 'Удалить правило и всю историю' : (lang === 'en' ? 'Delete the rule and all data from history' : 'Sterge regula si toate datele din istoric'))}</div>
                             </button>
-                            <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'en' ? 'Cancel' : 'Anulează'}</button>
+                            <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
                         </div>
                     </div>
                 </>
@@ -177,19 +177,19 @@ export default function StopSetari() {
                     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100 }} onClick={() => { setShowForm(false); resetForm() }} />
                     <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, ...g, padding: '28px 32px', width: '540px', maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto' }}>
                         <div style={{ fontSize: '16px', fontWeight: '800', color: colors.text, marginBottom: '20px' }}>
-                            {editingId ? (lang === 'en' ? '✏️ Edit Rule' : '✏️ Editează Regula') : (lang === 'en' ? '➕ Add Scan Rule' : '➕ Adaugă Regulă de Scanare')}
+                            {editingId ? ((lang === 'ru' ? '✏️ Изменить' : (lang === 'en' ? '✏️ Edit Rule' : '✏️ Editează Regula'))) : ((lang === 'ru' ? '➕ Добавить' : (lang === 'en' ? '➕ Add Scan Rule' : '➕ Adaugă Regulă de Scanare')))}
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
-                                <Lbl>{lang === 'en' ? 'Rule name' : 'Nume regulă'}</Lbl>
+                                <Lbl>{(lang === 'ru' ? 'Имя правила' : (lang === 'en' ? 'Rule name' : 'Nume regulă'))}</Lbl>
                                 <input value={formName} onChange={e => setFormName(e.target.value)} placeholder="ex: Sushi Master - toate" style={sel} />
                             </div>
 
                             <div>
-                                <Lbl>{lang === 'en' ? 'Scan type' : 'Tip scanare'}</Lbl>
+                                <Lbl>{(lang === 'ru' ? 'Тип сканирования' : (lang === 'en' ? 'Scan type' : 'Tip scanare'))}</Lbl>
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                    {[['all', lang === 'en' ? 'All' : 'Toate'], ['brand', 'Brand'], ['restaurant', 'Restaurant']].map(([v, l]) => (
+                                    {[['all', (lang === 'ru' ? 'Все' : (lang === 'en' ? 'All' : 'Toate'))], ['brand', 'Brand'], ['restaurant', 'Restaurant']].map(([v, l]) => (
                                         <button key={v} onClick={() => setFormType(v)}
                                             style={{ flex: 1, padding: '10px', borderRadius: '10px', border: formType === v ? '2px solid #6366F1' : `1px solid ${colors.border}`, background: formType === v ? 'rgba(99,102,241,0.08)' : 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: formType === v ? '#6366F1' : colors.text }}>
                                             {l}
@@ -201,7 +201,7 @@ export default function StopSetari() {
                             {formType === 'brand' && (
                                 <div>
                                     <Lbl>{lang === 'en' ? `Brands (${formBrands.length} selected)` : `Branduri (${formBrands.length} selectate)`}</Lbl>
-                                    <input value={brandSearch} onChange={e => setBrandSearch(e.target.value)} placeholder={lang === 'en' ? "Search brand..." : "Cauta brand..."} style={{ ...sel, marginBottom: '6px' }} />
+                                    <input value={brandSearch} onChange={e => setBrandSearch(e.target.value)} placeholder={(lang === 'ru' ? "Поиск бренда..." : (lang === 'en' ? "Search brand..." : "Cauta brand..."))} style={{ ...sel, marginBottom: '6px' }} />
                                     <div style={{ maxHeight: '140px', overflowY: 'auto', borderRadius: '10px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}>
                                         {filteredBrands.map(b => (
                                             <div key={b.id} onClick={() => toggleFormBrand(b.id)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', cursor: 'pointer', borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, background: formBrands.includes(b.id) ? 'rgba(99,102,241,0.08)' : 'transparent' }}>
@@ -219,11 +219,11 @@ export default function StopSetari() {
                             {formType === 'restaurant' && (
                                 <div>
                                     <Lbl>{lang === 'en' ? `Restaurants (${formRestaurants.length} selected)` : `Restaurante (${formRestaurants.length} selectate)`}</Lbl>
-                                    <input value={restSearch} onChange={e => setRestSearch(e.target.value)} placeholder={lang === 'en' ? "Search restaurant or city..." : "Cauta restaurant sau oras..."} style={{ ...sel, marginBottom: '6px' }} />
+                                    <input value={restSearch} onChange={e => setRestSearch(e.target.value)} placeholder={(lang === 'ru' ? "Поиск города или ресторана..." : (lang === 'en' ? "Search restaurant or city..." : "Cauta restaurant sau oras..."))} style={{ ...sel, marginBottom: '6px' }} />
                                     <div style={{ maxHeight: '180px', overflowY: 'auto', borderRadius: '10px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}>
                                         <div style={{ padding: '5px 14px', display: 'flex', gap: '6px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
-                                            <button onClick={() => setFormRestaurants(filteredRestaurants.map(r => r.id))} style={{ fontSize: '10px', fontWeight: '700', color: '#6366F1', background: 'rgba(99,102,241,0.08)', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer' }}>{lang === 'en' ? 'Select all' : 'Selecteaza tot'}</button>
-                                            <button onClick={() => setFormRestaurants([])} style={{ fontSize: '10px', fontWeight: '700', color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: '5px', padding: '3px 8px', cursor: 'pointer' }}>{lang === 'en' ? 'Deselect' : 'Deselecteaza'}</button>
+                                            <button onClick={() => setFormRestaurants(filteredRestaurants.map(r => r.id))} style={{ fontSize: '10px', fontWeight: '700', color: '#6366F1', background: 'rgba(99,102,241,0.08)', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer' }}>{(lang === 'ru' ? 'Выбрать все' : (lang === 'en' ? 'Select all' : 'Selecteaza tot'))}</button>
+                                            <button onClick={() => setFormRestaurants([])} style={{ fontSize: '10px', fontWeight: '700', color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: '5px', padding: '3px 8px', cursor: 'pointer' }}>{(lang === 'ru' ? 'Снять выбор' : (lang === 'en' ? 'Deselect' : 'Deselecteaza'))}</button>
                                         </div>
                                         {filteredRestaurants.map(r => (
                                             <div key={r.id} onClick={() => toggleFormRest(r.id)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 14px', cursor: 'pointer', borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, background: formRestaurants.includes(r.id) ? 'rgba(99,102,241,0.08)' : 'transparent' }}>
@@ -240,7 +240,7 @@ export default function StopSetari() {
                             )}
 
                             <div>
-                                <Lbl>{lang === 'en' ? 'Platforms' : 'Platforme'}</Lbl>
+                                <Lbl>{(lang === 'ru' ? 'Платформы' : (lang === 'en' ? 'Platforms' : 'Platforme'))}</Lbl>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     {[['wolt', '#009de0'], ['glovo', '#FFC244'], ['bolt', '#34D186']].map(([p, c]) => (
                                         <button key={p} onClick={() => togglePlatform(p)}
@@ -253,7 +253,7 @@ export default function StopSetari() {
 
                             {/* ═══ SCHEDULE SECTION ═══ */}
                             <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, paddingTop: '14px' }}>
-                                <Lbl>📅 {lang === 'en' ? 'Schedule' : 'Programare'}</Lbl>
+                                <Lbl>📅 {(lang === 'ru' ? 'Расписание' : (lang === 'en' ? 'Schedule' : 'Programare'))}</Lbl>
                                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                                     {FREQ.map(([v, l]) => (
                                         <button key={v} onClick={() => setFormFreq(v)}
@@ -266,7 +266,7 @@ export default function StopSetari() {
                                 {formFreq !== 'manual' && (
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
                                         <div style={{ flex: 1 }}>
-                                            <Lbl>{lang === 'en' ? 'Time' : 'Ora'}</Lbl>
+                                            <Lbl>{(lang === 'ru' ? 'Время' : (lang === 'en' ? 'Time' : 'Ora'))}</Lbl>
                                             <input type="time" value={formTime} onChange={e => setFormTime(e.target.value)} style={sel} />
                                         </div>
                                     </div>
@@ -274,7 +274,7 @@ export default function StopSetari() {
 
                                 {formFreq === 'weekly' && (
                                     <div>
-                                        <Lbl>{lang === 'en' ? 'Days' : 'Zile'}</Lbl>
+                                        <Lbl>{(lang === 'ru' ? 'Дни' : (lang === 'en' ? 'Days' : 'Zile'))}</Lbl>
                                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                             {DAYS.map((day) => (
                                                 <button key={day.d} onClick={() => toggleDay(day.d)}
@@ -289,10 +289,10 @@ export default function StopSetari() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
-                            <button onClick={() => { setShowForm(false); resetForm() }} style={{ padding: '10px 20px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{lang === 'en' ? 'Cancel' : 'Anulează'}</button>
+                            <button onClick={() => { setShowForm(false); resetForm() }} style={{ padding: '10px 20px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
                             <button onClick={saveRule} disabled={saving || !formName.trim()}
                                 style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: saving || !formName.trim() ? 0.5 : 1 }}>
-                                {saving ? (lang === 'en' ? 'Saving...' : 'Se salveaza...') : editingId ? (lang === 'en' ? 'Save Changes' : 'Salvează Modificarile') : (lang === 'en' ? 'Save' : 'Salvează')}
+                                {saving ? ((lang === 'ru' ? 'Сохранение...' : (lang === 'en' ? 'Saving...' : 'Se salveaza...'))) : editingId ? ((lang === 'ru' ? 'Сохранить изменения' : (lang === 'en' ? 'Save Changes' : 'Salvează Modificarile'))) : ((lang === 'ru' ? 'Сохранить' : (lang === 'en' ? 'Save' : 'Salvează')))}
                             </button>
                         </div>
                     </div>
@@ -301,20 +301,20 @@ export default function StopSetari() {
 
             {/* Rules list */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>{lang === 'en' ? 'Loading...' : 'Se incarca...'}</div>
+                <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>{(lang === 'ru' ? 'Загрузка...' : (lang === 'en' ? 'Loading...' : 'Se incarca...'))}</div>
             ) : rules.length === 0 ? (
                 <div style={{ ...g, padding: '48px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{lang === 'en' ? 'No rules configured' : 'Nicio regulă configurată'}</div>
-                    <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '6px' }}>{lang === 'en' ? 'Add a rule to configure automatic scanning' : 'Adaugă o regulă pentru a configura scanarea automată'}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{(lang === 'ru' ? 'Правила не настроены' : (lang === 'en' ? 'No rules configured' : 'Nicio regulă configurată'))}</div>
+                    <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '6px' }}>{(lang === 'ru' ? 'Добавьте правило для автоматического сканирования' : (lang === 'en' ? 'Add a rule to configure automatic scanning' : 'Adaugă o regulă pentru a configura scanarea automată'))}</div>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {rules.map(rule => {
-                        const scopeInfo = rule.scope_type === 'all' ? (lang === 'en' ? 'All brands and restaurants' : 'Toate brandurile si restaurantele')
-                            : rule.scope_type === 'brand' ? `${lang === 'en' ? 'Brands' : 'Branduri'}: ${(rule.brand_ids || [rule.brand_id]).filter(Boolean).map(id => brands.find(b => b.id === id)?.name || '?').join(', ')}`
-                            : `${lang === 'en' ? 'Restaurants' : 'Restaurante'}: ${(rule.restaurant_ids || [rule.restaurant_id]).filter(Boolean).length} ${lang === 'en' ? 'selected' : 'selectate'}`
-                        const schedInfo = rule.schedule_frequency === 'manual' ? (lang === 'en' ? 'Manual' : 'Manual')
-                            : `${freqLabel(rule.schedule_frequency)} ${lang === 'en' ? 'at' : 'la'} ${rule.schedule_time || '08:00'}${rule.schedule_frequency === 'weekly' && rule.schedule_days?.length ? ` (${rule.schedule_days.map(d => {
+                        const scopeInfo = rule.scope_type === 'all' ? ((lang === 'ru' ? 'Все бренды и рестораны' : (lang === 'en' ? 'All brands and restaurants' : 'Toate brandurile si restaurantele')))
+                            : rule.scope_type === 'brand' ? `${(lang === 'ru' ? 'Branduri' : (lang === 'en' ? 'Brands' : 'Branduri'))}: ${(rule.brand_ids || [rule.brand_id]).filter(Boolean).map(id => brands.find(b => b.id === id)?.name || '?').join(', ')}`
+                            : `${(lang === 'ru' ? 'Рестораны' : (lang === 'en' ? 'Restaurants' : 'Restaurante'))}: ${(rule.restaurant_ids || [rule.restaurant_id]).filter(Boolean).length} ${(lang === 'ru' ? 'выбрано' : (lang === 'en' ? 'selected' : 'selectate'))}`
+                        const schedInfo = rule.schedule_frequency === 'manual' ? ((lang === 'ru' ? 'Ручной' : (lang === 'en' ? 'Manual' : 'Manual')))
+                            : `${freqLabel(rule.schedule_frequency)} ${(lang === 'ru' ? 'в' : (lang === 'en' ? 'at' : 'la'))} ${rule.schedule_time || '08:00'}${rule.schedule_frequency === 'weekly' && rule.schedule_days?.length ? ` (${rule.schedule_days.map(d => {
                                 const dayObj = DAYS.find(x => x.d === d);
                                 return dayObj ? (lang === 'en' ? dayObj.en.slice(0,3) : dayObj.d.slice(0,3)) : d.slice(0,3);
                             }).join(', ')})` : ''}`
@@ -327,22 +327,22 @@ export default function StopSetari() {
                                     <div style={{ fontSize: '14px', fontWeight: '700', color: colors.text, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                         {rule.name}
                                         <span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '5px', background: rule.is_active ? 'rgba(34,197,94,0.12)' : 'rgba(255,149,0,0.12)', color: rule.is_active ? '#22c55e' : '#FF9500' }}>
-                                            {rule.is_active ? (lang === 'en' ? 'ACTIVE' : 'ACTIV') : (lang === 'en' ? 'INACTIVE' : 'INACTIV')}
+                                            {rule.is_active ? ((lang === 'ru' ? 'АКТИВЕН' : (lang === 'en' ? 'ACTIVE' : 'ACTIV'))) : ((lang === 'ru' ? 'НЕАКТИВЕН' : (lang === 'en' ? 'INACTIVE' : 'INACTIV')))}
                                         </span>
                                     </div>
                                     <div style={{ fontSize: '11px', color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {scopeInfo} · {lang === 'en' ? 'Platforms' : 'Platforme'}: {(rule.platforms || []).join(', ')}
+                                        {scopeInfo} · {(lang === 'ru' ? 'Платформы' : (lang === 'en' ? 'Platforms' : 'Platforme'))}: {(rule.platforms || []).join(', ')}
                                     </div>
                                     <div style={{ fontSize: '11px', color: '#6366F1', fontWeight: '600', marginTop: '2px' }}>
                                         📅 {schedInfo}
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                                    <button onClick={() => openEdit(rule)} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#6366F1' }}>{lang === 'en' ? 'Edit' : 'Editează'}</button>
+                                    <button onClick={() => openEdit(rule)} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#6366F1' }}>{(lang === 'ru' ? 'Editează' : (lang === 'en' ? 'Edit' : 'Editează'))}</button>
                                     <button onClick={() => toggleActive(rule.id, rule.is_active)} style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: rule.is_active ? '#FF9500' : '#22c55e' }}>
-                                        {rule.is_active ? (lang === 'en' ? 'Deactivate' : 'Dezactiv.') : (lang === 'en' ? 'Activate' : 'Activeaza')}
+                                        {rule.is_active ? ((lang === 'ru' ? 'Деактив.' : (lang === 'en' ? 'Deactivate' : 'Dezactiv.'))) : ((lang === 'ru' ? 'Активировать' : (lang === 'en' ? 'Activate' : 'Activeaza')))}
                                     </button>
-                                    <button onClick={() => setDeleteConfirm(rule.id)} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)', background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#ef4444' }}>{lang === 'en' ? 'Delete' : 'Sterge'}</button>
+                                    <button onClick={() => setDeleteConfirm(rule.id)} style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)', background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#ef4444' }}>{(lang === 'ru' ? 'Sterge' : (lang === 'en' ? 'Delete' : 'Sterge'))}</button>
                                 </div>
                             </div>
                         )

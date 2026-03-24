@@ -485,26 +485,26 @@ export default function DeliveryZone() {
                             <div style={{ width: 48, height: 48, borderRadius: '14px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                                 <svg style={{ animation: 'spin 1.2s linear infinite' }} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: isDark ? '#fff' : '#111', marginBottom: '6px' }}>{lang === 'en' ? 'Import Restaurants' : 'Import Restaurante'}</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: isDark ? '#fff' : '#111', marginBottom: '6px' }}>{(lang === 'ru' ? 'Import Restaurante' : (lang === 'en' ? 'Import Restaurants' : 'Import Restaurante'))}</div>
                             <div style={{ fontSize: '13px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', lineHeight: 1.5 }}>{lang === 'en' ? importProgress.phase.replace('Se geocodează', 'Geocoding').replace('restaurant', 'restaurant').replace('completat', 'completed') : importProgress.phase}</div>
                         </div>
                         {importProgress.total && (
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                    <span style={{ fontSize: '11px', fontWeight: '600', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{lang === 'en' ? 'Progress' : 'Progres'}</span>
+                                    <span style={{ fontSize: '11px', fontWeight: '600', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{(lang === 'ru' ? 'Прогресс' : (lang === 'en' ? 'Progress' : 'Progres'))}</span>
                                     <span style={{ fontSize: '12px', fontWeight: '700', color: '#6366F1' }}>{importProgress.current} / {importProgress.total}</span>
                                 </div>
                                 <div style={{ height: 6, borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                                     <div style={{ height: '100%', borderRadius: 6, background: 'linear-gradient(90deg, #6366F1, #8B5CF6)', width: `${Math.round((importProgress.current / importProgress.total) * 100)}%`, transition: 'width 0.4s ease' }} />
                                 </div>
                                 <div style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', marginTop: '8px', textAlign: 'center' }}>
-                                    {Math.round((importProgress.current / importProgress.total) * 100)}% {lang === 'en' ? 'completed' : 'completat'}
+                                    {Math.round((importProgress.current / importProgress.total) * 100)}% {(lang === 'ru' ? 'завершено' : (lang === 'en' ? 'completed' : 'completat'))}
                                 </div>
                             </div>
                         )}
                         <button onClick={() => { cancelImportRef.current = true }}
                             style={{ marginTop: '20px', width: '100%', padding: '9px', borderRadius: '10px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`, background: 'transparent', color: '#ef4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                            {lang === 'en' ? 'Cancel import' : 'Anulează importul'}
+                            {(lang === 'ru' ? 'Отменить импорт' : (lang === 'en' ? 'Cancel import' : 'Anulează importul'))}
                         </button>
                     </div>
                 </div>
@@ -517,11 +517,11 @@ export default function DeliveryZone() {
                     <div style={{ flex: 1 }}>
                         {importResult.ok ? (
                             <>
-                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>{lang === 'en' ? 'Import completed successfully' : 'Import finalizat cu succes'}</div>
+                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>{(lang === 'ru' ? 'Импорт успешно завершен' : (lang === 'en' ? 'Import completed successfully' : 'Import finalizat cu succes'))}</div>
                                 <div style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', lineHeight: 1.6 }}>
-                                    <span style={{ fontWeight: '600', color: isDark ? '#fff' : '#111' }}>{importResult.created}</span> {lang === 'en' ? 'new restaurants added' : 'restaurante noi adăugate'} &nbsp;·&nbsp;
-                                    <span style={{ fontWeight: '600', color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>{importResult.skipped}</span> {lang === 'en' ? 'already existing' : 'deja existente'} &nbsp;·&nbsp;
-                                    <span style={{ fontWeight: '600', color: '#f59e0b' }}>{importResult.failed}</span> {lang === 'en' ? 'failed (geocoding)' : 'eșuate (geocodare)'}
+                                    <span style={{ fontWeight: '600', color: isDark ? '#fff' : '#111' }}>{importResult.created}</span> {(lang === 'ru' ? 'добавлены новые рестораны' : (lang === 'en' ? 'new restaurants added' : 'restaurante noi adăugate'))} &nbsp;·&nbsp;
+                                    <span style={{ fontWeight: '600', color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>{importResult.skipped}</span> {(lang === 'ru' ? 'уже существуют' : (lang === 'en' ? 'already existing' : 'deja existente'))} &nbsp;·&nbsp;
+                                    <span style={{ fontWeight: '600', color: '#f59e0b' }}>{importResult.failed}</span> {(lang === 'ru' ? 'ошибка (геокодирование)' : (lang === 'en' ? 'failed (geocoding)' : 'eșuate (geocodare)'))}
                                 </div>
                             </>
                         ) : (
@@ -539,23 +539,23 @@ export default function DeliveryZone() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '8px' }}>
                         <div style={{ flex: 1 }} />
                         <button onClick={importAllRestaurants} disabled={importing} className="btn-secondary"
-                            title={lang === 'en' ? "Auto import active restaurants from DB" : "Importă automat toate restaurantele active din BD cu geocodare"}
+                            title={(lang === 'ru' ? "Автоимпорт активных ресторанов из БД с геокодированием" : (lang === 'en' ? "Auto import active restaurants from DB" : "Importă automat toate restaurantele active din BD cu geocodare"))}
                             style={{ fontSize: '12px' }}>
                             {importing
-                                ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> {lang === 'en' ? 'Importing...' : 'Se importă…'}</>
+                                ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> {(lang === 'ru' ? 'Импорт...' : (lang === 'en' ? 'Importing...' : 'Se importă…'))}</>
                                 : <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg> {t('import_restaurants')}</>}
                         </button>
                         {configs.length > 0 && (
                             <button onClick={() => configs.forEach(c => runCheck(c))} disabled={!!runningId}
                                 style={{ padding: '6px 14px', borderRadius: '7px', border: `1px solid ${colors.border}`, cursor: 'pointer', background: 'transparent', color: colors.text, fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px', opacity: runningId ? 0.6 : 1 }}>
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                                {lang === 'en' ? 'Run All' : 'Rulează Toate'}
+                                {(lang === 'ru' ? 'Запустить все' : (lang === 'en' ? 'Run All' : 'Rulează Toate'))}
                             </button>
                         )}
                         <button onClick={() => { setEditingConfig(null); setForm(emptyForm); setShowForm(true); setShowGlobalRules(false) }}
                             className="btn-primary" style={{ fontSize: '12px' }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                            {lang === 'en' ? 'Add Restaurant' : 'Adaugă Restaurant'}
+                            {(lang === 'ru' ? 'Добавить ресторан' : (lang === 'en' ? 'Add Restaurant' : 'Adaugă Restaurant'))}
                         </button>
                     </div>
 
@@ -563,7 +563,7 @@ export default function DeliveryZone() {
                     {showForm && (
                         <div style={{ ...glass, borderColor: '#6366F1', animation: 'fadeUp 0.2s ease' }}>
                             <div style={{ fontSize: '14px', fontWeight: '700', color: colors.text, marginBottom: '14px' }}>
-                                {editingConfig ? `${lang === 'en' ? 'Edit' : 'Editează'}: ${editingConfig.name}` : (lang === 'en' ? 'Add Monitored Restaurant' : 'Adaugă Restaurant Monitorizat')}
+                                {editingConfig ? `${(lang === 'ru' ? 'Editează' : (lang === 'en' ? 'Edit' : 'Editează'))}: ${editingConfig.name}` : ((lang === 'ru' ? 'Добавить отслеживаемый ресторан' : (lang === 'en' ? 'Add Monitored Restaurant' : 'Adaugă Restaurant Monitorizat')))}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
                                 {/* Config name - free text */}
@@ -579,9 +579,9 @@ export default function DeliveryZone() {
                                             const r = dbRestaurants.find(x => x.name === e.target.value)
                                             setForm(p => ({ ...p, restaurant_name: e.target.value, brand: r?.brand || p.brand, city: r?.city || p.city }))
                                         }}>
-                                        <option value="">-- {lang === 'en' ? 'Select restaurant' : 'Alege restaurantul'} --</option>
+                                        <option value="">-- {(lang === 'ru' ? 'Выберите ресторан' : (lang === 'en' ? 'Select restaurant' : 'Alege restaurantul'))} --</option>
                                         {dbRestaurants.map(r => <option key={r.id} value={r.name}>{r.name} ({r.city})</option>)}
-                                        <option value="__custom__">{lang === 'en' ? '+ Custom name' : '+ Nume personalizat'}</option>
+                                        <option value="__custom__">{(lang === 'ru' ? '+ Пользовательское имя' : (lang === 'en' ? '+ Custom name' : '+ Nume personalizat'))}</option>
                                     </select>
                                     {form.restaurant_name === '__custom__' && (
                                         <input style={{ ...inp({ width: '100%' }), marginTop: '4px' }} placeholder="ex: Sushi Master Halelor" onChange={e => setForm(p => ({ ...p, restaurant_name: e.target.value }))} />

@@ -49,7 +49,7 @@ export default function StopIstoric() {
                         📋 Istoric Scanări
                     </h1>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                        {lang === 'en' ? 'All previous scan results — compare evolution over time' : 'Toate rezultatele scanarilor anterioare — compara evolutia in timp'}
+                        {(lang === 'ru' ? 'Все предыдущие результаты сканирования — сравните эволюцию' : (lang === 'en' ? 'All previous scan results — compare evolution over time' : 'Toate rezultatele scanarilor anterioare — compara evolutia in timp'))}
                     </p>
                 </div>
                 <button onClick={loadHistory} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: colors.textSecondary }}>
@@ -121,7 +121,7 @@ export default function StopIstoric() {
                                                 </span>
                                             </div>
                                             <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>
-                                                Referinta: {item.reference_date} → {lang === 'en' ? 'Check' : 'Verificare'}: {item.check_date}
+                                                Referinta: {item.reference_date} → {(lang === 'ru' ? 'Проверка' : (lang === 'en' ? 'Check' : 'Verificare'))}: {item.check_date}
                                             </div>
                                         </div>
                                     </div>

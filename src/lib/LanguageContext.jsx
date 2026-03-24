@@ -242,10 +242,131 @@ const translations = {
         active_monitoring: 'Active monitoring',
         alerts_today: 'Alerts today',
         revenue_at_risk: 'Revenue at risk',
+    },
+    ru: {
+        // Nav
+        nav_dashboard: 'Аналитика',
+        nav_monitoring: 'Мониторинг',
+        nav_stopControl: 'Стоп-Контроль',
+        nav_marketing: 'Маркетинг',
+        nav_competitors: 'Конкуренты',
+        nav_brands: 'Бренды',
+        nav_restaurants: 'Рестораны',
+        nav_alerts: 'Оповещения',
+        nav_events: 'События',
+        nav_rules: 'Правила',
+        nav_reports: 'Отчеты',
+        nav_discovery: 'Открытия',
+        nav_deliveryZone: 'Зоны Доставки',
+        nav_settings: 'Настройки',
+
+        // Theme
+        theme_light: 'Светлая тема',
+        theme_dark: 'Темная тема',
+
+        // Auth
+        logout: 'Выйти',
+        login: 'Войти',
+        email: 'Эл. почта',
+        password: 'Пароль',
+
+        // Common
+        search: 'Поиск',
+        save: 'Сохранить',
+        cancel: 'Отмена',
+        add: 'Добавить',
+        edit: 'Изменить',
+        delete: 'Удалить',
+        loading: 'Загрузка...',
+        all: 'Все',
+        today: 'Сегодня',
+        export_excel: 'Экспорт Excel',
+        filters: 'Фильтры',
+        results: 'результатов',
+        page: 'Страница',
+        per_page: 'На стр.',
+        back: 'Назад',
+        close: 'Закрыть',
+        confirm: 'Подтвердить?',
+        yes: 'Да',
+        no: 'Нет',
+
+        // Marketing
+        marketing_title: 'Конкурентная разведка',
+        marketing_subtitle: 'Автоматизированный мониторинг конкурентов · Цены · Продукты · Динамика',
+        tab_config: 'Конфигурация',
+        tab_results: 'Результаты',
+        tab_history: 'История',
+        view_chronological: 'Хронология',
+        view_by_brand: 'По бренду',
+        view_by_city: 'По городу',
+        view_by_product: 'Продукт',
+        run_all: 'Запустить всё',
+        add_search: 'Добавить поиск',
+        rank_history: 'История позиций',
+        products_prices: 'Продукты и цены',
+        checks: 'Проверки',
+        appearances: 'Появления',
+        best_rank: 'Лучшая позиция',
+        rating: 'Рейтинг',
+        locations: 'Локации',
+        products: 'Продукты',
+        cities: 'Локации',
+        platforms: 'Платформы',
+        brands_count: 'Бренды',
+        back_to_history: 'К истории',
+        back_to_cities: 'К городам',
+        open_on_platform: 'Открыть на платформе',
+        filter_brand: 'Фильтр бренда…',
+        filter_city: 'Фильтр города…',
+
+        // Delivery Zone
+        dz_title: 'Зоны доставки',
+        dz_subtitle: 'Несколько адресов на ресторан · проверка 1-5 км · проверка',
+        tab_configs: '⚙ Конфигурации',
+        tab_history_dz: '📋 История',
+        import_restaurants: '⬇ Импорт ресторанов',
+        run_all_dz: 'Запустить всё',
+        add_restaurant: 'Добавить',
+        no_restaurants: 'Нет ресторанов',
+        verify: 'Проверить',
+        verifying: 'Проверка...',
+        no_history: 'Нет истории',
+        run_check_hint: 'Запустите проверку',
+        address: 'Адрес',
+        add_address: '+ Адрес',
+        geocode: '📍 Гео',
+        config_name: 'ИМЯ КОНФИГ.',
+        restaurant_name: 'РЕСТОРАН',
+        brand_searched: 'ИСКОМЫЙ БРЕНД',
+        platform: 'ПЛАТФОРМА',
+        city: 'ГОРОД',
+
+        // Settings
+        settings_title: 'Настройки',
+        settings_profile: 'Профиль',
+        settings_avatar: 'Аватар',
+        settings_display_name: 'Имя',
+        settings_language: 'Язык',
+        settings_theme: 'Тема',
+        settings_save: 'Сохранить',
+        settings_saved: 'Сохранено!',
+        upload_avatar: 'Загрузить',
+        remove_avatar: 'Удалить',
+
+        // Competitors
+        competitors_title: 'Конкуренты',
+
+        // Dashboard
+        dashboard_title: 'Дешборд',
+        total_restaurants: 'Активные рестораны',
+        active_monitoring: 'Мониторинг',
+        alerts_today: 'Оповещения сегодня',
+        revenue_at_risk: 'Доходы под угрозой',
     }
 }
 
-const LanguageContext = createContext()
+const LanguageContext = createContext(null)
 
 export const LanguageProvider = ({ children }) => {
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'ro')
