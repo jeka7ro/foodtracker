@@ -27,7 +27,7 @@ import OwnProducts from './pages/OwnProducts'
 import SmartAssistant from './components/SmartAssistant'
 import MarketingPromotions from './pages/MarketingPromotions'
 import MarketingAnalyticsCity from './pages/MarketingAnalyticsCity'
-
+import RoleSettings from './pages/RoleSettings'
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -91,6 +91,9 @@ function Layout({ children }) {
     const isDeliveryActive = location.pathname.startsWith('/delivery-zone')
     const [deliveryOpen, setDeliveryOpen] = useState(isDeliveryActive)
 
+    const isUsersActive = location.pathname === '/users' || location.pathname === '/role-settings'
+    const [usersOpen, setUsersOpen] = useState(isUsersActive)
+
     const SIDEBAR_W = sidebarCollapsed ? 64 : 240
     const HEADER_H = 68  // matches sidebar logo area: 20px top + 34px icon + 14px bottom
 
@@ -151,9 +154,19 @@ function Layout({ children }) {
         { path: '/rules', iconKey: 'rules', label: t('nav_rules') },
         { path: '/reports', iconKey: 'reports', label: t('nav_reports') },
     ]
-    const bottomUsers = [
-        { path: '/users', iconKey: 'users', label: lang === 'en' ? 'Users' : 'Utilizatori' }
+    const usersSubItems = [
+        {
+            path: '/users', match: (p) => p === '/users',
+            label: lang === 'en' ? 'Users List' : 'Listă Utilizatori',
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+        },
+        {
+            path: '/role-settings', match: (p) => p === '/role-settings',
+            label: lang === 'en' ? 'Role Settings' : 'Setări Roluri',
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 11l.01 0c.96-1.92 1.4-3.5 1.15-5-.45-2.7-2.9-4.8-5.65-4.9-3.23-.1-6.17 2.45-6.5 5.65-.25 2.4.65 4.6 2.3 6.1L4 21c-.4.4-.3 1.1.2 1.4.5.3 1.1.2 1.5-.2l.7-.7.7.7c.4.4 1 .5 1.5.2.5-.3.6-1 .2-1.4l1.3-1.3c1.5 1.65 3.7 2.55 6.1 2.3 3.2-.35 5.75-3.27 5.65-6.5-.1-2.75-2.2-5.2-4.9-5.65-1.5-.25-3.08.19-5 1.15l-.01 0z" /></svg>
+        }
     ]
+
     const deliverySubItems = [
         {
             path: '/delivery-zone?tab=configs', match: (p, s) => p === '/delivery-zone' && (!s.get('tab') || s.get('tab') === 'configs'),
@@ -457,23 +470,51 @@ function Layout({ children }) {
                         </div>
                     )}
 
-                    {bottomUsers.map(item => (
-                        <NavLink key={item.path} to={item.path} title={sidebarCollapsed ? item.label : undefined}
-                            style={({ isActive }) => ({
-                                display: 'flex', alignItems: 'center', gap: '10px',
-                                padding: sidebarCollapsed ? '9px 0' : '9px 16px',
-                                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                                borderRadius: '10px', textDecoration: 'none',
-                                fontSize: '15px', fontWeight: '600',
-                                letterSpacing: '-0.15px',
-                                color: isActive ? '#2bbec8' : colors.textSecondary,
-                                background: isActive ? 'rgba(43,190,200,0.12)' : 'transparent',
-                                transition: 'all 0.15s',
-                            })}>
-                            <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
-                            {!sidebarCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
-                        </NavLink>
-                    ))}
+                    <div onClick={() => { if (!sidebarCollapsed) setUsersOpen(o => !o) }}
+                        title={sidebarCollapsed ? (lang === 'en' ? 'Users' : 'Utilizatori') : undefined}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: sidebarCollapsed ? '9px 0' : '9px 16px',
+                            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                            borderRadius: '10px', cursor: 'pointer',
+                            fontSize: '15px', fontWeight: '600',
+                            color: isUsersActive ? '#2bbec8' : colors.textSecondary,
+                            background: isUsersActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            transition: 'all 0.15s', userSelect: 'none',
+                        }}>
+                        <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.users}</span>
+                        {!sidebarCollapsed && <>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lang === 'en' ? 'Users' : 'Utilizatori'}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                                style={{ transform: usersOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </>}
+                    </div>
+
+                    {usersOpen && !sidebarCollapsed && (
+                        <div style={{ marginBottom: '4px' }}>
+                            {usersSubItems.map(sub => {
+                                const isActive = sub.match(location.pathname)
+                                return (
+                                    <NavLink key={sub.path} to={sub.path}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '8px 16px 8px 34px', borderRadius: '10px',
+                                            textDecoration: 'none', fontSize: '15px',
+                                            letterSpacing: '-0.15px',
+                                            fontWeight: isActive ? '700' : '500',
+                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
+                                            transition: 'all 0.15s',
+                                        }}>
+                                        <span style={{ opacity: 0.7, flexShrink: 0 }}>{sub.icon}</span>
+                                        {sub.label}
+                                    </NavLink>
+                                )
+                            })}
+                        </div>
+                    )}
                 </nav>
             </aside>
 
@@ -614,7 +655,7 @@ export default function App() {
                                     <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
                                     <Route path="/delivery-zone" element={<ProtectedRoute><Layout><DeliveryZone /></Layout></ProtectedRoute>} />
                                     <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
-
+                                    <Route path="/role-settings" element={<ProtectedRoute><Layout><RoleSettings /></Layout></ProtectedRoute>} />
                                     <Route path="/own-products" element={<ProtectedRoute><Layout><OwnProducts /></Layout></ProtectedRoute>} />
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Routes>

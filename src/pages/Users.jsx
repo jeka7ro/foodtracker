@@ -4,7 +4,7 @@ import { useLanguage } from '../lib/LanguageContext'
 import { useUserProfile } from '../lib/UserProfileContext'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../lib/AuthContext'
-import RoleSettings from './RoleSettings'
+
 
 const ROLES = [
     { value: 'admin',               label: 'Admin',              color: '#ef4444', bg: '#fef2f2' },
@@ -64,7 +64,6 @@ export default function Users() {
     const { uploadAvatar } = useUserProfile()
     const fileRef = useRef()
 
-    const [activeTab, setActiveTab] = useState('users') // 'users' or 'roles'
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -332,21 +331,8 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                     {t('Adaugă utilizator', 'Add user')}
                 </button>
             </div>
-            {/* ── Tabs ── */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: `1px solid ${colors.border}`, paddingBottom: '12px' }}>
-                <button onClick={() => setActiveTab('users')}
-                    style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: activeTab === 'users' ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent', color: activeTab === 'users' ? colors.text : colors.textSecondary, fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    {t('Lista Utilizatori', 'Users List')}
-                </button>
-                <button onClick={() => setActiveTab('roles')}
-                    style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: activeTab === 'roles' ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent', color: activeTab === 'roles' ? colors.text : colors.textSecondary, fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    {t('Setări Roluri', 'Role Settings')}
-                </button>
-            </div>
 
-            {activeTab === 'users' && (
-                <>
-                {/* ── Search + Bulk bar ── */}
+            {/* ── Search + Bulk bar ── */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
                     <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -521,16 +507,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                     {users.filter(u => !u.is_active).length} {t('inactivi', 'inactive')}
                 </span>
             </div>
-            </>
-            )}
-
-            {activeTab === 'roles' && (
-                <div style={{ margin: '-28px -32px' }}>
-                    <RoleSettings />
-                </div>
-            )}
-
-
+            
             {/* ══════════════════════════════════════════════════════════════
                 EDIT USER SLIDEOUT
             ══════════════════════════════════════════════════════════════ */}
@@ -640,52 +617,6 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                 </select>
                             </div>
 
-                            {/* Preferred language */}
-                            <div>
-                                <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                    {t('Limbă preferată', 'Preferred language')}
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {[{ code: 'ro', label: '🇷🇴 Română' }, { code: 'en', label: '🇬🇧 English' }].map(l => (
-                                        <button key={l.code} onClick={() => setEditForm(f => ({ ...f, preferred_lang: l.code }))}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', border: `1px solid ${editForm.preferred_lang === l.code ? '#6366F1' : colors.border}`, background: editForm.preferred_lang === l.code ? 'rgba(99,102,241,0.12)' : (isDark ? 'rgba(255,255,255,0.04)' : '#f9fafb'), color: editForm.preferred_lang === l.code ? '#6366F1' : colors.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
-                                            {l.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Preferred theme */}
-                            <div>
-                                <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                    {t('Temă preferată', 'Preferred theme')}
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {[{ v: 'light', label: '☀️ ' + t('Luminos', 'Light') }, { v: 'dark', label: '🌙 ' + t('Întunecat', 'Dark') }].map(o => (
-                                        <button key={o.v} onClick={() => setEditForm(f => ({ ...f, preferred_theme: o.v }))}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', border: `1px solid ${editForm.preferred_theme === o.v ? '#6366F1' : colors.border}`, background: editForm.preferred_theme === o.v ? 'rgba(99,102,241,0.12)' : (isDark ? 'rgba(255,255,255,0.04)' : '#f9fafb'), color: editForm.preferred_theme === o.v ? '#6366F1' : colors.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
-                                            {o.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Alert rhythm */}
-                            <div>
-                                <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                    {t('Ritm alerte', 'Alert rhythm')}
-                                </label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {ALERT_RHYTHMS.map(r => (
-                                        <button key={r.value} onClick={() => setEditForm(f => ({ ...f, alert_rhythm: r.value }))}
-                                            style={{ padding: '10px 14px', borderRadius: '10px', border: `1px solid ${editForm.alert_rhythm === r.value ? '#6366F1' : colors.border}`, background: editForm.alert_rhythm === r.value ? 'rgba(99,102,241,0.12)' : (isDark ? 'rgba(255,255,255,0.04)' : '#f9fafb'), color: editForm.alert_rhythm === r.value ? '#6366F1' : colors.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ fontSize: '18px' }}>{r.icon}</span>
-                                            <span>{r.label}</span>
-                                            {editForm.alert_rhythm === r.value && <span style={{ marginLeft: 'auto', fontSize: '16px' }}>✓</span>}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* Active status */}
                             {editUser.user_id !== currentUser?.id && (
