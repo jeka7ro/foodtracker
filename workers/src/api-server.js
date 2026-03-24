@@ -1226,61 +1226,58 @@ app.get('/api/pos/discrepancies', async (req, res) => {
             // Map true POS stopped ids by name loosely
             const posStoppedNames = stopList.map(s => s.name.toLowerCase().trim())
             
-            // 2. Extragem datele preincarcate din snapshot-urile pe azi pt acelasi restaurant
+            // 2. Fetch today's platform snapshots
             const { data: snaps } = await supabase
                 .from('own_product_snapshots')
                 .select('product_name, platform, is_available')
                 .eq('restaurant_id', rest.id)
                 .eq('snapshot_date', today)
 
-            if (!snaps || snaps.length === 0) continue
-
-            // Discrepancies logic:
-            // - if it's NOT in posStoppedNames, it SHOULD be available
-            // - if it's in posStoppedNames, it SHOULD be unavailable
-            // But we know that own_product_snapshots only registers `is_available` if we found it.
-            // Wait, actually `detectStoppedProducts` uses yesterday vs today trick to find "stopped" items.
-            // For true 1-to-1: if POS says STOP -> but it's found in today's snaps (meaning it's active on Glovo) -> Critical ALARM!
-            
             const discrepancies = []
             
-            // If the item is stopped in POS but active on platform:
-            posStoppedNames.forEach(posName => {
-                const activeOnPlatforms = snaps.filter(s => s.product_name.toLowerCase().includes(posName) || posName.includes(s.product_name.toLowerCase()))
-                activeOnPlatforms.forEach(found => {
-                    discrepancies.push({
-                        type: 'pos_stopped_but_active_on_platform',
-                        product_name: found.product_name,
-                        platform: found.platform,
-                        message: `Stare critică: "${found.product_name}" este OPRIT în casa de marcat, dar clienții îl pot comanda pe ${found.platform.toUpperCase()}.`
+            // Only check discrepancies if we have platform snapshots
+            if (snaps && snaps.length > 0) {
+                // If the item is stopped in POS but active on platform
+                posStoppedNames.forEach(posName => {
+                    const activeOnPlatforms = snaps.filter(s => 
+                        s.is_available && 
+                        (s.product_name.toLowerCase().includes(posName) || posName.includes(s.product_name.toLowerCase()))
+                    )
+                    activeOnPlatforms.forEach(found => {
+                        discrepancies.push({
+                            type: 'pos_stopped_but_active_on_platform',
+                            product_name: found.product_name,
+                            platform: found.platform,
+                            message: `Stare critică: "${found.product_name}" este OPRIT în casa de marcat, dar clienții îl pot comanda pe ${found.platform.toUpperCase()}.`
+                        })
                     })
                 })
-            })
 
-            // Additional logic: what if it's inactive on platform, but ACTIVE in POS?
-            const { data: yesterdaySnaps } = await supabase
-                .from('own_product_snapshots')
-                .select('product_name, platform')
-                .eq('restaurant_id', rest.id)
-                .eq('snapshot_date', new Date(Date.now() - 86400000).toISOString().split('T')[0])
-                
-            if (yesterdaySnaps) {
-                const todayKeys = new Set(snaps.map(s => `${s.platform}|${s.product_name}`))
-                const stoppedOnPlatform = yesterdaySnaps.filter(p => !todayKeys.has(`${p.platform}|${p.product_name}`))
-                
-                stoppedOnPlatform.forEach(platStop => {
-                    const lcName = platStop.product_name.toLowerCase()
-                    const posHasItStopped = posStoppedNames.some(pName => lcName.includes(pName) || pName.includes(lcName))
+                // Additional logic: what if it's inactive on platform, but ACTIVE in POS?
+                const { data: yesterdaySnaps } = await supabase
+                    .from('own_product_snapshots')
+                    .select('product_name, platform')
+                    .eq('restaurant_id', rest.id)
+                    .eq('snapshot_date', new Date(Date.now() - 86400000).toISOString().split('T')[0])
                     
-                    if (!posHasItStopped) {
-                        discrepancies.push({
-                            type: 'active_in_pos_but_stopped_on_platform',
-                            product_name: platStop.product_name,
-                            platform: platStop.platform,
-                            message: `Nesincronizare: "${platStop.product_name}" este DISPONIBIL în bucătărie, dar manual oprit (inactiv) pe ${platStop.platform.toUpperCase()}.`
-                        })
-                    }
-                })
+                if (yesterdaySnaps) {
+                    const todayKeys = new Set(snaps.map(s => `${s.platform}|${s.product_name}`))
+                    const stoppedOnPlatform = yesterdaySnaps.filter(p => !todayKeys.has(`${p.platform}|${p.product_name}`))
+                    
+                    stoppedOnPlatform.forEach(platStop => {
+                        const lcName = platStop.product_name.toLowerCase()
+                        const posHasItStopped = posStoppedNames.some(pName => lcName.includes(pName) || pName.includes(lcName))
+                        
+                        if (!posHasItStopped) {
+                            discrepancies.push({
+                                type: 'active_in_pos_but_stopped_on_platform',
+                                product_name: platStop.product_name,
+                                platform: platStop.platform,
+                                message: `Nesincronizare: "${platStop.product_name}" este DISPONIBIL în bucătărie, dar manual oprit (inactiv) pe ${platStop.platform.toUpperCase()}.`
+                            })
+                        }
+                    })
+                }
             }
 
             results.push({
