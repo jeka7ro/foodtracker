@@ -180,7 +180,7 @@ export default function OwnProducts() {
         try {
             const res = await fetch(`${WORKER_URL}/api/own-brands/scrape-all`, { method: 'POST' })
             const d = await res.json()
-            setScanMsg({ ok: true, text: `${d.totalProducts || 0} produse salvate` })
+            setScanMsg({ ok: true, text: `${d.totalProducts || 0} ${lang === 'ru' ? 'продуктов сохранено' : lang === 'en' ? 'products saved' : 'produse salvate'}` })
             await loadProducts()
         } catch (e) { setScanMsg({ ok: false, text: e.message }) }
         finally { setScraping(false) }
@@ -194,7 +194,7 @@ export default function OwnProducts() {
                 body: JSON.stringify({ restaurantId })
             })
             const d = await res.json()
-            setScanMsg({ ok: true, text: `${d.productCount || 0} produse salvate` })
+            setScanMsg({ ok: true, text: `${d.productCount || 0} ${lang === 'ru' ? 'продуктов сохранено' : lang === 'en' ? 'products saved' : 'produse salvate'}` })
             await loadProducts()
         } catch (e) { setScanMsg({ ok: false, text: e.message }) }
         finally { setScrapingId(null) }
@@ -213,7 +213,9 @@ export default function OwnProducts() {
                 <div>
                     <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>{lang === 'ru' ? 'Свои продукты (бренды)' : lang === 'en' ? 'Own Products' : 'Produse Branduri Proprii'}</h1>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
-                        Organizate pe oras si restaurant · {products.length} {lang === 'ru' ? 'записей' : lang === 'en' ? 'records' : 'inregistrari'} · {totalUnique} {lang === 'ru' ? 'уник. продуктов' : lang === 'en' ? 'unique products' : 'produse unice'} · {totalRestaurants} restaurante
+                    <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
+                        {lang === 'ru' ? 'По городам и ресторанам' : lang === 'en' ? 'Organized by city and restaurant' : 'Organizate pe oras si restaurant'} · {products.length} {lang === 'ru' ? 'записей' : lang === 'en' ? 'records' : 'inregistrari'} · {totalUnique} {lang === 'ru' ? 'уник. продуктов' : lang === 'en' ? 'unique products' : 'produse unice'} · {totalRestaurants} {lang === 'ru' ? 'ресторанов' : lang === 'en' ? 'restaurants' : 'restaurante'}
+                    </p>
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -221,7 +223,7 @@ export default function OwnProducts() {
                         style={{ ...sel, fontSize: '13px' }} />
                     <button onClick={scanAll} disabled={scraping}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', border: 'none', background: scraping ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: scraping ? 'wait' : 'pointer', boxShadow: scraping ? 'none' : '0 3px 12px rgba(99,102,241,0.35)' }}>
-                        {scraping ? <><SpinIcon /> Se scaneaza...</> : 'Scaneaza tot'}
+                        {scraping ? <><SpinIcon /> {lang === 'ru' ? 'Сканирование...' : lang === 'en' ? 'Scanning...' : 'Se scaneaza...'}</> : (lang === 'ru' ? 'Сканировать всё' : lang === 'en' ? 'Scan All' : 'Scaneaza tot')}
                     </button>
                 </div>
             </div>
@@ -257,7 +259,7 @@ export default function OwnProducts() {
                             style={{ ...sel, minWidth: '160px' }} />
                         {/* Food/Drink toggle */}
                         <div style={{ display: 'flex', gap: '3px', padding: '3px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
-                            {[['all', 'Toate'], ['food', 'Mancare'], ['drink', 'Bauturi']].map(([v, l]) => (
+                            {[['all', lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Toate'], ['food', lang === 'ru' ? 'Еда' : lang === 'en' ? 'Food' : 'Mancare'], ['drink', lang === 'ru' ? 'Напитки' : lang === 'en' ? 'Drinks' : 'Bauturi']].map(([v, l]) => (
                                 <button key={v} onClick={() => setTypeFilter(v)} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '700', background: typeFilter === v ? '#6366F1' : 'transparent', color: typeFilter === v ? '#fff' : colors.textSecondary, transition: 'all 0.12s' }}>{l}</button>
                             ))}
                         </div>
@@ -295,7 +297,7 @@ export default function OwnProducts() {
                                         <span style={{ fontSize: '11px', color: '#6366F1', transform: cityCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.15s', display: 'inline-block', lineHeight: 1 }}>▶</span>
                                         <span style={{ fontSize: '15px', fontWeight: '800', color: '#6366F1', flex: 1 }}>{city}</span>
                                         <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: '10px' }}>
-                                            {cityRests.length} {lang === 'ru' ? 'ресторанов ' : lang === 'en' ? 'restaurants ' : 'restaurante '}· {totalProds} produse
+                                            {cityRests.length} {lang === 'ru' ? 'ресторанов ' : lang === 'en' ? 'restaurants ' : 'restaurante '}· {totalProds} {lang === 'ru' ? 'продуктов' : lang === 'en' ? 'products' : 'produse'}
                                         </span>
                                     </button>
 
@@ -325,13 +327,13 @@ export default function OwnProducts() {
                                                                     </div>
                                                                 </div>
                                                                 <span style={{ fontSize: '11px', color: colors.textSecondary, marginLeft: 'auto', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '8px' }}>
-                                                                    {restProds.length} produse
+                                                                    {restProds.length} {lang === 'ru' ? 'продуктов' : lang === 'en' ? 'products' : 'produse'}
                                                                 </span>
                                                             </button>
                                                             {/* Per-restaurant scan button */}
                                                             <button onClick={() => scanOne(rid)} disabled={scrapingId === rid}
                                                                 style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, background: 'transparent', cursor: scrapingId === rid ? 'wait' : 'pointer', color: '#6366F1', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                                                {scrapingId === rid ? <><SpinIcon /> Scraping...</> : 'Scaneaza'}
+                                                                {scrapingId === rid ? <><SpinIcon /> {lang === 'ru' ? 'Сканирование...' : lang === 'en' ? 'Scanning...' : 'Scaneaza...'}</> : (lang === 'ru' ? 'Сканировать' : lang === 'en' ? 'Scan' : 'Scaneaza')}
                                                             </button>
                                                         </div>
 
@@ -339,7 +341,7 @@ export default function OwnProducts() {
                                                         {!restCollapsed && (
                                                             <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: '10px', background: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)' }}>
                                                                 {restProds.map(p => (
-                                                                    <ProductCard key={p.id} p={p} isDark={isDark} colors={colors} />
+                                                                    <ProductCard key={p.id} p={p} isDark={isDark} colors={colors} lang={lang} />
                                                                 ))}
                                                             </div>
                                                         )}
@@ -360,7 +362,7 @@ export default function OwnProducts() {
     )
 }
 
-function ProductCard({ p, isDark, colors }) {
+function ProductCard({ p, isDark, colors, lang }) {
     const drink = isDrink(p.category)
     // Find if at least one platform has promotion
     const isPromoted = p.platforms?.some(pl => pl.is_promoted)
@@ -385,8 +387,8 @@ function ProductCard({ p, isDark, colors }) {
                     ))}
                 </div>
 
-                {isPromoted && <span style={{ position: 'absolute', top: 6, left: 6, background: '#f59e0b', color: '#fff', fontSize: '9px', fontWeight: '800', padding: '2px 6px', borderRadius: '5px' }}>Promovat</span>}
-                {drink && <span style={{ position: 'absolute', bottom: 6, left: 6, background: 'rgba(251,191,36,0.9)', color: '#78350f', fontSize: '9px', fontWeight: '800', padding: '2px 6px', borderRadius: '5px' }}>Bautura</span>}
+                {isPromoted && <span style={{ position: 'absolute', top: 6, left: 6, background: '#f59e0b', color: '#fff', fontSize: '9px', fontWeight: '800', padding: '2px 6px', borderRadius: '5px' }}>{lang === 'ru' ? 'Промо' : lang === 'en' ? 'Promoted' : 'Promovat'}</span>}
+                {drink && <span style={{ position: 'absolute', bottom: 6, left: 6, background: 'rgba(251,191,36,0.9)', color: '#78350f', fontSize: '9px', fontWeight: '800', padding: '2px 6px', borderRadius: '5px' }}>{lang === 'ru' ? 'Напиток' : lang === 'en' ? 'Drink' : 'Bautura'}</span>}
             </div>
             {/* Info */}
             <div style={{ padding: '8px 10px 10px', display: 'flex', flexDirection: 'column', height: '100%' }}>

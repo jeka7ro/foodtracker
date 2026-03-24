@@ -50,7 +50,7 @@ const NAV_ICONS = {
     rules: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>,
     reports: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>,
     delivery: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>,
-    users: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>,
+    users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
     ownproducts: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
 }
 
@@ -103,12 +103,12 @@ function Layout({ children }) {
         { path: '/monitoring', iconKey: 'monitoring', label: t('nav_monitoring') },
     ]
     const stopSubItems = [
-        { path: '/stop-control', label: (lang === 'ru' ? 'Opriri' : (lang === 'en' ? 'Overview' : 'Opriri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
-        { path: '/stop-preturi', label: (lang === 'ru' ? 'Comparație Prețuri' : (lang === 'en' ? 'Prices' : 'Comparație Prețuri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-        { path: '/stop-istoric', label: (lang === 'ru' ? 'Istoric' : (lang === 'en' ? 'History' : 'Istoric')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+        { path: '/stop-control', label: (lang === 'ru' ? 'Остановки' : (lang === 'en' ? 'Overview' : 'Opriri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
+        { path: '/stop-preturi', label: (lang === 'ru' ? 'Сравнение цен' : (lang === 'en' ? 'Prices' : 'Comparație Prețuri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+        { path: '/stop-istoric', label: (lang === 'ru' ? 'История' : (lang === 'en' ? 'History' : 'Istoric')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
     ]
     const ownProductsSubItems = [
-        { path: '/own-products', label: (lang === 'ru' ? 'Продукты агрегаторов' : (lang === 'en' ? 'Platform Products' : 'Produse (Aplicații)')), icon: NAV_ICONS.ownproducts },
+        { path: '/own-products', label: (lang === 'ru' ? 'Свои продукты (агр.)' : (lang === 'en' ? 'Platform Products' : 'Produse (Aplicații)')), icon: NAV_ICONS.ownproducts },
         { path: '/iiko-products', label: (lang === 'ru' ? 'Меню POS (iiko)' : (lang === 'en' ? 'POS Products (iiko)' : 'Meniu POS (iiko)')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
         { path: '/brands', label: t('nav_brands'), icon: NAV_ICONS.brands },
         { path: '/restaurants', label: t('nav_restaurants'), icon: NAV_ICONS.restaurants },
@@ -116,27 +116,27 @@ function Layout({ children }) {
     const mktSubItems = [
         {
             path: '/marketing?tab=searches', match: (p, s) => p === '/marketing' && (!s.get('tab') || s.get('tab') === 'searches'),
-            label: (lang === 'ru' ? 'Căutări' : (lang === 'en' ? 'Searches' : 'Căutări')),
+            label: t('nav_searches'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
         },
         {
             path: '/marketing?tab=results', match: (p, s) => p === '/marketing' && s.get('tab') === 'results',
-            label: (lang === 'ru' ? 'Rezultate' : (lang === 'en' ? 'Results' : 'Rezultate')),
+            label: t('nav_results'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
         },
         {
             path: '/marketing?tab=prices', match: (p, s) => p === '/marketing' && s.get('tab') === 'prices',
-            label: (lang === 'ru' ? 'Prețuri concurenți' : (lang === 'en' ? 'Competitor Prices' : 'Prețuri concurenți')),
+            label: t('nav_prices'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
         },
         {
             path: '/marketing-analytics', match: (p) => p === '/marketing-analytics',
-            label: (lang === 'ru' ? 'Analize & KPI' : (lang === 'en' ? 'Analytics & KPIs' : 'Analize & KPI')),
+            label: t('nav_analytics'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>
         },
         {
             path: '/marketing-promotions', match: (p) => p === '/marketing-promotions',
-            label: (lang === 'ru' ? 'Radar Promoții' : (lang === 'en' ? 'Promotions Radar' : 'Radar Promoții')),
+            label: t('nav_radar'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         },
         {
@@ -146,7 +146,7 @@ function Layout({ children }) {
         },
         {
             path: '/competitor-products', match: (p) => p === '/competitor-products',
-            label: (lang === 'ru' ? 'Produse Concurenți' : (lang === 'en' ? 'Competitor Products' : 'Produse Concurenți')),
+            label: t('nav_competitor_products'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         },
     ]
@@ -553,7 +553,7 @@ function Layout({ children }) {
                     <div onClick={toggleTheme}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.18s', userSelect: 'none' }}>
                         <span style={{ fontSize: '14px', lineHeight: 1 }}>{isDark ? '☀️' : '🌙'}</span>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.textSecondary, letterSpacing: '0.3px' }}>{isDark ? ((lang === 'ru' ? 'Luminos' : (lang === 'en' ? 'Light' : 'Luminos'))) : ((lang === 'ru' ? 'Întunecat' : (lang === 'en' ? 'Dark' : 'Întunecat')))}</span>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.textSecondary, letterSpacing: '0.3px' }}>{isDark ? (lang === 'ru' ? 'Светлая' : lang === 'en' ? 'Light' : 'Luminos') : (lang === 'ru' ? 'Тёмная' : lang === 'en' ? 'Dark' : 'Întunecat')}</span>
                     </div>
 
                     {/* ── Language segmented control ── */}
