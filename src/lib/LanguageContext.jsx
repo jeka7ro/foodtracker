@@ -23,6 +23,15 @@ const translations = {
         nav_discovery: 'Discovery',
         nav_deliveryZone: 'Zone Livrare',
         nav_settings: 'Setări',
+        nav_users: 'Utilizatori',
+        nav_user_list: 'Listă Utilizatori',
+        nav_role_settings: 'Setări Roluri',
+        nav_configurations: 'Configurații',
+        nav_history: 'Istoric',
+        nav_own_products: 'Produse (Aplicații)',
+        nav_iiko_products: 'Meniu POS (iiko)',
+        nav_overview: 'Opriri',
+        nav_prices_compare: 'Comparație Prețuri',
 
         // Theme
         theme_light: 'Light Mode',
@@ -150,6 +159,15 @@ const translations = {
         nav_discovery: 'Discovery',
         nav_deliveryZone: 'Delivery Zones',
         nav_settings: 'Settings',
+        nav_users: 'Users',
+        nav_user_list: 'Users List',
+        nav_role_settings: 'Role Settings',
+        nav_configurations: 'Configurations',
+        nav_history: 'History',
+        nav_own_products: 'Platform Products',
+        nav_iiko_products: 'POS Products (iiko)',
+        nav_overview: 'Overview',
+        nav_prices_compare: 'Prices',
 
         // Theme
         theme_light: 'Light Mode',
@@ -277,6 +295,15 @@ const translations = {
         nav_discovery: 'Открытия',
         nav_deliveryZone: 'Зоны Доставки',
         nav_settings: 'Настройки',
+        nav_users: 'Пользователи',
+        nav_user_list: 'Список пользователей',
+        nav_role_settings: 'Настройки ролей',
+        nav_configurations: 'Конфигурации',
+        nav_history: 'История',
+        nav_own_products: 'Свои продукты (агр.)',
+        nav_iiko_products: 'Меню POS (iiko)',
+        nav_overview: 'Остановки',
+        nav_prices_compare: 'Сравнение цен',
 
         // Theme
         theme_light: 'Светлая тема',

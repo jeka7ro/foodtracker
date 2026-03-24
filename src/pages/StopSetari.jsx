@@ -165,7 +165,7 @@ export default function StopSetari() {
                                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#ef4444' }}>{(lang === 'ru' ? 'Удалить также результаты' : (lang === 'en' ? 'Delete also results' : 'Sterge si rezultatele'))}</div>
                                 <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>{(lang === 'ru' ? 'Удалить правило и всю историю' : (lang === 'en' ? 'Delete the rule and all data from history' : 'Sterge regula si toate datele din istoric'))}</div>
                             </button>
-                            <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
+                            <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Отмена' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
                         </div>
                     </div>
                 </>
@@ -289,7 +289,7 @@ export default function StopSetari() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
-                            <button onClick={() => { setShowForm(false); resetForm() }} style={{ padding: '10px 20px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
+                            <button onClick={() => { setShowForm(false); resetForm() }} style={{ padding: '10px 20px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: colors.textSecondary }}>{(lang === 'ru' ? 'Отмена' : (lang === 'en' ? 'Cancel' : 'Anulează'))}</button>
                             <button onClick={saveRule} disabled={saving || !formName.trim()}
                                 style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: saving || !formName.trim() ? 0.5 : 1 }}>
                                 {saving ? ((lang === 'ru' ? 'Сохранение...' : (lang === 'en' ? 'Saving...' : 'Se salveaza...'))) : editingId ? ((lang === 'ru' ? 'Сохранить изменения' : (lang === 'en' ? 'Save Changes' : 'Salvează Modificarile'))) : ((lang === 'ru' ? 'Сохранить' : (lang === 'en' ? 'Save' : 'Salvează')))}
@@ -311,7 +311,7 @@ export default function StopSetari() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {rules.map(rule => {
                         const scopeInfo = rule.scope_type === 'all' ? ((lang === 'ru' ? 'Все бренды и рестораны' : (lang === 'en' ? 'All brands and restaurants' : 'Toate brandurile si restaurantele')))
-                            : rule.scope_type === 'brand' ? `${(lang === 'ru' ? 'Branduri' : (lang === 'en' ? 'Brands' : 'Branduri'))}: ${(rule.brand_ids || [rule.brand_id]).filter(Boolean).map(id => brands.find(b => b.id === id)?.name || '?').join(', ')}`
+                            : rule.scope_type === 'brand' ? `${(lang === 'ru' ? 'Бренды' : (lang === 'en' ? 'Brands' : 'Branduri'))}: ${(rule.brand_ids || [rule.brand_id]).filter(Boolean).map(id => brands.find(b => b.id === id)?.name || '?').join(', ')}`
                             : `${(lang === 'ru' ? 'Рестораны' : (lang === 'en' ? 'Restaurants' : 'Restaurante'))}: ${(rule.restaurant_ids || [rule.restaurant_id]).filter(Boolean).length} ${(lang === 'ru' ? 'выбрано' : (lang === 'en' ? 'selected' : 'selectate'))}`
                         const schedInfo = rule.schedule_frequency === 'manual' ? ((lang === 'ru' ? 'Ручной' : (lang === 'en' ? 'Manual' : 'Manual')))
                             : `${freqLabel(rule.schedule_frequency)} ${(lang === 'ru' ? 'в' : (lang === 'en' ? 'at' : 'la'))} ${rule.schedule_time || '08:00'}${rule.schedule_frequency === 'weekly' && rule.schedule_days?.length ? ` (${rule.schedule_days.map(d => {
@@ -338,7 +338,7 @@ export default function StopSetari() {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                                    <button onClick={() => openEdit(rule)} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#6366F1' }}>{(lang === 'ru' ? 'Editează' : (lang === 'en' ? 'Edit' : 'Editează'))}</button>
+                                    <button onClick={() => openEdit(rule)} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: '#6366F1' }}>{(lang === 'ru' ? 'Изменить' : (lang === 'en' ? 'Edit' : 'Editează'))}</button>
                                     <button onClick={() => toggleActive(rule.id, rule.is_active)} style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: '600', color: rule.is_active ? '#FF9500' : '#22c55e' }}>
                                         {rule.is_active ? ((lang === 'ru' ? 'Деактив.' : (lang === 'en' ? 'Deactivate' : 'Dezactiv.'))) : ((lang === 'ru' ? 'Активировать' : (lang === 'en' ? 'Activate' : 'Activeaza')))}
                                     </button>

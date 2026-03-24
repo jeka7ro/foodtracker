@@ -62,7 +62,7 @@ export default function RoleSettings() {
     const { colors, isDark } = useTheme()
     const { lang } = useLanguage()
     const { refreshPermissions } = useAuth()
-    const t = (ro, en) => lang === 'en' ? en : ro
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
 
     const [permissions, setPermissions] = useState({})
     const [loading, setLoading] = useState(true)
@@ -129,7 +129,7 @@ export default function RoleSettings() {
             if (refreshPermissions) await refreshPermissions()
             setTimeout(() => setSaved(false), 3000)
         } catch (err) {
-            if (!dbError) alert(`${t('Eroare la salvare', 'Save error')}: ${err.message}`)
+            if (!dbError) alert(`${t('Eroare la salvare', 'Save error', 'Ошибка при сохранении')}: ${err.message}`)
         }
         setSaving(false)
     }
@@ -142,13 +142,13 @@ export default function RoleSettings() {
         return (
             <div style={{ padding: '28px 32px', maxWidth: '900px' }}>
                 <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
-                    {t('Setari Roluri', 'Role Settings')}
+                    {t('Setari Roluri', 'Role Settings', 'Настройки ролей')}
                 </h1>
                 <div style={{ background: colors.card, border: `1px solid rgba(245,158,11,0.4)`, borderRadius: '16px', padding: '28px', marginTop: '20px' }}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '18px' }}>
-                        <div style={{ fontWeight: '700', color: colors.text, fontSize: '15px' }}>{t('Tabelul role_permissions lipseste', 'Table role_permissions missing')}</div>
+                        <div style={{ fontWeight: '700', color: colors.text, fontSize: '15px' }}>{t('Tabelul role_permissions lipseste', 'Table role_permissions missing', 'Таблица role_permissions отсутствует')}</div>
                         <button onClick={() => navigator.clipboard.writeText(PERM_SQL)} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                            {t('Copiaza SQL', 'Copy SQL')}
+                            {t('Copiaza SQL', 'Copy SQL', 'Копировать SQL')}
                         </button>
                     </div>
                     <pre style={{ background: isDark ? 'rgba(0,0,0,0.4)' : '#f8f9fa', borderRadius: '10px', padding: '16px', fontSize: '11px', fontFamily: 'monospace', color: isDark ? '#a5f3fc' : '#0f172a', overflowX: 'auto', margin: 0, lineHeight: 1.6 }}>{PERM_SQL}</pre>
@@ -162,26 +162,26 @@ export default function RoleSettings() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
-                        {t('Setari Roluri', 'Role Settings')}
+                        {t('Setari Roluri', 'Role Settings', 'Настройки ролей')}
                     </h1>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                        {t('Configureaza ce pagini vede fiecare rol', 'Configure which pages each role can access')}
+                        {t('Configureaza ce pagini vede fiecare rol', 'Configure which pages each role can access', 'Настроить доступ к страницам для каждой роли')}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={reset}
                         style={{ padding: '9px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                        {t('Reseteaza', 'Reset')}
+                        {t('Reseteaza', 'Reset', 'Сбросить')}
                     </button>
                     <button onClick={save} disabled={saving}
                         style={{ padding: '9px 20px', borderRadius: '10px', border: 'none', background: saved ? '#10b981' : '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: `0 2px 12px ${saved ? 'rgba(16,185,129,0.35)' : 'rgba(99,102,241,0.35)'}`, opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>
-                        {saving ? '...' : saved ? t('Salvat!', 'Saved!') : t('Salveaza', 'Save')}
+                        {saving ? '...' : saved ? t('Salvat!', 'Saved!', 'Сохранено!') : t('Salveaza', 'Save', 'Сохранить')}
                     </button>
                 </div>
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, fontSize: '13px' }}>{t('Se incarca...', 'Loading...')}</div>
+                <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, fontSize: '13px' }}>{t('Se incarca...', 'Loading...', 'Загрузка...')}</div>
             ) : (
                 <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', overflow: 'hidden' }}>
                     <div style={{ overflowX: 'auto' }}>
@@ -189,7 +189,7 @@ export default function RoleSettings() {
                             <thead>
                                 <tr>
                                     <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '700', color: colors.textSecondary, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, position: 'sticky', left: 0, background: isDark ? colors.card : '#fff', zIndex: 2, minWidth: '200px' }}>
-                                        {t('Pagina', 'Page')}
+                                        {t('Pagina', 'Page', 'Страница')}
                                     </th>
                                     {ROLES.map(r => (
                                         <th key={r.value} style={{ padding: '14px 8px', textAlign: 'center', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, minWidth: '90px' }}>
@@ -198,7 +198,7 @@ export default function RoleSettings() {
                                                 <span style={{ fontSize: '10px', color: colors.textSecondary }}>{countFor(r.value)}/{ALL_PAGES.length}</span>
                                                 {r.value !== 'admin' && (
                                                     <button onClick={() => toggleAllRole(r.value)} style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                        {countFor(r.value) === ALL_PAGES.length ? t('Deselecteaza', 'Uncheck') : t('Selecteaza tot', 'Check all')}
+                                                        {countFor(r.value) === ALL_PAGES.length ? t('Deselecteaza', 'Uncheck', 'Снять выбор') : t('Selecteaza tot', 'Check all', 'Выбрать все')}
                                                     </button>
                                                 )}
                                             </div>

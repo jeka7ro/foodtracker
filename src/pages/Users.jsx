@@ -92,7 +92,7 @@ export default function Users() {
     })
     const editFileRef = useRef(null)
 
-    const t = (ro, en) => lang === 'en' ? en : ro
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
 
     // ── Load ──────────────────────────────────────────────────────────────
     const loadUsers = useCallback(async () => {
@@ -152,7 +152,7 @@ export default function Users() {
     }
 
     const deleteUser = async (id) => {
-        if (!confirm(t('Ești sigur că vrei să ștergi acest utilizator?', 'Are you sure you want to delete this user?'))) return
+        if (!confirm(t('Ești sigur că vrei să ștergi acest utilizator?', 'Are you sure you want to delete this user?', 'Вы уверены, что хотите удалить этого пользователя?'))) return
         setUsers(prev => prev.filter(u => u.id !== id))
         await supabase.from('user_roles').delete().eq('id', id)
         setSelected(prev => { const n = new Set(prev); n.delete(id); return n })
@@ -197,9 +197,9 @@ export default function Users() {
 
     // ── Invite ─────────────────────────────────────────────────────────────
     const inviteUser = async () => {
-        if (!inviteEmail || !invitePassword) { setInviteError(t('Email și parolă obligatorii', 'Email and password required')); return }
-        if (invitePassword !== inviteConfirm) { setInviteError(t('Parolele nu coincid', 'Passwords do not match')); return }
-        if (invitePassword.length < 6) { setInviteError(t('Parola trebuie să aibă minim 6 caractere', 'Password must be at least 6 characters')); return }
+        if (!inviteEmail || !invitePassword) { setInviteError(t('Email și parolă obligatorii', 'Email and password required', 'Требуется email и пароль')); return }
+        if (invitePassword !== inviteConfirm) { setInviteError(t('Parolele nu coincid', 'Passwords do not match', 'Пароли не совпадают')); return }
+        if (invitePassword.length < 6) { setInviteError(t('Parola trebuie să aibă minim 6 caractere', 'Password must be at least 6 characters', 'Пароль должен содержать не менее 6 символов')); return }
         const fullName = [inviteFirst.trim(), inviteLast.trim()].filter(Boolean).join(' ') || inviteEmail.split('@')[0]
         setInviting(true); setInviteError('')
         try {
@@ -292,12 +292,12 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '18px' }}>
                     <div style={{ fontSize: '28px' }}>⚠️</div>
                     <div>
-                        <div style={{ fontWeight: '700', color: colors.text, fontSize: '15px' }}>{t('Tabelul user_roles lipsește', 'Table user_roles missing')}</div>
-                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>{t('Rulați SQL-ul de mai jos în Supabase → SQL Editor', 'Run SQL below in Supabase → SQL Editor')}</div>
+                        <div style={{ fontWeight: '700', color: colors.text, fontSize: '15px' }}>{t('Tabelul user_roles lipsește', 'Table user_roles missing', 'Таблица user_roles отсутствует')}</div>
+                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>{t('Rulați SQL-ul de mai jos în Supabase → SQL Editor', 'Run SQL below in Supabase → SQL Editor', 'Запустите SQL ниже в Supabase → SQL Editor')}</div>
                     </div>
                     <button onClick={() => navigator.clipboard.writeText(MIGRATION_SQL)}
                         style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                        📋 {t('Copiază SQL', 'Copy SQL')}
+                        📋 {t('Copiază SQL', 'Copy SQL', 'Копировать SQL')}
                     </button>
                 </div>
                 <pre style={{ background: isDark ? 'rgba(0,0,0,0.4)' : '#f8f9fa', borderRadius: '10px', padding: '16px', fontSize: '11px', fontFamily: 'monospace', color: isDark ? '#a5f3fc' : '#0f172a', overflowX: 'auto', margin: 0, lineHeight: 1.6 }}>{MIGRATION_SQL}</pre>
@@ -313,10 +313,10 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
-                        {t('Utilizatori', 'Users')}
+                        {t('Utilizatori', 'Users', 'Пользователи')}
                     </h1>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                        {t('Gestionează accesul și rolurile echipei', 'Manage team access and roles')}
+                        {t('Gestionează accesul și rolurile echipei', 'Manage team access and roles', 'Управление доступом и ролями команды')}
                     </p>
                 </div>
                 <button onClick={() => setShowInvite(true)} style={{
@@ -328,7 +328,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                         <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
                     </svg>
-                    {t('Adaugă utilizator', 'Add user')}
+                    {t('Adaugă utilizator', 'Add user', 'Добавить пользователя')}
                 </button>
             </div>
 
@@ -339,7 +339,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                     </svg>
                     <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={t('Caută după email, nume sau rol…', 'Search by email, name or role…')}
+                        placeholder={t('Caută după email, nume sau rol…', 'Search by email, name or role…', 'Поиск по email, имени или роли…')}
                         style={{ width: '100%', paddingLeft: '36px', padding: '9px 12px 9px 36px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
 
@@ -347,23 +347,23 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                 {someSelected && (
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', animation: 'fadeIn 0.15s ease' }}>
                         <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '600', marginRight: '4px' }}>
-                            {selected.size} {t('selectați', 'selected')}
+                            {selected.size} {t('selectați', 'selected', 'выбрано')}
                         </span>
 
                         <button onClick={bulkActivate}
                             style={{ padding: '7px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                            ✓ {t('Activează', 'Activate')}
+                            ✓ {t('Activează', 'Activate', 'Активировать')}
                         </button>
 
                         <button onClick={bulkDeactivate}
                             style={{ padding: '7px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: colors.textSecondary, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                            ⊘ {t('Dezactivează', 'Deactivate')}
+                            ⊘ {t('Dezactivează', 'Deactivate', 'Деактивировать')}
                         </button>
 
                         <div style={{ position: 'relative' }}>
                             <button onClick={() => setShowBulkRole(v => !v)}
                                 style={{ padding: '7px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'rgba(99,102,241,0.1)', color: '#6366F1', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                                ✎ {t('Schimbă rol', 'Change role')}
+                                ✎ {t('Schimbă rol', 'Change role', 'Изменить роль')}
                             </button>
                             {showBulkRole && (
                                 <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 200, background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.18)', minWidth: 180, padding: '6px' }}>
@@ -381,7 +381,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
 
                         <button onClick={bulkDelete}
                             style={{ padding: '7px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                            🗑 {t('Șterge', 'Delete')}
+                            🗑 {t('Șterge', 'Delete', 'Удалить')}
                         </button>
 
                         <button onClick={clearSelected}
@@ -401,18 +401,18 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         <input type="checkbox" checked={allSelected} onChange={toggleAll}
                             style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#6366F1' }} />
                     </div>
-                    {[t('Utilizator', 'User'), t('Rol', 'Role'), t('Data adăugare', 'Added'), 'Status', t('Acțiuni', 'Actions')].map(h => (
+                    {[t('Utilizator', 'User', 'Пользователь'), t('Rol', 'Role', 'Роль'), t('Data adăugare', 'Added', 'Дата добавления'), 'Status', t('Acțiuni', 'Actions', 'Действия')].map(h => (
                         <span key={h} style={{ fontSize: '10px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
                     ))}
                 </div>
 
                 {loading ? (
                     <div style={{ padding: '48px', textAlign: 'center', color: colors.textSecondary, fontSize: '13px' }}>
-                        {t('Se încarcă…', 'Loading…')}
+                        {t('Se încarcă…', 'Loading…', 'Загрузка…')}
                     </div>
                 ) : filtered.length === 0 ? (
                     <div style={{ padding: '48px', textAlign: 'center', color: colors.textSecondary, fontSize: '13px' }}>
-                        {t('Niciun utilizator găsit', 'No users found')}
+                        {t('Niciun utilizator găsit', 'No users found', 'Пользователи не найдены')}
                     </div>
                 ) : filtered.map((u, i) => {
                     const isMe = u.user_id === currentUser?.id
@@ -461,13 +461,13 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                 background: u.is_active ? (isDark ? 'rgba(16,185,129,0.15)' : '#ecfdf5') : (isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2'),
                                 color: u.is_active ? '#10b981' : '#ef4444', display: 'inline-block'
                             }}>
-                                {u.is_active ? t('Activ', 'Active') : t('Inactiv', 'Inactive')}
+                                {u.is_active ? t('Activ', 'Active', 'Активен') : t('Inactiv', 'Inactive', 'Неактивен')}
                             </span>
 
                             {/* Actions */}
                             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                                 {/* Edit button */}
-                                <button onClick={() => openEdit(u)} title={t('Editează', 'Edit')}
+                                <button onClick={() => openEdit(u)} title={t('Editează', 'Edit', 'Изменить')}
                                     style={{ padding: '5px 9px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center' }}>
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -477,7 +477,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
 
                                 {/* Toggle active */}
                                 {!isMe && (
-                                    <button onClick={() => toggleActive(u.id, u.is_active)} title={u.is_active ? t('Dezactivează', 'Deactivate') : t('Activează', 'Activate')}
+                                    <button onClick={() => toggleActive(u.id, u.is_active)} title={u.is_active ? t('Dezactivează', 'Deactivate', 'Деактивировать') : t('Activează', 'Activate', 'Активировать')}
                                         style={{ padding: '5px 9px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', color: u.is_active ? '#f59e0b' : '#10b981', cursor: 'pointer', fontSize: '13px' }}>
                                         {u.is_active ? '⊘' : '✓'}
                                     </button>
@@ -485,7 +485,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
 
                                 {/* Delete */}
                                 {!isMe && (
-                                    <button onClick={() => deleteUser(u.id)} title={t('Șterge', 'Delete')}
+                                    <button onClick={() => deleteUser(u.id)} title={t('Șterge', 'Delete', 'Удалить')}
                                         style={{ padding: '5px 9px', borderRadius: '7px', border: '1px solid rgba(239,68,68,0.2)', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '13px' }}>
                                         🗑
                                     </button>
@@ -504,7 +504,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                     return <span key={r.value} style={{ fontSize: '12px', color: colors.textSecondary }}><span style={{ color: r.color, fontWeight: '700' }}>{count}</span> {r.label}</span>
                 })}
                 <span style={{ fontSize: '12px', color: colors.textSecondary, marginLeft: 'auto' }}>
-                    {users.filter(u => !u.is_active).length} {t('inactivi', 'inactive')}
+                    {users.filter(u => !u.is_active).length} {t('inactivi', 'inactive', 'неактивных')}
                 </span>
             </div>
             
@@ -543,7 +543,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                             {/* Avatar upload */}
                             <div>
                                 <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '12px' }}>
-                                    {t('Avatar', 'Avatar')}
+                                    {t('Avatar', 'Avatar', 'Аватар')}
                                 </label>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <Avatar user={editUser} size={64} />
@@ -577,7 +577,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <button onClick={() => editFileRef.current?.click()}
                                             style={{ padding: '8px 16px', borderRadius: '9px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f5f5f7', color: colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                                            {t('Schimbă poza', 'Change photo')}
+                                            {t('Schimbă poza', 'Change photo', 'Изменить фото')}
                                         </button>
                                         {editUser.avatar_url && (
                                             <button onClick={async () => {
@@ -588,7 +588,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                                     updateDbUser({ avatar_url: null })
                                                 }
                                             }} style={{ padding: '6px 16px', borderRadius: '9px', border: '1px solid rgba(239,68,68,0.2)', background: 'transparent', color: '#ef4444', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-                                                {t('Sterge poza', 'Remove photo')}
+                                                {t('Sterge poza', 'Remove photo', 'Удалить фото')}
                                             </button>
                                         )}
                                     </div>
@@ -598,17 +598,17 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                             {/* Full name */}
                             <div>
                                 <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
-                                    {t('Nume complet', 'Full name')}
+                                    {t('Nume complet', 'Full name', 'Полное имя')}
                                 </label>
                                 <input value={editForm.full_name || ''} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
-                                    placeholder={t('Nume afișat…', 'Display name…')}
+                                    placeholder={t('Nume afișat…', 'Display name…', 'Отображаемое имя…')}
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
 
                             {/* Role */}
                             <div>
                                 <label style={{ fontSize: '11px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
-                                    {t('Rol', 'Role')}
+                                    {t('Rol', 'Role', 'Роль')}
                                 </label>
                                 <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))}
                                     disabled={editUser.user_id === currentUser?.id}
@@ -625,7 +625,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                         Status
                                     </label>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        {[{ v: true, label: '✓ ' + t('Activ', 'Active'), color: '#10b981' }, { v: false, label: '⊘ ' + t('Inactiv', 'Inactive'), color: '#ef4444' }].map(o => (
+                                        {[{ v: true, label: '✓ ' + t('Activ', 'Active', 'Активен'), color: '#10b981' }, { v: false, label: '⊘ ' + t('Inactiv', 'Inactive', 'Неактивен'), color: '#ef4444' }].map(o => (
                                             <button key={String(o.v)} onClick={() => setEditForm(f => ({ ...f, is_active: o.v }))}
                                                 style={{ flex: 1, padding: '10px', borderRadius: '10px', border: `1px solid ${editForm.is_active === o.v ? o.color : colors.border}`, background: editForm.is_active === o.v ? `${o.color}18` : (isDark ? 'rgba(255,255,255,0.04)' : '#f9fafb'), color: editForm.is_active === o.v ? o.color : colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}>
                                                 {o.label}
@@ -640,11 +640,11 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         <div style={{ padding: '20px 28px', borderTop: `1px solid ${colors.border}`, display: 'flex', gap: '10px' }}>
                             <button onClick={() => setEditUser(null)}
                                 style={{ flex: 1, padding: '11px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                                {t('Anulează', 'Cancel')}
+                                {t('Anulează', 'Cancel', 'Отмена')}
                             </button>
                             <button onClick={saveEdit}
                                 style={{ flex: 2, padding: '11px', borderRadius: '10px', border: 'none', background: '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 2px 10px rgba(99,102,241,0.35)' }}>
-                                {t('Salvează modificările', 'Save changes')}
+                                {t('Salvează modificările', 'Save changes', 'Сохранить изменения')}
                             </button>
                         </div>
                     </div>
@@ -659,18 +659,18 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                     onClick={e => e.target === e.currentTarget && setShowInvite(false)}>
                     <div style={{ background: colors.card, borderRadius: '18px', padding: '32px', width: 520, border: `1px solid ${colors.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.28)', animation: 'fadeUp 0.2s ease', maxHeight: '90vh', overflowY: 'auto' }}>
                         <h3 style={{ margin: '0 0 24px', fontSize: '16px', fontWeight: '800', color: colors.text }}>
-                            {t('Adaugă utilizator nou', 'Add new user')}
+                            {t('Adaugă utilizator nou', 'Add new user', 'Добавить нового пользователя')}
                         </h3>
 
                         {/* Nume + Prenume — 2 columns */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Nume', 'Last name')}</label>
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Nume', 'Last name', 'Имя')}</label>
                                 <input type="text" value={inviteLast} onChange={e => setInviteLast(e.target.value)} placeholder="Popescu"
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Prenume', 'First name')}</label>
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Prenume', 'First name', 'Имя')}</label>
                                 <input type="text" value={inviteFirst} onChange={e => setInviteFirst(e.target.value)} placeholder="Ion"
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
@@ -684,7 +684,7 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${inviteError && !inviteEmail ? '#ef4444' : colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Telefon', 'Phone')}</label>
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Telefon', 'Phone', 'Телефон')}</label>
                                 <input type="tel" value={invitePhone} onChange={e => setInvitePhone(e.target.value)} placeholder="+40 7xx xxx xxx"
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
@@ -693,23 +693,23 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         {/* Parola + Confirma parola */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Parolă *', 'Password *')}</label>
-                                <input type="password" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} placeholder={t('Min. 6 caractere', 'Min. 6 chars')}
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Parolă *', 'Password *', 'Пароль *')}</label>
+                                <input type="password" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} placeholder={t('Min. 6 caractere', 'Min. 6 chars', 'Мин. 6 символов')}
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${inviteError && !invitePassword ? '#ef4444' : colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Confirmă parola *', 'Confirm password *')}</label>
-                                <input type="password" value={inviteConfirm} onChange={e => setInviteConfirm(e.target.value)} placeholder={t('Repetă parola', 'Repeat password')}
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Confirmă parola *', 'Confirm password *', 'Подтвердите пароль *')}</label>
+                                <input type="password" value={inviteConfirm} onChange={e => setInviteConfirm(e.target.value)} placeholder={t('Repetă parola', 'Repeat password', 'Повторите пароль')}
                                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${inviteConfirm && inviteConfirm !== invitePassword ? '#ef4444' : colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px', boxSizing: 'border-box' }} />
                                 {inviteConfirm && inviteConfirm !== invitePassword && (
-                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>{t('Parolele nu coincid', 'Passwords do not match')}</div>
+                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>{t('Parolele nu coincid', 'Passwords do not match', 'Пароли не совпадают')}</div>
                                 )}
                             </div>
                         </div>
 
                         {/* Rol */}
                         <div style={{ marginBottom: '20px' }}>
-                            <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Rol', 'Role')}</label>
+                            <label style={{ fontSize: '12px', fontWeight: '600', color: colors.textSecondary, display: 'block', marginBottom: '5px' }}>{t('Rol', 'Role', 'Роль')}</label>
                             <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#f9fafb', color: colors.text, fontSize: '13px' }}>
                                 {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
@@ -721,11 +721,11 @@ CREATE POLICY "Allow all for authenticated" ON public.user_roles
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button onClick={() => setShowInvite(false)}
                                 style={{ flex: 1, padding: '11px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                                {t('Anulează', 'Cancel')}
+                                {t('Anulează', 'Cancel', 'Отмена')}
                             </button>
                             <button onClick={inviteUser} disabled={inviting || (inviteConfirm && inviteConfirm !== invitePassword)}
                                 style={{ flex: 2, padding: '11px', borderRadius: '10px', border: 'none', background: '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: (inviting || (inviteConfirm && inviteConfirm !== invitePassword)) ? 0.6 : 1 }}>
-                                {inviting ? t('Se creează…', 'Creating…') : t('Creează cont', 'Create account')}
+                                {inviting ? t('Se creează…', 'Creating…', 'Создание…') : t('Creează cont', 'Create account', 'Создать аккаунт')}
                             </button>
                         </div>
                     </div>

@@ -188,18 +188,18 @@ export default function MarketingAnalyticsCity() {
                     onMouseOut={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.textSecondary }}
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                    Înapoi la Analytics
+                    {lang === 'ru' ? 'Назад к аналитике' : lang === 'en' ? 'Back to Analytics' : 'Înapoi la Analytics'}
                 </button>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
                         {CITY_FLAGS[cityName] || '📍'} {cityName}
                     </h1>
                     <p style={{ margin: '4px 0 0 0', color: colors.textSecondary, fontSize: '14px' }}>
-                        {loading ? 'Se încarcă...' : `${filtered.length} produse`}
+                        {loading ? (lang === 'ru' ? 'Загрузка...' : lang === 'en' ? 'Loading...' : 'Se încarcă...') : `${filtered.length} ${lang === 'ru' ? 'продуктов' : lang === 'en' ? 'products' : 'produse'}`}
                         {snapshotDate && <> · Snapshot: <strong>{snapshotDate}</strong></>}
                         {avgDiff !== null && (
                             <span style={{ marginLeft: '12px', fontWeight: '700', color: Number(avgDiff) <= 0 ? '#10B981' : '#EF4444' }}>
-                                Diferență medie: {Number(avgDiff) > 0 ? '+' : ''}{avgDiff}%
+                                {lang === 'ru' ? 'Средняя разница:' : lang === 'en' ? 'Avg difference:' : 'Diferență medie:'} {Number(avgDiff) > 0 ? '+' : ''}{avgDiff}%
                             </span>
                         )}
                     </p>
@@ -210,10 +210,10 @@ export default function MarketingAnalyticsCity() {
             {!loading && (
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
                     {[
-                        { label: 'Total produse', val: data.length, color: '#6366F1' },
-                        { label: 'Cu preț comparat', val: matched.length, color: '#10B981' },
-                        { label: 'Categorii', val: categories.length, color: '#F59E0B' },
-                        { label: 'Branduri competitor', val: compBrands.length, color: '#EC4899' },
+                        { label: lang === 'ru' ? 'Всего продуктов' : lang === 'en' ? 'Total products' : 'Total produse', val: data.length, color: '#6366F1' },
+                        { label: lang === 'ru' ? 'Сравнены цены' : lang === 'en' ? 'Prices compared' : 'Cu preț comparat', val: matched.length, color: '#10B981' },
+                        { label: lang === 'ru' ? 'Категории' : lang === 'en' ? 'Categories' : 'Categorii', val: categories.length, color: '#F59E0B' },
+                        { label: lang === 'ru' ? 'Бренды конкурентов' : lang === 'en' ? 'Competitor brands' : 'Branduri competitor', val: compBrands.length, color: '#EC4899' },
                     ].map(({ label, val, color }) => (
                         <div key={label} style={{ flex: '1 1 140px', background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '14px', border: `1px solid ${colors.border}`, padding: '16px 20px' }}>
                             <div style={{ fontSize: '22px', fontWeight: '800', color }}>{val}</div>
@@ -226,23 +226,23 @@ export default function MarketingAnalyticsCity() {
             {/* Filters */}
             <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ flex: '2 1 200px' }}>
-                    <input style={inputStyle} placeholder="🔍 Caută produs..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+                    <input style={inputStyle} placeholder={lang === 'ru' ? '🔍 Поиск продукта...' : lang === 'en' ? '🔍 Search product...' : '🔍 Caută produs...'} value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
                 </div>
                 <div style={{ flex: '1 1 140px' }}>
                     <select style={inputStyle} value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }}>
-                        <option value="">Toate categoriile</option>
+                        <option value="">{lang === 'ru' ? 'Все категории' : lang === 'en' ? 'All categories' : 'Toate categoriile'}</option>
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                 </div>
                 <div style={{ flex: '1 1 120px' }}>
                     <select style={inputStyle} value={filterPlatform} onChange={e => { setFilterPlatform(e.target.value); setPage(1) }}>
-                        <option value="">Toate platformele</option>
+                        <option value="">{lang === 'ru' ? 'Все платформы' : lang === 'en' ? 'All platforms' : 'Toate platformele'}</option>
                         {platforms.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                 </div>
                 <div style={{ flex: '1 1 160px' }}>
                     <select style={inputStyle} value={filterCompBrand} onChange={e => { setFilterCompBrand(e.target.value); setPage(1) }}>
-                        <option value="">Toți concurenții</option>
+                        <option value="">{lang === 'ru' ? 'Все конкуренты' : lang === 'en' ? 'All competitors' : 'Toți concurenții'}</option>
                         {compBrands.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                 </div>
@@ -252,12 +252,12 @@ export default function MarketingAnalyticsCity() {
             {loading ? (
                 <div style={{ padding: '80px', textAlign: 'center', color: colors.textSecondary }}>
                     <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
-                    <div style={{ fontWeight: '600' }}>Se încarcă datele pentru {cityName}...</div>
+                    <div style={{ fontWeight: '600' }}>{lang === 'ru' ? 'Загрузка данных для' : 'Se încarcă datele pentru'} {cityName}...</div>
                 </div>
             ) : filtered.length === 0 ? (
                 <div style={{ padding: '80px', textAlign: 'center', color: colors.textSecondary }}>
                     <div style={{ fontSize: '32px', marginBottom: '12px' }}>📭</div>
-                    <div style={{ fontWeight: '600' }}>Nu există produse pentru filtrele selectate</div>
+                    <div style={{ fontWeight: '600' }}>{lang === 'ru' ? 'Нет продуктов для выбранных фильтров' : 'Nu există produse pentru filtrele selectate'}</div>
                 </div>
             ) : (
                 <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
@@ -265,7 +265,7 @@ export default function MarketingAnalyticsCity() {
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
                                 <tr style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb' }}>
-                                    {['Actualizare', 'Produs', 'Gramaj', 'Bucăți', 'Brandul Nostru', 'Concurent', 'Diferență'].map(h => (
+                                    {(lang === 'ru' ? ['Обновление', 'Продукт', 'Вес', 'Шт.', 'Наш бренд', 'Конкурент', 'Разница'] : ['Actualizare', 'Produs', 'Gramaj', 'Bucăți', 'Brandul Nostru', 'Concurent', 'Diferență']).map(h => (
                                         <th key={h} style={{ padding: '12px 20px', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                                     ))}
                                 </tr>
@@ -367,7 +367,7 @@ export default function MarketingAnalyticsCity() {
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                                     style={{ padding: '7px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: page === 1 ? colors.textSecondary : colors.text, cursor: page === 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: '600', opacity: page === 1 ? 0.4 : 1 }}>
-                                    ← Anterior
+                                    ← {lang === 'ru' ? 'Нaза́д' : 'Anterior'}
                                 </button>
                                 {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
                                     let p
@@ -385,7 +385,7 @@ export default function MarketingAnalyticsCity() {
                                 })}
                                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
                                     style={{ padding: '7px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: page === totalPages ? colors.textSecondary : colors.text, cursor: page === totalPages ? 'default' : 'pointer', fontSize: '13px', fontWeight: '600', opacity: page === totalPages ? 0.4 : 1 }}>
-                                    Următor →
+                                    {lang === 'ru' ? 'Вперед' : 'Următor'} →
                                 </button>
                             </div>
                         </div>
@@ -417,14 +417,14 @@ export default function MarketingAnalyticsCity() {
                             <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <div style={{ fontSize: '11px', color: colors.textSecondary }}>Competiție ({selectedProduct.compBrand})</div>
+                                        <div style={{ fontSize: '11px', color: colors.textSecondary }}>{lang === 'ru' ? 'Конкурент' : 'Competiție'} ({selectedProduct.compBrand})</div>
                                         <div style={{ fontSize: '18px', fontWeight: '800', color: colors.text }}>{selectedProduct.compPrice} lei</div>
                                     </div>
                                     {selectedProduct.hasExactMatch && (
                                         <>
                                             <div style={{ fontSize: '11px', color: colors.textSecondary, textAlign: 'center' }}>vs</div>
                                             <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '11px', color: colors.textSecondary }}>Noi ({selectedProduct.ourBrand})</div>
+                                                <div style={{ fontSize: '11px', color: colors.textSecondary }}>{lang === 'ru' ? 'Мы' : 'Noi'} ({selectedProduct.ourBrand})</div>
                                                 <div style={{ fontSize: '18px', fontWeight: '800', color: '#6366F1' }}>{selectedProduct.ourPrice} lei</div>
                                             </div>
                                         </>
@@ -434,7 +434,7 @@ export default function MarketingAnalyticsCity() {
                             {selectedProduct.compUrl && (
                                 <a href={selectedProduct.compUrl} target="_blank" rel="noopener noreferrer"
                                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '12px', padding: '12px', background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', border: `1px solid ${colors.border}`, borderRadius: '10px', color: colors.text, textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
-                                    Deschide pagina restaurantului
+                                    {lang === 'ru' ? 'Открыть страницу ресторана' : 'Deschide pagina restaurantului'}
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </a>
                             )}

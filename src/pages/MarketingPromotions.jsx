@@ -162,7 +162,7 @@ export default function MarketingPromotions() {
             <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: '800', color: colors.text, margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-                        {(lang === 'ru' ? 'Radar Promoții' : (lang === 'en' ? 'Promotions Radar' : 'Radar Promoții'))}
+                        {(lang === 'ru' ? 'Радар Акций' : (lang === 'en' ? 'Promotions Radar' : 'Radar Promoții'))}
                     </h1>
                     <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>
                         {(lang === 'ru' ? 'Акции конкурентов, сгруппированные по городам.' : (lang === 'en' ? 'Competitor promotions grouped by city.' : 'Ofertele concurenței grupate pe orașe — Glovo, Wolt și Bolt.'))}
@@ -256,14 +256,14 @@ export default function MarketingPromotions() {
             {/* States */}
             {loading ? (
                 <div style={{ padding: '80px', textAlign: 'center', color: colors.textSecondary }}>
-                    Se încarcă promoțiile...
+                    {lang === 'ru' ? 'Загрузка акций...' : lang === 'en' ? 'Loading promotions...' : 'Se încarcă promoțiile...'}
                 </div>
             ) : promotions.length === 0 ? (
                 <div style={{ padding: '80px', textAlign: 'center', background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}` }}>
                     <div style={{ fontSize: '40px', marginBottom: '16px' }}>🤷‍♂️</div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: colors.text }}>Nicio promoție găsită</div>
-                    <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '8px' }}>Rulează o căutare din secțiunea Căutări pentru a popula datele.</div>
-                    <button onClick={fetchPromos} style={{ marginTop: '16px', padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#2bbec8', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}>🔄 Reîncarcă</button>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: colors.text }}>{lang === 'ru' ? 'Акции не найдены' : lang === 'en' ? 'No promotions found' : 'Nicio promoție găsită'}</div>
+                    <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '8px' }}>{lang === 'ru' ? 'Запустите поиск в разделе Поиски чтобы заполнить данные.' : 'Rulează o căutare din secțiunea Căutări pentru a popula datele.'}</div>
+                    <button onClick={fetchPromos} style={{ marginTop: '16px', padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#2bbec8', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}>🔄 {lang === 'ru' ? 'Обновить' : lang === 'en' ? 'Reload' : 'Reîncarcă'}</button>
                 </div>
             ) : (
                 /* CITY SECTIONS */
@@ -367,7 +367,7 @@ export default function MarketingPromotions() {
                                                         <div style={{ fontSize: '14px', fontWeight: '700', color: colors.text, lineHeight: 1.35, flex: 1, marginBottom: '10px' }}>{p.name}</div>
                                                         <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
                                                             <span style={{ fontSize: '11px', background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', color: colors.textSecondary, padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>{p.weight}</span>
-                                                            <span style={{ fontSize: '11px', background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', color: colors.textSecondary, padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>{p.pieces} buc</span>
+                                                            <span style={{ fontSize: '11px', background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', color: colors.textSecondary, padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>{p.pieces} {lang==='ru'?'шт':lang==='en'?'pcs':'buc'}</span>
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', borderTop: `1px solid ${colors.border}`, paddingTop: '10px' }}>
                                                             <div style={{ fontSize: '19px', fontWeight: '900', color: '#EF4444' }}>
@@ -450,15 +450,15 @@ export default function MarketingPromotions() {
                                 <span style={{ fontSize: '12px', background: PLATFORM_COLORS[selectedProduct.platform] || '#6366F1', color: '#fff', padding: '3px 8px', borderRadius: '12px', fontWeight: '600', textTransform: 'capitalize' }}>{selectedProduct.brand}</span>
                                 <span style={{ fontSize: '12px', background: isDark ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>{selectedProduct.category}</span>
                                 {selectedProduct.weight !== '—' && <span style={{ fontSize: '12px', background: isDark ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>{selectedProduct.weight}</span>}
-                                {selectedProduct.pieces !== '—' && <span style={{ fontSize: '12px', background: isDark ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>{selectedProduct.pieces} {lang==='en'?'pieces':'bucăți'}</span>}
-                                {selectedProduct.platform && <span style={{ fontSize: '12px', border: `1px solid ${colors.border}`, color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600', textTransform: 'capitalize' }}>Platformă: {selectedProduct.platform}</span>}
+                                {selectedProduct.pieces !== '—' && <span style={{ fontSize: '12px', background: isDark ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600' }}>{selectedProduct.pieces} {lang==='ru'?'шт.':lang==='en'?'pieces':'bucăți'}</span>}
+                                {selectedProduct.platform && <span style={{ fontSize: '12px', border: `1px solid ${colors.border}`, color: colors.textSecondary, padding: '3px 8px', borderRadius: '12px', fontWeight: '600', textTransform: 'capitalize' }}>{lang === 'ru' ? 'Платформа' : 'Platformă'}: {selectedProduct.platform}</span>}
                             </div>
                             
                             <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb', border: `1px solid ${colors.border}`, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Detalii Promoție</div>
+                                <div style={{ fontSize: '12px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>{lang === 'ru' ? 'Детали акции' : lang === 'en' ? 'Promotion Details' : 'Detalii Promoție'}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div>
-                                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px' }}>Preț vechi</div>
+                                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px' }}>{lang === 'ru' ? 'Старая цена' : lang === 'en' ? 'Old Price' : 'Preț vechi'}</div>
                                         <div style={{ fontSize: '14px', color: colors.textSecondary, textDecoration: 'line-through' }}>{selectedProduct.oldPrice.toFixed(2)} lei</div>
                                     </div>
                                     <div style={{ textAlign: 'center' }}>
@@ -467,7 +467,7 @@ export default function MarketingPromotions() {
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px' }}>Preț Promo</div>
+                                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px' }}>{lang === 'ru' ? 'Акционная цена' : lang === 'en' ? 'Promo Price' : 'Preț Promo'}</div>
                                         <div style={{ fontSize: '20px', fontWeight: '800', color: '#EF4444' }}>{selectedProduct.newPrice.toFixed(2)} lei</div>
                                     </div>
                                 </div>
@@ -478,7 +478,7 @@ export default function MarketingPromotions() {
                                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', background: PLATFORM_COLORS[selectedProduct.platform] || (isDark ? 'rgba(255,255,255,0.05)' : '#ffffff'), border: `1px solid ${PLATFORM_COLORS[selectedProduct.platform] ? 'transparent' : colors.border}`, borderRadius: '12px', color: '#fff', textDecoration: 'none', fontSize: '13px', fontWeight: '700', transition: 'opacity 0.2s' }}
                                     onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
                                     onMouseOut={e => e.currentTarget.style.opacity = '1'}>
-                                    Deschide pe {selectedProduct.platform.charAt(0).toUpperCase() + selectedProduct.platform.slice(1)}
+                                    {lang === 'ru' ? 'Открыть на ' : lang === 'en' ? 'Open on ' : 'Deschide pe '} {selectedProduct.platform.charAt(0).toUpperCase() + selectedProduct.platform.slice(1)}
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </a>
                             )}

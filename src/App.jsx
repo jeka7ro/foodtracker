@@ -103,13 +103,13 @@ function Layout({ children }) {
         { path: '/monitoring', iconKey: 'monitoring', label: t('nav_monitoring') },
     ]
     const stopSubItems = [
-        { path: '/stop-control', label: (lang === 'ru' ? 'Остановки' : (lang === 'en' ? 'Overview' : 'Opriri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
-        { path: '/stop-preturi', label: (lang === 'ru' ? 'Сравнение цен' : (lang === 'en' ? 'Prices' : 'Comparație Prețuri')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-        { path: '/stop-istoric', label: (lang === 'ru' ? 'История' : (lang === 'en' ? 'History' : 'Istoric')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+        { path: '/stop-control', label: t('nav_overview'), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
+        { path: '/stop-preturi', label: t('nav_prices_compare'), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+        { path: '/stop-istoric', label: t('nav_history'), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
     ]
     const ownProductsSubItems = [
-        { path: '/own-products', label: (lang === 'ru' ? 'Свои продукты (агр.)' : (lang === 'en' ? 'Platform Products' : 'Produse (Aplicații)')), icon: NAV_ICONS.ownproducts },
-        { path: '/iiko-products', label: (lang === 'ru' ? 'Меню POS (iiko)' : (lang === 'en' ? 'POS Products (iiko)' : 'Meniu POS (iiko)')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
+        { path: '/own-products', label: t('nav_own_products'), icon: NAV_ICONS.ownproducts },
+        { path: '/iiko-products', label: t('nav_iiko_products'), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
         { path: '/brands', label: t('nav_brands'), icon: NAV_ICONS.brands },
         { path: '/restaurants', label: t('nav_restaurants'), icon: NAV_ICONS.restaurants },
     ]
@@ -159,12 +159,12 @@ function Layout({ children }) {
     const usersSubItems = [
         {
             path: '/users', match: (p) => p === '/users',
-            label: (lang === 'ru' ? 'Listă Utilizatori' : (lang === 'en' ? 'Users List' : 'Listă Utilizatori')),
+            label: t('nav_user_list'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
         },
         {
             path: '/role-settings', match: (p) => p === '/role-settings',
-            label: (lang === 'ru' ? 'Настройки ролей' : (lang === 'en' ? 'Role Settings' : 'Setări Roluri')),
+            label: t('nav_role_settings'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 11l.01 0c.96-1.92 1.4-3.5 1.15-5-.45-2.7-2.9-4.8-5.65-4.9-3.23-.1-6.17 2.45-6.5 5.65-.25 2.4.65 4.6 2.3 6.1L4 21c-.4.4-.3 1.1.2 1.4.5.3 1.1.2 1.5-.2l.7-.7.7.7c.4.4 1 .5 1.5.2.5-.3.6-1 .2-1.4l1.3-1.3c1.5 1.65 3.7 2.55 6.1 2.3 3.2-.35 5.75-3.27 5.65-6.5-.1-2.75-2.2-5.2-4.9-5.65-1.5-.25-3.08.19-5 1.15l-.01 0z" /></svg>
         }
     ]
@@ -172,12 +172,12 @@ function Layout({ children }) {
     const deliverySubItems = [
         {
             path: '/delivery-zone?tab=configs', match: (p, s) => p === '/delivery-zone' && (!s.get('tab') || s.get('tab') === 'configs'),
-            label: (lang === 'ru' ? 'Configurații' : (lang === 'en' ? 'Configurations' : 'Configurații')),
+            label: t('nav_configurations'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         },
         {
             path: '/delivery-zone?tab=history', match: (p, s) => p === '/delivery-zone' && s.get('tab') === 'history',
-            label: (lang === 'ru' ? 'Istoric' : (lang === 'en' ? 'History' : 'Istoric')),
+            label: t('nav_history'),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         }
     ]
@@ -315,7 +315,7 @@ function Layout({ children }) {
 
                     {/* Own Products expandable group */}
                     <div onClick={() => { if (!sidebarCollapsed) setOwnProductsOpen(o => !o) }}
-                        title={sidebarCollapsed ? ((lang === 'ru' ? 'Свои продукты' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))) : undefined}
+                        title={sidebarCollapsed ? t('nav_own_products') : undefined}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '10px',
                             padding: sidebarCollapsed ? '9px 0' : '9px 16px',
@@ -328,7 +328,7 @@ function Layout({ children }) {
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.ownproducts}</span>
                         {!sidebarCollapsed && <>
-                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(lang === 'ru' ? 'Свои продукты' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))}</span>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('nav_own_products')}</span>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
                                 style={{ transform: ownProductsOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
                                 <polyline points="9 18 15 12 9 6" />
@@ -473,7 +473,7 @@ function Layout({ children }) {
                     )}
 
                     <div onClick={() => { if (!sidebarCollapsed) setUsersOpen(o => !o) }}
-                        title={sidebarCollapsed ? ((lang === 'ru' ? 'Utilizatori' : (lang === 'en' ? 'Users' : 'Utilizatori'))) : undefined}
+                        title={sidebarCollapsed ? t('nav_users') : undefined}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '10px',
                             padding: sidebarCollapsed ? '9px 0' : '9px 16px',
@@ -486,7 +486,7 @@ function Layout({ children }) {
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.users}</span>
                         {!sidebarCollapsed && <>
-                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(lang === 'ru' ? 'Utilizatori' : (lang === 'en' ? 'Users' : 'Utilizatori'))}</span>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('nav_users')}</span>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
                                 style={{ transform: usersOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
                                 <polyline points="9 18 15 12 9 6" />
@@ -553,7 +553,7 @@ function Layout({ children }) {
                     <div onClick={toggleTheme}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.18s', userSelect: 'none' }}>
                         <span style={{ fontSize: '14px', lineHeight: 1 }}>{isDark ? '☀️' : '🌙'}</span>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.textSecondary, letterSpacing: '0.3px' }}>{isDark ? (lang === 'ru' ? 'Светлая' : lang === 'en' ? 'Light' : 'Luminos') : (lang === 'ru' ? 'Тёмная' : lang === 'en' ? 'Dark' : 'Întunecat')}</span>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.textSecondary, letterSpacing: '0.3px' }}>{isDark ? t('theme_light') : t('theme_dark')}</span>
                     </div>
 
                     {/* ── Language segmented control ── */}

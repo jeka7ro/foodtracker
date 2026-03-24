@@ -121,7 +121,7 @@ function ProductCard({ p, colors, isDark, onOpenModal }) {
 export default function CompetitorProducts() {
     const { colors, isDark } = useTheme()
     const { lang } = useLanguage()
-    const t = (ro, en) => lang === 'en' ? en : ro
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
 
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
@@ -253,10 +253,10 @@ export default function CompetitorProducts() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
-                        🛒 {t('Produse Concurenți', 'Competitor Products')}
+                        🛒 {t('Produse Concurenți', 'Competitor Products', 'Продукты конкурентов')}
                     </h1>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                        {loading ? '…' : `${total.toLocaleString()} ${t('produse din toate platformele', 'products across all platforms')}`}
+                        {loading ? '…' : `${total.toLocaleString()} ${t('produse din toate platformele', 'products across all platforms', 'продуктов на всех платформах')}`}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -281,43 +281,43 @@ export default function CompetitorProducts() {
                     <svg style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
                     <input
                         value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={t('Caută produs…', 'Search product…')}
+                        placeholder={t('Caută produs…', 'Search product…', 'Поиск продукта…')}
                         style={{ ...selectStyle, width: '100%', paddingLeft: 28, boxSizing: 'border-box' }}
                     />
                 </div>
 
                 <select value={filterCity} onChange={e => setFilterCity(e.target.value)} style={selectStyle}>
-                    <option value="">{t('Toate orașele', 'All cities')}</option>
+                    <option value="">{t('Toate orașele', 'All cities', 'Все города')}</option>
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
 
                 <select value={filterRestaurant} onChange={e => setFilterRestaurant(e.target.value)} style={selectStyle}>
-                    <option value="">{t('Toate brandurile', 'All brands')}</option>
+                    <option value="">{t('Toate brandurile', 'All brands', 'Все бренды')}</option>
                     {restaurants.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
 
                 <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={selectStyle}>
-                    <option value="">{t('Toate categoriile', 'All categories')}</option>
+                    <option value="">{t('Toate categoriile', 'All categories', 'Все категории')}</option>
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
 
                 <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={selectStyle}>
-                    <option value="date">{t('Cele mai noi', 'Most recent')}</option>
-                    <option value="price_asc">{t('Preț: mic → mare', 'Price: low → high')}</option>
-                    <option value="price_desc">{t('Preț: mare → mic', 'Price: high → low')}</option>
-                    <option value="name">{t('Nume A-Z', 'Name A-Z')}</option>
+                    <option value="date">{t('Cele mai noi', 'Most recent', 'Самые новые')}</option>
+                    <option value="price_asc">{t('Preț: mic → mare', 'Price: low → high', 'Цена: по возрастанию')}</option>
+                    <option value="price_desc">{t('Preț: mare → mic', 'Price: high → low', 'Цена: по убыванию')}</option>
+                    <option value="name">{t('Nume A-Z', 'Name A-Z', 'Имя А-Я')}</option>
                 </select>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: '600', color: colors.text, cursor: 'pointer', userSelect: 'none' }}>
                     <input type="checkbox" checked={onlyWithImages} onChange={e => setOnlyWithImages(e.target.checked)}
                         style={{ width: 15, height: 15, accentColor: '#6366F1' }} />
-                    {t('Doar cu poze', 'With images only')}
+                    {t('Doar cu poze', 'With images only', 'Только с фото')}
                 </label>
 
                 {(filterPlatform || filterCity || filterCategory || search || onlyWithImages) && (
                     <button onClick={() => { setFilterPlatform(''); setFilterCity(''); setFilterCategory(''); setSearch(''); setOnlyWithImages(false) }}
                         style={{ ...selectStyle, color: '#ef4444', borderColor: '#ef4444', background: 'rgba(239,68,68,0.08)' }}>
-                        ✕ {t('Resetează', 'Reset')}
+                        ✕ {t('Resetează', 'Reset', 'Сбросить')}
                     </button>
                 )}
             </div>
@@ -326,7 +326,7 @@ export default function CompetitorProducts() {
             {loading && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: '12px' }}>
                     <svg style={{ animation: 'spin 1s linear infinite', color: '#6366F1' }} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                    <span style={{ fontSize: '14px', color: colors.textSecondary }}>{t('Se încarcă produsele…', 'Loading products…')}</span>
+                    <span style={{ fontSize: '14px', color: colors.textSecondary }}>{t('Se încarcă produsele…', 'Loading products…', 'Загрузка продуктов…')}</span>
                 </div>
             )}
 
@@ -335,10 +335,10 @@ export default function CompetitorProducts() {
                 <div style={{ textAlign: 'center', padding: '80px 0' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>🛒</div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: colors.text, marginBottom: '8px' }}>
-                        {t('Nu există produse', 'No products found')}
+                        {t('Nu există produse', 'No products found', 'Продукты не найдены')}
                     </div>
                     <div style={{ fontSize: '13px', color: colors.textSecondary }}>
-                        {t('Rulează o căutare din pagina Intelligence Competitiv pentru a scrapa produse.', 'Run a search from the Competitive Intelligence page to scrape products.')}
+                        {t('Rulează o căutare din pagina Intelligence Competitiv pentru a scrapa produse.', 'Run a search from the Competitive Intelligence page to scrape products.', 'Запустите поиск на странице конкурентного анализа, чтобы собрать продукты.')}
                     </div>
                 </div>
             )}
@@ -362,14 +362,14 @@ export default function CompetitorProducts() {
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '32px' }}>
                     <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
                         style={{ ...selectStyle, opacity: page === 0 ? 0.4 : 1, padding: '8px 16px' }}>
-                        ← {t('Anterior', 'Prev')}
+                        ← {t('Anterior', 'Prev', 'Нaза́д')}
                     </button>
                     <span style={{ fontSize: '13px', color: colors.textSecondary, fontWeight: '600' }}>
-                        {t('Pagina', 'Page')} {page + 1} / {totalPages}
+                        {t('Pagina', 'Page', 'Страница')} {page + 1} / {totalPages}
                     </span>
                     <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
                         style={{ ...selectStyle, opacity: page >= totalPages - 1 ? 0.4 : 1, padding: '8px 16px' }}>
-                        {t('Următor', 'Next')} →
+                        {t('Următor', 'Next', 'Вперед')} →
                     </button>
                 </div>
             )}
@@ -409,7 +409,7 @@ export default function CompetitorProducts() {
                             
                             <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb', border: `1px solid ${colors.border}`, borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div>
-                                    <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px', fontWeight: '500' }}>{lang==='en'?'Current Price':'Preț Curent'}</div>
+                                    <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '2px', fontWeight: '500' }}>{lang === 'ru' ? 'Текущая цена' : (lang === 'en' ? 'Current Price' : 'Preț Curent')}</div>
                                     <div style={{ fontSize: '20px', fontWeight: '800', color: '#2bbec8' }}>{selectedProduct.price?.toFixed(2)} RON</div>
                                 </div>
                             </div>
@@ -419,7 +419,7 @@ export default function CompetitorProducts() {
                                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', borderRadius: '12px', color: colors.text, textDecoration: 'none', fontSize: '13px', fontWeight: '700', transition: 'all 0.2s', border: `1px solid ${colors.border}` }}
                                     onMouseOver={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.12)' : '#e2e8f0' }}
                                     onMouseOut={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9' }}>
-                                    Istoric / Preturi
+                                    {lang === 'ru' ? 'История / Цены' : lang === 'en' ? 'History / Prices' : 'Istoric / Prețuri'}
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
                                 </a>
                                 {selectedProduct.restaurant_url && (
@@ -427,7 +427,7 @@ export default function CompetitorProducts() {
                                         style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: PLATFORM_COLORS[selectedProduct.platform] || '#2bbec8', border: 'none', borderRadius: '12px', color: '#fff', textDecoration: 'none', fontSize: '13px', fontWeight: '700', transition: 'opacity 0.2s' }}
                                         onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
                                         onMouseOut={e => e.currentTarget.style.opacity = '1'}>
-                                        Deschide pe Platf.
+                                        {lang === 'ru' ? 'Открыть на платформе' : lang === 'en' ? 'Open on Platform' : 'Deschide pe Platf.'}
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                     </a>
                                 )}

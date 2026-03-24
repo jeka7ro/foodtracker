@@ -35,7 +35,7 @@ export default function BusinessRulesTab() {
     if (loading) {
         return (
             <div style={{ padding: '28px 40px', textAlign: 'center', color: colors.textSecondary }}>
-                {(lang === 'ru' ? 'Se încarcă regulile...' : (lang === 'en' ? 'Loading rules...' : 'Se încarcă regulile...'))}
+                {(lang === 'ru' ? 'Загрузка правил...' : (lang === 'en' ? 'Loading rules...' : 'Se încarcă regulile...'))}
             </div>
         )
     }
@@ -54,10 +54,10 @@ export default function BusinessRulesTab() {
                 }}>
                     <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={colors.textSecondary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg></div>
                     <div style={{ fontSize: '16px', fontWeight: '600', color: colors.text, marginBottom: '8px' }}>
-                        {(lang === 'ru' ? 'Nicio regulă configurată momentan' : (lang === 'en' ? 'No rules configured yet' : 'Nicio regulă configurată momentan'))}
+                        {(lang === 'ru' ? 'На данный момент правила не настроены' : (lang === 'en' ? 'No rules configured yet' : 'Nicio regulă configurată momentan'))}
                     </div>
                     <div style={{ fontSize: '13px', color: colors.textSecondary }}>
-                        {(lang === 'ru' ? 'Adaugă reguli pentru a defini comportamentul așteptat al restaurantului' : (lang === 'en' ? 'Add rules to define expected restaurant behavior' : 'Adaugă reguli pentru a defini comportamentul așteptat al restaurantului'))}
+                        {(lang === 'ru' ? 'Добавьте правила для определения ожидаемого поведения ресторана' : (lang === 'en' ? 'Add rules to define expected restaurant behavior' : 'Adaugă reguli pentru a defini comportamentul așteptat al restaurantului'))}
                     </div>
                 </div>
             ) : (
@@ -99,7 +99,7 @@ export default function BusinessRulesTab() {
                                     borderRadius: '6px',
                                     border: `0.5px solid ${rule.is_active ? colors.green : colors.textSecondary}40`
                                 }}>
-                                    {rule.is_active ? ((lang === 'ru' ? 'Activă' : (lang === 'en' ? 'Active' : 'Activă'))) : ((lang === 'ru' ? 'Inactivă' : (lang === 'en' ? 'Inactive' : 'Inactivă')))}
+                                    {rule.is_active ? ((lang === 'ru' ? 'Активен' : (lang === 'en' ? 'Active' : 'Activă'))) : ((lang === 'ru' ? 'Неактивен' : (lang === 'en' ? 'Inactive' : 'Inactivă')))}
                                 </span>
                             </div>
 

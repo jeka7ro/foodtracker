@@ -563,7 +563,7 @@ export default function DeliveryZone() {
                     {showForm && (
                         <div style={{ ...glass, borderColor: '#6366F1', animation: 'fadeUp 0.2s ease' }}>
                             <div style={{ fontSize: '14px', fontWeight: '700', color: colors.text, marginBottom: '14px' }}>
-                                {editingConfig ? `${(lang === 'ru' ? 'Editează' : (lang === 'en' ? 'Edit' : 'Editează'))}: ${editingConfig.name}` : ((lang === 'ru' ? 'Добавить отслеживаемый ресторан' : (lang === 'en' ? 'Add Monitored Restaurant' : 'Adaugă Restaurant Monitorizat')))}
+                                {editingConfig ? `${(lang === 'ru' ? 'Изменить' : (lang === 'en' ? 'Edit' : 'Editează'))}: ${editingConfig.name}` : ((lang === 'ru' ? 'Добавить отслеживаемый ресторан' : (lang === 'en' ? 'Add Monitored Restaurant' : 'Adaugă Restaurant Monitorizat')))}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
                                 {/* Config name - free text */}

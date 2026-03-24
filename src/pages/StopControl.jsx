@@ -499,11 +499,11 @@ export default function StopControl() {
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button onClick={() => setDeleteConfirm(null)} disabled={deleting}
                                 style={{ ...btnBase, padding: '10px 20px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: colors.textSecondary, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}` }}>
-                                {(lang === 'ru' ? 'Anulează' : (lang === 'en' ? 'Cancel' : 'Anulează'))}
+                                {(lang === 'ru' ? 'Отмена' : (lang === 'en' ? 'Cancel' : 'Anulează'))}
                             </button>
                             <button onClick={handleDeleteStop} disabled={deleting}
                                 style={{ ...btnBase, padding: '10px 20px', background: deleting ? 'rgba(239,68,68,0.4)' : 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff', boxShadow: '0 4px 14px rgba(239,68,68,0.35)' }}>
-                                {deleting ? ((lang === 'ru' ? 'Удаление...' : (lang === 'en' ? 'Deleting...' : 'Se șterge...'))) : ((lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge')))}
+                                {deleting ? ((lang === 'ru' ? 'Удаление...' : (lang === 'en' ? 'Deleting...' : 'Se șterge...'))) : ((lang === 'ru' ? 'Удалить' : (lang === 'en' ? 'Delete' : 'Șterge')))}
                             </button>
                         </div>
                     </div>
@@ -603,7 +603,7 @@ export default function StopControl() {
                                             </span>
                                         </td>
                                         <td style={{ padding: '13px 8px', textAlign: 'center' }}>
-                                            <button className="btn-h" onClick={() => setDeleteConfirm(e.id)} title={(lang === 'ru' ? 'Șterge' : (lang === 'en' ? 'Delete' : 'Șterge'))}
+                                            <button className="btn-h" onClick={() => setDeleteConfirm(e.id)} title={(lang === 'ru' ? 'Удалить' : (lang === 'en' ? 'Delete' : 'Șterge'))}
                                                 style={{ background: 'none', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, borderRadius: '8px', padding: '5px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: colors.textSecondary, transition: 'all 0.15s' }}
                                                 onMouseOver={ev => { ev.currentTarget.style.color = '#ef4444'; ev.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; ev.currentTarget.style.background = 'rgba(239,68,68,0.06)' }}
                                                 onMouseOut={ev => { ev.currentTarget.style.color = colors.textSecondary; ev.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; ev.currentTarget.style.background = 'none' }}>

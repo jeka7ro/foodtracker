@@ -60,7 +60,7 @@ export default function Settings() {
     const { colors, isDark } = useTheme()
     const { refreshPermissions } = useAuth()
     const g = glass(isDark)
-    const t = (ro, en) => lang === 'en' ? en : ro
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
 
     const [permissions, setPermissions] = useState({}) // role -> [paths] or '*'
     const [loading, setLoading] = useState(true)
@@ -184,7 +184,7 @@ export default function Settings() {
             await refreshPermissions() // reload permissions in Auth context
             setTimeout(() => setSaved(false), 3000)
         } catch (err) {
-            alert(t(`Eroare la salvare: ${err.message}`, `Save error: ${err.message}`))
+            alert(t(`Eroare la salvare: ${err.message}`, `Save error: ${err.message}`, `Ошибка при сохранении: ${err.message}`))
         }
         setSaving(false)
     }
@@ -229,15 +229,15 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
                         <div style={{ fontSize: '28px' }}>⚠️</div>
                         <div>
                             <div style={{ fontWeight: '700', color: colors.text, fontSize: '16px' }}>
-                                {t('Tabelul role_permissions lipsește', 'Table role_permissions missing')}
+                                {t('Tabelul role_permissions lipsește', 'Table role_permissions missing', 'Таблица role_permissions отсутствует')}
                             </div>
                             <div style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '4px' }}>
-                                {t('Rulați SQL-ul de mai jos în Supabase → SQL Editor pentru a crea tabelul de permisiuni', 'Run the SQL below in Supabase → SQL Editor to create the permissions table')}
+                                {t('Rulați SQL-ul de mai jos în Supabase → SQL Editor pentru a crea tabelul de permisiuni', 'Run the SQL below in Supabase → SQL Editor to create the permissions table', 'Запустите SQL-код ниже в Supabase → SQL Editor, чтобы создать таблицу')}
                             </div>
                         </div>
                         <button onClick={() => navigator.clipboard.writeText(MIGRATION_SQL)}
                             style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'rgba(99,102,241,0.1)', color: '#6366F1', fontSize: '12px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            📋 {t('Copiază SQL', 'Copy SQL')}
+                            📋 {t('Copiază SQL', 'Copy SQL', 'Копировать SQL')}
                         </button>
                     </div>
                     <pre style={{ background: isDark ? 'rgba(0,0,0,0.4)' : '#f8f9fa', borderRadius: '12px', padding: '18px', fontSize: '11px', fontFamily: 'monospace', color: isDark ? '#a5f3fc' : '#0f172a', overflowX: 'auto', margin: 0, lineHeight: 1.6 }}>{MIGRATION_SQL}</pre>
@@ -253,20 +253,20 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.text, letterSpacing: '-0.5px' }}>
-                        ⚙️ {t('Setări Roluri', 'Role Settings')}
+                        ⚙️ {t('Setări Roluri', 'Role Settings', 'Настройки ролей')}
                     </h1>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: colors.textSecondary }}>
-                        {t('Configurează ce pagini vede fiecare rol — modificările se aplică imediat după salvare', 'Configure which pages each role can access — changes apply immediately after saving')}
+                        {t('Configurează ce pagini vede fiecare rol — modificările se aplică imediat după salvare', 'Configure which pages each role can access — changes apply immediately after saving', 'Настроить доступ к страницам — изменения применяются сразу после сохранения')}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={resetToDefaults}
                         style={{ padding: '9px 16px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                        🔄 {t('Resetează', 'Reset defaults')}
+                        🔄 {t('Resetează', 'Reset defaults', 'Сбросить')}
                     </button>
                     <button onClick={savePermissions} disabled={saving}
                         style={{ padding: '9px 20px', borderRadius: '10px', border: 'none', background: saved ? '#10b981' : '#6366F1', color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: `0 2px 12px ${saved ? 'rgba(16,185,129,0.35)' : 'rgba(99,102,241,0.35)'}`, opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>
-                        {saving ? '...' : saved ? `✓ ${t('Salvat!', 'Saved!')}` : `💾 ${t('Salvează', 'Save')}`}
+                        {saving ? '...' : saved ? `✓ ${t('Salvat!', 'Saved!', 'Сохранено!')}` : `💾 ${t('Salvează', 'Save', 'Сохранить')}`}
                     </button>
                 </div>
             </div>
@@ -275,7 +275,7 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>
                     <div style={{ width: 36, height: 36, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 16px' }} />
-                    {t('Se încarcă...', 'Loading...')}
+                    {t('Se încarcă...', 'Loading...', 'Загрузка...')}
                 </div>
             ) : (
                 <div style={{ ...g, overflow: 'hidden' }}>
@@ -284,7 +284,7 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
                             <thead>
                                 <tr>
                                     <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '700', color: colors.textSecondary, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, position: 'sticky', left: 0, background: isDark ? 'rgba(30,32,40,0.95)' : 'rgba(255,255,255,0.98)', zIndex: 2, minWidth: '200px' }}>
-                                        {t('Pagină', 'Page')}
+                                        {t('Pagină', 'Page', 'Страница')}
                                     </th>
                                     {ROLES.map(r => (
                                         <th key={r.value} style={{ padding: '14px 8px', textAlign: 'center', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, minWidth: '90px' }}>
@@ -298,7 +298,7 @@ ON CONFLICT (role) DO UPDATE SET allowed_paths = EXCLUDED.allowed_paths, updated
                                                 {r.value !== 'admin' && (
                                                     <button onClick={() => toggleAllForRole(r.value)}
                                                         style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.textSecondary, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                        {permCounts[r.value] === ALL_PAGES.length ? t('Deselectează', 'Uncheck all') : t('Selectează tot', 'Check all')}
+                                                        {permCounts[r.value] === ALL_PAGES.length ? t('Deselectează', 'Uncheck all', 'Снять выбор') : t('Selectează tot', 'Check all', 'Выбрать всё')}
                                                     </button>
                                                 )}
                                             </div>

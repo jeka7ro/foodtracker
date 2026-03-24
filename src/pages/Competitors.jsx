@@ -81,10 +81,10 @@ export default function Competitors() {
             {/* Page header */}
             <div style={{ marginBottom: '28px' }}>
                 <h1 style={{ margin: '0 0 6px', fontSize: '26px', fontWeight: '800', color: colors.text, letterSpacing: '-0.6px' }}>
-                    Concurenți
+                    {lang === 'ru' ? 'Конкуренты' : lang === 'en' ? 'Competitors' : 'Concurenți'}
                 </h1>
                 <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>
-                    {competitors.length} {(lang === 'ru' ? 'restaurante concurente din toate căutările' : (lang === 'en' ? 'competitor restaurants from all searches' : 'restaurante concurente din toate căutările'))}
+                    {competitors.length} {(lang === 'ru' ? 'ресторанов-конкурентов из всех поисков' : (lang === 'en' ? 'competitor restaurants from all searches' : 'restaurante concurente din toate căutările'))}
                 </p>
             </div>
 
@@ -94,7 +94,7 @@ export default function Competitors() {
                 <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
                     <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                     <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={(lang === 'ru' ? 'Caută restaurant...' : (lang === 'en' ? 'Search restaurant...' : 'Caută restaurant...'))}
+                        placeholder={(lang === 'ru' ? 'Поиск ресторана...' : (lang === 'en' ? 'Search restaurant...' : 'Caută restaurant...'))}
                         style={{ width: '100%', paddingLeft: 36, padding: '9px 12px 9px 36px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
 
@@ -118,7 +118,7 @@ export default function Competitors() {
                 <select value={sortBy} onChange={e => setSortBy(e.target.value)}
                     style={{ padding: '9px 12px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.card, color: colors.text, fontSize: '13px', cursor: 'pointer' }}>
                     <option value="rank">{(lang === 'ru' ? 'Sortare: Best rank' : (lang === 'en' ? 'Sort: Best rank' : 'Sortare: Best rank'))}</option>
-                    <option value="appearances">{(lang === 'ru' ? 'Sortare: Apariții' : (lang === 'en' ? 'Sort: Appearances' : 'Sortare: Apariții'))}</option>
+                    <option value="appearances">{(lang === 'ru' ? 'Сортировка: Появления' : (lang === 'en' ? 'Sort: Appearances' : 'Sortare: Apariții'))}</option>
                     <option value="rating">{(lang === 'ru' ? 'Sortare: Rating' : (lang === 'en' ? 'Sort: Rating' : 'Sortare: Rating'))}</option>
                     <option value="name">{(lang === 'ru' ? 'Sortare: Nume' : (lang === 'en' ? 'Sort: Name' : 'Sortare: Nume'))}</option>
                 </select>
@@ -134,7 +134,7 @@ export default function Competitors() {
                 </div>
 
                 <div style={{ marginLeft: 'auto', fontSize: '13px', color: colors.textSecondary }}>
-                    {filtered.length} din {competitors.length}
+                    {filtered.length} {lang === 'ru' ? 'из' : lang === 'en' ? 'of' : 'din'} {competitors.length}
                 </div>
             </div>
 
@@ -142,7 +142,7 @@ export default function Competitors() {
             {loading && (
                 <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary }}>
                     <svg style={{ animation: 'spin 1s linear infinite' }} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                    <p style={{ marginTop: '12px' }}>Se încarcă concurenții...</p>
+                    <p style={{ marginTop: '12px' }}>{lang === 'ru' ? 'Загрузка конкурентов...' : lang === 'en' ? 'Loading competitors...' : 'Se încarcă concurenții...'}</p>
                 </div>
             )}
 
@@ -193,7 +193,7 @@ export default function Competitors() {
                                 {[
                                     { label: 'Best rank', value: comp.bestRank ? `#${comp.bestRank}` : '—', accent: comp.bestRank && comp.bestRank <= 3 },
                                     { label: 'Rating', value: comp.avgRating ? `${comp.avgRating}/10` : '—' },
-                                    { label: 'Apariții', value: `${comp.appearances}×` },
+                                    { label: lang === 'ru' ? 'Появления' : lang === 'en' ? 'Appearances' : 'Apariții', value: `${comp.appearances}×` },
                                 ].map(s => (
                                     <div key={s.label} style={{ textAlign: 'center', padding: '8px 4px', borderRadius: '8px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}>
                                         <div style={{ fontSize: '15px', fontWeight: '700', color: s.accent ? '#6366F1' : colors.text, letterSpacing: '-0.3px' }}>{s.value}</div>
@@ -210,7 +210,7 @@ export default function Competitors() {
                             {/* Products count if any */}
                             {comp.productCount > 0 && (
                                 <div style={{ fontSize: '11px', color: colors.textSecondary }}>
-                                    📋 {comp.productCount} produse scraped
+                                    📋 {comp.productCount} {lang === 'ru' ? 'собранных продуктов' : lang === 'en' ? 'scraped products' : 'produse scraped'}
                                 </div>
                             )}
                         </div>
@@ -223,7 +223,7 @@ export default function Competitors() {
                 <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', overflow: 'hidden' }}>
                     {/* Header */}
                     <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 130px 80px 80px 90px 80px', gap: '8px', padding: '10px 18px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${colors.border}` }}>
-                        {['', 'Brand', 'Locații', 'Apariții', 'Best Rank', 'Rating', 'Produse'].map(h => (
+                        {(lang === 'ru' ? ['', 'Бренд', 'Локации', 'Появления', 'Best Rank', 'Рейтинг', 'Продукты'] : lang === 'en' ? ['', 'Brand', 'Locations', 'Appearances', 'Best Rank', 'Rating', 'Products'] : ['', 'Brand', 'Locații', 'Apariții', 'Best Rank', 'Rating', 'Produse']).map(h => (
                             <span key={h} style={{ fontSize: '10px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{h}</span>
                         ))}
                     </div>
@@ -269,15 +269,15 @@ export default function Competitors() {
 
             {!loading && filtered.length === 0 && competitors.length > 0 && (
                 <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary }}>
-                    Niciun concurent nu corespunde filtrelor selectate.
+                    {lang === 'ru' ? 'Нет конкурентов, соответствующих выбранным фильтрам.' : lang === 'en' ? 'No competitors match the selected filters.' : 'Niciun concurent nu corespunde filtrelor selectate.'}
                 </div>
             )}
 
             {!loading && competitors.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px', border: `1px dashed ${colors.border}`, borderRadius: '16px' }}>
                     <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔍</div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: colors.text, marginBottom: '6px' }}>Niciun concurent</div>
-                    <div style={{ fontSize: '14px', color: colors.textSecondary }}>Rulează o căutare competitivă din pagina Marketing pentru a popula datele.</div>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: colors.text, marginBottom: '6px' }}>{lang === 'ru' ? 'Нет конкурентов' : lang === 'en' ? 'No competitors' : 'Niciun concurent'}</div>
+                    <div style={{ fontSize: '14px', color: colors.textSecondary }}>{lang === 'ru' ? 'Запустите конкурентный поиск со страницы маркетинга, чтобы заполнить данные.' : 'Rulează o căutare competitivă din pagina Marketing pentru a popula datele.'}</div>
                 </div>
             )}
         </div>

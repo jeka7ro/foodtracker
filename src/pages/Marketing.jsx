@@ -1382,10 +1382,10 @@ export default function Marketing() {
                         <div style={{ ...glass, padding: '48px', textAlign: 'center' }}>
                             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
                             <h3 style={{ color: colors.text, fontSize: '18px', fontWeight: '600', margin: '0 0 8px' }}>Nicio căutare configurată</h3>
-                            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: '0 0 20px' }}>Adaugă o căutare pentru a monitoriza concurența automat</p>
+                            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: '0 0 20px' }}>{lang === 'ru' ? 'Добавьте поиск для автоматического мониторинга конкурентов' : 'Adaugă o căutare pentru a monitoriza concurența automat'}</p>
                             <button className="mkt-btn" onClick={() => setShowForm(true)}
                                 style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #2bbec8, #17a2b8)', color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                                + Adaugă prima căutare
+                                + {lang === 'ru' ? 'Добавить первый поиск' : 'Adaugă prima căutare'}
                             </button>
                         </div>
                     )}
@@ -2284,7 +2284,7 @@ export default function Marketing() {
                         <div style={{ ...glass, padding: '28px', width: '560px', maxHeight: '88vh', overflowY: 'auto', animation: 'fadeUp 0.3s ease' }}
                             onClick={e => e.stopPropagation()}>
                             <h2 style={{ margin: '0 0 22px', fontSize: '17px', fontWeight: '700', color: colors.text }}>
-                                {editingSearch ? 'Editează Căutare' : 'Adaugă Căutare Competitivă'}
+                                {editingSearch ? (lang === 'ru' ? 'Изменить поиск' : 'Editează Căutare') : (lang === 'ru' ? 'Добавить конкурентный поиск' : 'Adaugă Căutare Competitivă')}
                             </h2>
 
                             {/* Brand */}
@@ -2380,7 +2380,7 @@ export default function Marketing() {
                                 </button>
                                 <button className="mkt-btn" onClick={handleSaveSearch} disabled={!form.search_term.trim()}
                                     style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600', opacity: form.search_term.trim() ? 1 : 0.5 }}>
-                                    {editingSearch ? 'Salvează' : 'Adaugă Căutare'}
+                                    {editingSearch ? (lang === 'ru' ? 'Сохранить' : 'Salvează') : (lang === 'ru' ? 'Добавить поиск' : 'Adaugă Căutare')}
                                 </button>
                             </div>
                         </div>
