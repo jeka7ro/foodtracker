@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '../lib/ThemeContext'
+import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { getSmartSearchWords } from '../lib/searchUtils'
 
@@ -15,6 +16,7 @@ const SpinIcon = () => (
 
 export default function OwnProducts() {
     const { colors, isDark } = useTheme()
+    const { lang } = useLanguage()
 
     const [brands, setBrands] = useState([])
     const [restaurants, setRestaurants] = useState([])
@@ -209,9 +211,9 @@ export default function OwnProducts() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>Produse Branduri Proprii</h1>
+                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>{lang === 'ru' ? 'Свои продукты (бренды)' : lang === 'en' ? 'Own Products' : 'Produse Branduri Proprii'}</h1>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
-                        Organizate pe oras si restaurant · {products.length} inregistrari · {totalUnique} produse unice · {totalRestaurants} restaurante
+                        Organizate pe oras si restaurant · {products.length} {lang === 'ru' ? 'записей' : lang === 'en' ? 'records' : 'inregistrari'} · {totalUnique} {lang === 'ru' ? 'уник. продуктов' : lang === 'en' ? 'unique products' : 'produse unice'} · {totalRestaurants} restaurante
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -238,20 +240,20 @@ export default function OwnProducts() {
                     {/* Filter bar */}
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px', padding: '10px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}` }}>
                         <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={sel}>
-                            <option value="all">Toate brandurile</option>
+                            <option value="all">{lang === 'ru' ? 'Все бренды' : lang === 'en' ? 'All brands' : 'Toate brandurile'}</option>
                             {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                         <select value={selectedPlatform} onChange={e => setSelectedPlatform(e.target.value)} style={sel}>
-                            <option value="all">Toate platformele</option>
+                            <option value="all">{lang === 'ru' ? 'Все платформы' : lang === 'en' ? 'All platforms' : 'Toate platformele'}</option>
                             <option value="wolt">Wolt</option>
                             <option value="glovo">Glovo</option>
                             <option value="bolt">Bolt</option>
                         </select>
                         <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} style={sel}>
-                            <option value="all">Toate orasele</option>
+                            <option value="all">{lang === 'ru' ? 'Все города' : lang === 'en' ? 'All cities' : 'Toate orasele'}</option>
                             {cities.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cauta produs..."
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={lang === 'ru' ? 'Поиск продукта...' : lang === 'en' ? 'Search product...' : 'Cauta produs...'}
                             style={{ ...sel, minWidth: '160px' }} />
                         {/* Food/Drink toggle */}
                         <div style={{ display: 'flex', gap: '3px', padding: '3px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
@@ -261,12 +263,12 @@ export default function OwnProducts() {
                         </div>
                         {/* Expand/collapse all */}
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                            <button onClick={() => setCollapsedCities({})} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>Extinde tot</button>
+                            <button onClick={() => setCollapsedCities({})} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Развернуть всё' : lang === 'en' ? 'Expand all' : 'Extinde tot'}</button>
                             <button onClick={() => {
                                 const all = {}
                                 grouped.forEach(g => { all[g.city] = true; g.restaurants.forEach(r => { all[r.rid] = true }) })
                                 setCollapsedCities(all); setCollapsedRestaurants(all)
-                            }} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>Restringe tot</button>
+                            }} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Свернуть всё' : lang === 'en' ? 'Collapse all' : 'Restringe tot'}</button>
                         </div>
                     </div>
 
@@ -274,13 +276,13 @@ export default function OwnProducts() {
                     {loading ? (
                         <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>
                             <div style={{ width: 36, height: 36, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 16px' }} />
-                            <div>Se incarca...</div>
+                            <div>{lang === 'ru' ? 'Загрузка...' : lang === 'en' ? 'Loading...' : 'Se incarca...'}</div>
                         </div>
                     ) : grouped.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`, borderRadius: '14px' }}>
-                            <div style={{ fontSize: '14px', fontWeight: '600', color: colors.text, marginBottom: '8px' }}>Niciun produs pentru {snapshotDate}</div>
-                            <div style={{ fontSize: '12px', marginBottom: '20px' }}>Apasa "Scaneaza tot" pentru a aduce produsele de pe platforme.</div>
-                            <button onClick={scanAll} style={{ padding: '9px 22px', borderRadius: '9px', border: 'none', background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Scaneaza tot</button>
+                            <div style={{ fontSize: '14px', fontWeight: '600', color: colors.text, marginBottom: '8px' }}>{lang === 'ru' ? 'Нет продуктов для ' : lang === 'en' ? 'No products for ' : 'Niciun produs pentru '}{snapshotDate}</div>
+                            <div style={{ fontSize: '12px', marginBottom: '20px' }}>{lang === 'ru' ? 'Нажмите \'Сканировать всё\', чтобы получить продукты с платформ.' : lang === 'en' ? 'Press \'Scan All\' to fetch products from platforms.' : 'Apasa "Scaneaza tot" pentru a aduce produsele de pe platforme.'}</div>
+                            <button onClick={scanAll} style={{ padding: '9px 22px', borderRadius: '9px', border: 'none', background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>{lang === 'ru' ? 'Сканировать всё' : lang === 'en' ? 'Scan All' : 'Scaneaza tot'}</button>
                         </div>
                     ) : (
                         grouped.map(({ city, restaurants: cityRests }) => {
@@ -293,7 +295,7 @@ export default function OwnProducts() {
                                         <span style={{ fontSize: '11px', color: '#6366F1', transform: cityCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.15s', display: 'inline-block', lineHeight: 1 }}>▶</span>
                                         <span style={{ fontSize: '15px', fontWeight: '800', color: '#6366F1', flex: 1 }}>{city}</span>
                                         <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: '10px' }}>
-                                            {cityRests.length} restaurante · {totalProds} produse
+                                            {cityRests.length} {lang === 'ru' ? 'ресторанов ' : lang === 'en' ? 'restaurants ' : 'restaurante '}· {totalProds} produse
                                         </span>
                                     </button>
 

@@ -1,4 +1,5 @@
 import { useTheme } from '../lib/ThemeContext'
+import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -126,6 +127,7 @@ function PlatformLogo({ platform, size = 20 }) {
 
 export default function Dashboard() {
     const { colors, isDark } = useTheme()
+    const { lang } = useLanguage()
     const [now, setNow] = useState(new Date())
 
     useEffect(() => {
@@ -248,7 +250,7 @@ export default function Dashboard() {
             d.setHours(d.getHours() - i * 3)
             const count = recentChecks.filter(c => {
                 const ct = new Date(c.checked_at)
-                return Math.abs(ct - d) < 3 * 3600 * 1000 && c.final_status === 'available'
+                return Math.abs(ct.getTime() - d.getTime()) < 3 * 3600 * 1000 && c.final_status === 'available'
             }).length
             pts.push(count)
         }
@@ -297,7 +299,7 @@ export default function Dashboard() {
 
     const timeSince = (dateStr) => {
         if (!dateStr) return ''
-        const diff = (now - new Date(dateStr)) / 1000
+        const diff = (now.getTime() - new Date(dateStr).getTime()) / 1000
         if (diff < 60) return 'acum'
         if (diff < 3600) return `${Math.floor(diff / 60)}m`
         if (diff < 86400) return `${Math.floor(diff / 3600)}h`
@@ -359,12 +361,12 @@ export default function Dashboard() {
                 <div className="dash-card" style={{ ...glass, padding: '22px 24px', animation: 'fadeUp 0.3s ease 0.05s both' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Restaurante</div>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang === 'ru' ? 'Рестораны' : lang === 'en' ? 'Restaurants' : 'Restaurante'}</div>
                             <div style={{ fontSize: '34px', fontWeight: '700', color: colors.text, lineHeight: 1, letterSpacing: '-1px' }}>
                                 <AnimCounter value={restaurants.length} />
                             </div>
                             <div style={{ fontSize: '12px', color: colors.green, marginTop: '6px', fontWeight: '600' }}>
-                                {activeRestaurants} active
+                                {activeRestaurants} {lang === 'ru' ? 'активно' : lang === 'en' ? 'active' : 'active'}
                             </div>
                         </div>
                         <div style={{
@@ -386,7 +388,7 @@ export default function Dashboard() {
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Disponibilitate</div>
+                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang === 'ru' ? 'Доступность' : lang === 'en' ? 'Availability' : 'Disponibilitate'}</div>
                                 <div style={{ fontSize: '34px', fontWeight: '700', color: overallAvailability === null ? colors.textSecondary : overallAvailability >= 80 ? colors.green : overallAvailability >= 50 ? '#FF9500' : colors.red, lineHeight: 1, letterSpacing: '-1px' }}>
                                     {overallAvailability === null ? '—' : <><AnimCounter value={overallAvailability} />%</>}
                                 </div>
@@ -468,7 +470,7 @@ export default function Dashboard() {
                 <div className="dash-card" style={{ ...glass, padding: '24px', animation: 'fadeUp 0.3s ease 0.25s both' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                         <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '650', color: colors.text, letterSpacing: '-0.2px' }}>
-                            Disponibilitate Platforme
+                            {lang === 'ru' ? 'Доступность платформ' : lang === 'en' ? 'Platform Availability' : 'Disponibilitate Platforme'}
                         </h3>
                         <span style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '500' }}>
                             Live
@@ -607,7 +609,7 @@ export default function Dashboard() {
                         {/* Chart 1: Availability by City */}
                         <div style={{ ...glassInner, padding: '18px' }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text, marginBottom: '16px', letterSpacing: '-0.1px' }}>
-                                Disponibilitate pe Oraș
+                                {lang === 'ru' ? 'Доступность по городам' : lang === 'en' ? 'Availability by City' : 'Disponibilitate pe Oraș'}
                             </div>
                             {(() => {
                                 // Group restaurants by city and calculate availability
@@ -802,7 +804,7 @@ export default function Dashboard() {
                         { to: '/monitoring', label: 'Live Monitor' },
                         { to: '/stop-control', label: 'Stop Control' },
                         { to: '/marketing', label: 'Marketing' },
-                        { to: '/restaurants', label: 'Restaurante' },
+                        { to: '/restaurants', label: lang === 'ru' ? 'Рестораны' : lang === 'en' ? 'Restaurants' : 'Restaurante' },
                         { to: '/reports', label: 'Rapoarte' },
                         { to: '/rules', label: 'Reguli' },
                         { to: '/alerts', label: 'Alerte' },

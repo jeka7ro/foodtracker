@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '../lib/ThemeContext'
+import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
@@ -10,6 +11,7 @@ const SpinIcon = () => (
 
 export default function IikoProducts() {
     const { colors, isDark } = useTheme()
+    const { lang } = useLanguage()
     
     const [brands, setBrands] = useState([])
     const [restaurants, setRestaurants] = useState([])
@@ -107,7 +109,7 @@ export default function IikoProducts() {
         <div style={{ padding: '24px 28px', minHeight: '100vh' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>Produse POS (iiko)</h1>
+                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>{lang === 'ru' ? 'Продукты POS (iiko)' : lang === 'en' ? 'POS Products (iiko)' : 'Produse POS (iiko)'}</h1>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
                         Sincronizare în timp real a meniului direct din sistemul POS.
                     </p>
@@ -126,29 +128,29 @@ export default function IikoProducts() {
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px', padding: '10px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}` }}>
                 <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={sel}>
-                    <option value="all">Toate brandurile</option>
+                    <option value="all">{lang === 'ru' ? 'Все бренды' : lang === 'en' ? 'All brands' : 'Toate brandurile'}</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
                 <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} style={sel}>
-                    <option value="all">Toate orașele</option>
+                    <option value="all">{lang === 'ru' ? 'Все города' : lang === 'en' ? 'All cities' : 'Toate orașele'}</option>
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Caută produs sau cod..." style={{ ...sel, minWidth: '200px' }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={lang === 'ru' ? 'Поиск продукта или кода...' : lang === 'en' ? 'Search product or code...' : 'Caută produs sau cod...'} style={{ ...sel, minWidth: '200px' }} />
                 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <button onClick={() => setCollapsedCities({})} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>Extinde tot</button>
+                    <button onClick={() => setCollapsedCities({})} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Развернуть всё' : lang === 'en' ? 'Expand all' : 'Extinde tot'}</button>
                     <button onClick={() => {
                         const all = {}
                         grouped.forEach(g => { all[g.city] = true; g.restaurants.forEach(r => { all[r.rid] = true }) })
                         setCollapsedCities(all); setCollapsedRestaurants(all)
-                    }} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>Restrânge tot</button>
+                    }} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: 'transparent', cursor: 'pointer', color: colors.textSecondary }}>{lang === 'ru' ? 'Свернуть всё' : lang === 'en' ? 'Collapse all' : 'Restrânge tot'}</button>
                 </div>
             </div>
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '80px', color: colors.textSecondary }}>
                     <div style={{ width: 36, height: 36, border: `3px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 16px' }} />
-                    <div>Se încarcă produsele din iiko...</div>
+                    <div>{lang === 'ru' ? 'Загрузка продуктов из iiko...' : lang === 'en' ? 'Loading products from iiko...' : 'Se încarcă produsele din iiko...'}</div>
                 </div>
             ) : grouped.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '14px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
@@ -166,7 +168,7 @@ export default function IikoProducts() {
                                     <span style={{ fontSize: '11px', color: '#6366F1', transform: cityCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', transition: 'transform 0.15s', display: 'inline-block', lineHeight: 1 }}>▶</span>
                                     <span style={{ fontSize: '15px', fontWeight: '800', color: '#6366F1', flex: 1 }}>{city}</span>
                                     <span style={{ fontSize: '11px', color: colors.textSecondary, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: '10px' }}>
-                                        {restaurants.length} restaurante · {totalProds} produse
+                                        {restaurants.length} {lang === 'ru' ? 'ресторанов ' : lang === 'en' ? 'restaurants ' : 'restaurante '}· {totalProds} produse
                                     </span>
                                 </button>
                                 
@@ -196,11 +198,11 @@ export default function IikoProducts() {
                                                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                                                                 <thead>
                                                                     <tr style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', color: colors.textSecondary, textAlign: 'left' }}>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '30%' }}>Produs</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '25%' }}>Categorie</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>SKU / Cod</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>Mărime</th>
-                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', textAlign: 'right', width: '15%' }}>Preț POS</th>
+                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '30%' }}>{lang === 'ru' ? 'Продукт' : lang === 'en' ? 'Product' : 'Produs'}</th>
+                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '25%' }}>{lang === 'ru' ? 'Категория' : lang === 'en' ? 'Category' : 'Categorie'}</th>
+                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>{lang === 'ru' ? 'SKU / Код' : lang === 'en' ? 'SKU / Code' : 'SKU / Cod'}</th>
+                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', width: '15%' }}>{lang === 'ru' ? 'Размер' : lang === 'en' ? 'Size' : 'Mărime'}</th>
+                                                                        <th style={{ padding: '8px 16px', fontWeight: '600', textAlign: 'right', width: '15%' }}>{lang === 'ru' ? 'Цена POS' : lang === 'en' ? 'POS Price' : 'Preț POS'}</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -208,7 +210,7 @@ export default function IikoProducts() {
                                                                         <tr key={it.iiko_id + idx} style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
                                                                             <td style={{ padding: '8px 16px', color: colors.text, fontWeight: '500' }}>
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: it.is_available ? '#10b981' : '#ef4444' }} title={it.is_available ? 'Disponibil' : 'Stop-list'} />
+                                                                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: it.is_available ? '#10b981' : '#ef4444' }} title={it.is_available ? 'Доступно' : 'Стоп-лист'} />
                                                                                     {it.name}
                                                                                 </div>
                                                                             </td>

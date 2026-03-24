@@ -108,8 +108,8 @@ function Layout({ children }) {
         { path: '/stop-istoric', label: (lang === 'ru' ? 'Istoric' : (lang === 'en' ? 'History' : 'Istoric')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
     ]
     const ownProductsSubItems = [
-        { path: '/own-products', label: (lang === 'ru' ? 'Produse (Aplicații)' : (lang === 'en' ? 'Own Products (Apps)' : 'Produse (Aplicații)')), icon: NAV_ICONS.ownproducts },
-        { path: '/iiko-products', label: (lang === 'ru' ? 'Meniu POS (iiko)' : (lang === 'en' ? 'POS Products (iiko)' : 'Meniu POS (iiko)')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
+        { path: '/own-products', label: (lang === 'ru' ? 'Продукты агрегаторов' : (lang === 'en' ? 'Platform Products' : 'Produse (Aplicații)')), icon: NAV_ICONS.ownproducts },
+        { path: '/iiko-products', label: (lang === 'ru' ? 'Меню POS (iiko)' : (lang === 'en' ? 'POS Products (iiko)' : 'Meniu POS (iiko)')), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> },
         { path: '/brands', label: t('nav_brands'), icon: NAV_ICONS.brands },
         { path: '/restaurants', label: t('nav_restaurants'), icon: NAV_ICONS.restaurants },
     ]
@@ -164,7 +164,7 @@ function Layout({ children }) {
         },
         {
             path: '/role-settings', match: (p) => p === '/role-settings',
-            label: (lang === 'ru' ? 'Setări Roluri' : (lang === 'en' ? 'Role Settings' : 'Setări Roluri')),
+            label: (lang === 'ru' ? 'Настройки ролей' : (lang === 'en' ? 'Role Settings' : 'Setări Roluri')),
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 11l.01 0c.96-1.92 1.4-3.5 1.15-5-.45-2.7-2.9-4.8-5.65-4.9-3.23-.1-6.17 2.45-6.5 5.65-.25 2.4.65 4.6 2.3 6.1L4 21c-.4.4-.3 1.1.2 1.4.5.3 1.1.2 1.5-.2l.7-.7.7.7c.4.4 1 .5 1.5.2.5-.3.6-1 .2-1.4l1.3-1.3c1.5 1.65 3.7 2.55 6.1 2.3 3.2-.35 5.75-3.27 5.65-6.5-.1-2.75-2.2-5.2-4.9-5.65-1.5-.25-3.08.19-5 1.15l-.01 0z" /></svg>
         }
     ]
@@ -315,7 +315,7 @@ function Layout({ children }) {
 
                     {/* Own Products expandable group */}
                     <div onClick={() => { if (!sidebarCollapsed) setOwnProductsOpen(o => !o) }}
-                        title={sidebarCollapsed ? ((lang === 'ru' ? 'Produse Proprii' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))) : undefined}
+                        title={sidebarCollapsed ? ((lang === 'ru' ? 'Свои продукты' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))) : undefined}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '10px',
                             padding: sidebarCollapsed ? '9px 0' : '9px 16px',
@@ -328,7 +328,7 @@ function Layout({ children }) {
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.ownproducts}</span>
                         {!sidebarCollapsed && <>
-                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(lang === 'ru' ? 'Produse Proprii' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))}</span>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(lang === 'ru' ? 'Свои продукты' : (lang === 'en' ? 'Own Products' : 'Produse Proprii'))}</span>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
                                 style={{ transform: ownProductsOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
                                 <polyline points="9 18 15 12 9 6" />
