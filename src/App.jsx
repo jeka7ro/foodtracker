@@ -27,7 +27,7 @@ import OwnProducts from './pages/OwnProducts'
 import SmartAssistant from './components/SmartAssistant'
 import MarketingPromotions from './pages/MarketingPromotions'
 import MarketingAnalyticsCity from './pages/MarketingAnalyticsCity'
-import RoleSettings from './pages/RoleSettings'
+
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -152,8 +152,7 @@ function Layout({ children }) {
         { path: '/reports', iconKey: 'reports', label: t('nav_reports') },
     ]
     const bottomUsers = [
-        { path: '/users', iconKey: 'users', label: lang === 'en' ? 'Users' : 'Utilizatori' },
-        { path: '/role-settings', iconKey: 'users', label: lang === 'en' ? 'Role Settings' : 'Setari Roluri' },
+        { path: '/users', iconKey: 'users', label: lang === 'en' ? 'Users' : 'Utilizatori' }
     ]
     const deliverySubItems = [
         {
@@ -615,7 +614,7 @@ export default function App() {
                                     <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
                                     <Route path="/delivery-zone" element={<ProtectedRoute><Layout><DeliveryZone /></Layout></ProtectedRoute>} />
                                     <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
-                                    <Route path="/role-settings" element={<ProtectedRoute><Layout><RoleSettings /></Layout></ProtectedRoute>} />
+
                                     <Route path="/own-products" element={<ProtectedRoute><Layout><OwnProducts /></Layout></ProtectedRoute>} />
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Routes>
