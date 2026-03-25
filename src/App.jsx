@@ -558,21 +558,24 @@ function Layout({ children }) {
                         </svg>
                     </button>
 
-                    {/* ── Theme pill toggle ── */}
+                    {/* ── Theme circle toggle ── */}
                     <div onClick={toggleTheme}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.2)', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, transition: 'all 0.18s', userSelect: 'none' }}>
-                        <span style={{ fontSize: '14px', lineHeight: 1 }}>{isDark ? '☀️' : '🌙'}</span>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: isDark ? colors.textSecondary : '#ffffff', letterSpacing: '0.3px' }}>{isDark ? t('theme_light') : t('theme_dark')}</span>
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, transition: 'all 0.18s', userSelect: 'none', color: isDark ? colors.textSecondary : '#ffffff', flexShrink: 0 }}>
+                        {isDark ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        )}
                     </div>
 
                     {/* ── Language segmented control ── */}
-                    <div style={{ display: 'flex', padding: '3px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', borderRadius: '12px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, gap: '2px' }}>
+                    <div style={{ display: 'flex', padding: '2px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', borderRadius: '22px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, gap: '2px', height: 34, alignItems: 'center', boxSizing: 'border-box' }}>
                         {[{ code: 'ro', label: 'RO' }, { code: 'en', label: 'EN' }, { code: 'ru', label: 'RU' }].map(l => (
                             <button key={l.code} onClick={() => setLang(l.code)}
                                 style={{
-                                    padding: '4px 11px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                                    height: '100%', padding: '0 11px', borderRadius: '20px', border: 'none', cursor: 'pointer',
                                     fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
-                                    transition: 'all 0.18s',
+                                    transition: 'all 0.18s', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     background: lang === l.code ? (isDark ? 'rgba(99,102,241,0.25)' : '#ffffff') : 'transparent',
                                     color: lang === l.code ? (isDark ? '#2bbec8' : '#116d74') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.8)'),
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
@@ -589,11 +592,11 @@ function Layout({ children }) {
                     {showUserPanel && <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setShowUserPanel(false)} />}
                     <div style={{ position: 'relative' }}>
                         <div onClick={() => { setShowUserPanel(s => !s) }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 4px 4px 10px', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', transition: 'all 0.18s' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: colors.text, maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 2px 2px 12px', height: 34, boxSizing: 'border-box', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', transition: 'all 0.18s' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: isDark ? colors.text : '#ffffff', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {dbUser?.display_name || dbUser?.full_name || user?.email?.split('@')[0] || 'User'}
                             </span>
-                            <div style={{ width: 30, height: 30, borderRadius: '50%', background: dbUser?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', fontWeight: '700', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 6px rgba(99,102,241,0.35)' }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: dbUser?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', fontWeight: '700', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 6px rgba(99,102,241,0.35)' }}>
                                 {dbUser?.avatar_url
                                     ? <img src={dbUser.avatar_url} alt="av" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     : (dbUser?.display_name?.[0] || dbUser?.full_name?.[0] || user?.email?.[0] || '?').toUpperCase()}
