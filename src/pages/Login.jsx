@@ -47,7 +47,7 @@ export default function Login() {
     return (
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'linear-gradient(135deg, #0f0f13 0%, #1a1025 50%, #0f1a2e 100%)',
+                        background: 'linear-gradient(135deg, #001a1c 0%, #00363a 50%, #001f24 100%)',
             position: 'relative', overflow: 'hidden',
         }}>
             <style>{`
@@ -56,26 +56,26 @@ export default function Login() {
                 @keyframes pulse { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.05)} }
                 @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
                 .login-input { transition: all 0.2s ease; }
-                .login-input:focus { border-color: #6366F1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important; outline: none; }
-                .login-input:focus + .input-icon { color: #6366F1 !important; }
-                .sign-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,102,241,0.55) !important; }
+                .login-input:focus { border-color: #2bbec8 !important; box-shadow: 0 0 0 3px rgba(43,190,200,0.18) !important; outline: none; }
+                .login-input:focus + .input-icon { color: #2bbec8 !important; }
+                .sign-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(43,190,200,0.55) !important; }
                 .sign-btn:active:not(:disabled) { transform: translateY(0); }
                 .sign-btn { transition: all 0.2s ease; }
-                .eye-btn:hover { color: #a5b4fc !important; }
+                .eye-btn:hover { color: #7de0e6 !important; }
             `}</style>
 
             {/* Glowing orbs */}
-            <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)', top: '-120px', left: '-100px', animation: 'pulse 6s ease infinite' }} />
-            <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)', bottom: '-80px', right: '-60px', animation: 'pulse 8s ease infinite 2s' }} />
-            <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%)', top: '40%', right: '18%', animation: 'float 7s ease infinite 1s' }} />
+            <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(43,190,200,0.18) 0%, transparent 70%)', top: '-120px', left: '-100px', animation: 'pulse 6s ease infinite' }} />
+            <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,200,0.14) 0%, transparent 70%)', bottom: '-80px', right: '-60px', animation: 'pulse 8s ease infinite 2s' }} />
+            <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,200,150,0.1) 0%, transparent 70%)', top: '40%', right: '18%', animation: 'float 7s ease infinite 1s' }} />
 
             {/* Card */}
             <div style={{
                 width: '100%', maxWidth: 420, margin: '0 20px',
-                background: 'rgba(255,255,255,0.04)',
+                background: 'rgba(43,190,200,0.06)',
                 backdropFilter: 'blur(28px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: '1px solid rgba(43,190,200,0.2)',
                 borderRadius: '24px',
                 padding: '44px 40px',
                 boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
@@ -84,11 +84,12 @@ export default function Login() {
                 {/* Logo + title */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
-                        height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 18px'
+                        height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 16px'
                     }}>
                         <img src="/logo.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
                     </div>
+                    <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>Smart Displays</div>
                     <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', fontWeight: '400' }}>Sign in to your account</div>
                 </div>
 
@@ -154,8 +155,8 @@ export default function Login() {
                     {/* Remember me */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                         <div onClick={() => setRemember(v => !v)} style={{
-                            width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${remember ? '#6366F1' : 'rgba(255,255,255,0.2)'}`,
-                            background: remember ? '#6366F1' : 'transparent',
+                            width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${remember ? '#2bbec8' : 'rgba(255,255,255,0.2)'}`,
+                            background: remember ? '#2bbec8' : 'transparent',
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s',
                         }}>
                             {remember && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
@@ -175,9 +176,9 @@ export default function Login() {
                     <button type="submit" disabled={loading} className="sign-btn"
                         style={{
                             width: '100%', padding: '14px', border: 'none', borderRadius: '12px',
-                            background: loading ? 'rgba(99,102,241,0.5)' : 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                            background: loading ? 'rgba(43,190,200,0.5)' : 'linear-gradient(135deg, #2bbec8, #008080)',
                             color: 'white', fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
-                            boxShadow: '0 4px 18px rgba(99,102,241,0.35)',
+                            boxShadow: '0 4px 18px rgba(43,190,200,0.35)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                             fontFamily: 'inherit',
                         }}>

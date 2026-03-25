@@ -203,15 +203,19 @@ function Layout({ children }) {
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
-                            width: 36, height: 36,
+                            width: 44, height: 44,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             flexShrink: 0,
                         }}>
                             <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, overflow: 'hidden', height: 40 }}>
-                            <img src="/logo.png" alt="Logo" style={{ height: '100%', maxWidth: '200px', objectFit: 'contain' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
+                            <img src="/logo.png" alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+                                <span style={{ fontSize: '19px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
+                                <span style={{ fontSize: '16px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Displays</span>
+                            </div>
                         </div>
                     )}
                 </div>
