@@ -213,8 +213,8 @@ function Layout({ children }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
                             <img src="/logo.png" alt="Logo" style={{ height: '62px', objectFit: 'contain' }} />
                             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                                <span style={{ fontSize: '20px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
-                                <span style={{ fontSize: '17px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Displays</span>
+                                <span style={{ fontSize: '19px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
+                                <span style={{ fontSize: '17px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Food</span>
                             </div>
                         </div>
                     )}
