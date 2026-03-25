@@ -65,6 +65,9 @@ function SidebarItem({ to, icon, label, sub }) {
             letterSpacing: '-0.15px',
             color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
             background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
             transition: 'all 0.15s',
         })}>
             {!sub && <span style={{ opacity: 0.85, flexShrink: 0 }}>{icon}</span>}
@@ -235,6 +238,9 @@ function Layout({ children }) {
                                 letterSpacing: '-0.15px',
                                 color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                                 background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                                 transition: 'all 0.15s',
                             })}>
                             <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
@@ -253,6 +259,9 @@ function Layout({ children }) {
                             fontSize: '15px', fontWeight: '600',
                             color: isStopActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                             background: isStopActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isStopActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isStopActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isStopActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.stopcontrol}</span>
@@ -299,6 +308,9 @@ function Layout({ children }) {
                             fontSize: '15px', fontWeight: '600',
                             color: isOwnProductsActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                             background: isOwnProductsActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isOwnProductsActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isOwnProductsActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isOwnProductsActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.ownproducts}</span>
@@ -344,6 +356,9 @@ function Layout({ children }) {
                             fontSize: '15px', fontWeight: '600',
                             color: isMarketingActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                             background: isMarketingActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isMarketingActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isMarketingActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isMarketingActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.marketing}</span>
@@ -394,6 +409,9 @@ function Layout({ children }) {
                                 letterSpacing: '-0.15px',
                                 color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                                 background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                                 transition: 'all 0.15s',
                             })}>
                             <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
@@ -410,6 +428,9 @@ function Layout({ children }) {
                             fontSize: '15px', fontWeight: '600',
                             color: isDeliveryActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                             background: isDeliveryActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isDeliveryActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isDeliveryActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isDeliveryActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.delivery}</span>
@@ -457,6 +478,9 @@ function Layout({ children }) {
                             fontSize: '15px', fontWeight: '600',
                             color: isUsersActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                             background: isUsersActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isUsersActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isUsersActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isUsersActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.users}</span>
@@ -483,6 +507,9 @@ function Layout({ children }) {
                                             fontWeight: isActive ? '700' : '500',
                                             color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
                                             background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
+                                            backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
+                                            boxShadow: isActive ? (isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.2)' : 'inset 0 0 0 1px rgba(255,255,255,0.4), 0 6px 16px rgba(0,0,0,0.1)') : 'none',
                                             transition: 'all 0.15s',
                                         }}>
                                         <span style={{ opacity: 0.7, flexShrink: 0 }}>{sub.icon}</span>
