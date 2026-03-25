@@ -63,8 +63,8 @@ function SidebarItem({ to, icon, label, sub }) {
             borderRadius: '10px', textDecoration: 'none',
             fontSize: sub ? '14px' : '15px', fontWeight: sub ? '500' : '600',
             letterSpacing: '-0.15px',
-            color: isActive ? '#2bbec8' : colors.textSecondary,
-            background: isActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+            background: isActive ? 'rgba(255,255,255,0.2)' : 'transparent',
             transition: 'all 0.15s',
         })}>
             {!sub && <span style={{ opacity: 0.85, flexShrink: 0 }}>{icon}</span>}
@@ -96,7 +96,7 @@ function Layout({ children }) {
     const [usersOpen, setUsersOpen] = useState(isUsersActive)
 
     const SIDEBAR_W = sidebarCollapsed ? 64 : 240
-    const HEADER_H = 80  // matches sidebar logo area: 20px top + 46px icon + 14px bottom
+    const HEADER_H = 100  // matches sidebar logo area: 20px top + 66px icon + 14px bottom
 
     const topItems = [
         { path: '/dashboard', iconKey: 'dashboard', label: t('nav_dashboard') },
@@ -188,8 +188,8 @@ function Layout({ children }) {
             {/* ─── Sidebar ─── */}
             <aside style={{
                 width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
-                background: isDark ? 'rgba(17,17,19,0.98)' : 'rgba(255,255,255,0.98)',
-                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'}`,
+                background: '#2bbec8',
+                borderRight: `1px solid rgba(255,255,255,0.1)`,
                 overflowY: 'auto', overflowX: 'hidden',
                 transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
             }}>
@@ -200,10 +200,11 @@ function Layout({ children }) {
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                     flexShrink: 0,
+                    background: '#2bbec8',
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
-                            width: 52, height: 52,
+                            width: 64, height: 64,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             flexShrink: 0,
                         }}>
@@ -211,10 +212,10 @@ function Layout({ children }) {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
-                            <img src="/logo.png" alt="Logo" style={{ height: '62px', objectFit: 'contain' }} />
+                            <img src="/logo.png" alt="Logo" style={{ height: '76px', objectFit: 'contain' }} />
                             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                                <span style={{ fontSize: '19px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
-                                <span style={{ fontSize: '17px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Food</span>
+                                <span style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.5px' }}>Smart</span>
+                                <span style={{ fontSize: '17px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>Food</span>
                             </div>
                         </div>
                     )}
@@ -232,8 +233,8 @@ function Layout({ children }) {
                                 borderRadius: '10px', textDecoration: 'none',
                                 fontSize: '15px', fontWeight: '600',
                                 letterSpacing: '-0.15px',
-                                color: isActive ? '#2bbec8' : colors.textSecondary,
-                                background: isActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                                color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                                background: isActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                                 transition: 'all 0.15s',
                             })}>
                             <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
@@ -250,8 +251,8 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isStopActive ? '#2bbec8' : colors.textSecondary,
-                            background: isStopActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            color: isStopActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            background: isStopActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.stopcontrol}</span>
@@ -275,7 +276,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -296,8 +297,8 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isOwnProductsActive ? '#2bbec8' : colors.textSecondary,
-                            background: isOwnProductsActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            color: isOwnProductsActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            background: isOwnProductsActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.ownproducts}</span>
@@ -321,7 +322,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                             letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -341,8 +342,8 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isMarketingActive ? '#2bbec8' : colors.textSecondary,
-                            background: isMarketingActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            color: isMarketingActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            background: isMarketingActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.marketing}</span>
@@ -369,7 +370,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -391,8 +392,8 @@ function Layout({ children }) {
                                 borderRadius: '10px', textDecoration: 'none',
                                 fontSize: '15px', fontWeight: '600',
                                 letterSpacing: '-0.15px',
-                                color: isActive ? '#2bbec8' : colors.textSecondary,
-                                background: isActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                                color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                                background: isActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                                 transition: 'all 0.15s',
                             })}>
                             <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS[item.iconKey]}</span>
@@ -407,8 +408,8 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isDeliveryActive ? '#2bbec8' : colors.textSecondary,
-                            background: isDeliveryActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            color: isDeliveryActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            background: isDeliveryActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.delivery}</span>
@@ -434,7 +435,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? '#2bbec8' : colors.textSecondary,
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -454,8 +455,8 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isUsersActive ? '#2bbec8' : colors.textSecondary,
-                            background: isUsersActive ? 'rgba(43,190,200,0.12)' : 'transparent',
+                            color: isUsersActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            background: isUsersActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                             transition: 'all 0.15s', userSelect: 'none',
                         }}>
                         <span style={{ opacity: 0.85, flexShrink: 0 }}>{NAV_ICONS.users}</span>
@@ -480,8 +481,8 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                             letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? '#2bbec8' : colors.textSecondary,
-                                            background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                                            background: isActive ? 'rgba(255,255,255,0.2)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
                                         <span style={{ opacity: 0.7, flexShrink: 0 }}>{sub.icon}</span>
@@ -491,6 +492,13 @@ function Layout({ children }) {
                             })}
                         </div>
                     )}
+                    {/* Sidebar Footer */}
+
+                    <div style={{ padding: '16px', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+
+                        <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>www.getapp.ro</a>
+
+                    </div>
                 </nav>
             </aside>
 
@@ -500,9 +508,9 @@ function Layout({ children }) {
                 <header style={{
                     height: HEADER_H, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                     padding: '0 20px', gap: '6px',
-                    background: isDark ? 'rgba(22,22,24,0.92)' : 'rgba(255,255,255,0.92)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    background: '#2bbec8',
+                    backdropFilter: 'none',
+                    WebkitBackdropFilter: 'none',
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                     position: 'sticky', top: 0, zIndex: 50, flexShrink: 0,
                 }}>
@@ -510,8 +518,8 @@ function Layout({ children }) {
                     <button onClick={() => setSidebarCollapsed(c => !c)}
                         style={{
                             marginRight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            width: 32, height: 32, borderRadius: '9px', border: `1px solid ${colors.border}`,
-                            background: 'transparent', cursor: 'pointer', color: colors.textSecondary,
+                            width: 32, height: 32, borderRadius: '9px', border: `1px solid rgba(255,255,255,0.4)`,
+                            background: 'transparent', cursor: 'pointer', color: '#ffffff',
                             transition: 'all 0.18s',
                         }}
                         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
@@ -525,21 +533,21 @@ function Layout({ children }) {
 
                     {/* ── Theme pill toggle ── */}
                     <div onClick={toggleTheme}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${colors.border}`, transition: 'all 0.18s', userSelect: 'none' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', background: 'rgba(255,255,255,0.2)', border: `1px solid rgba(255,255,255,0.3)`, transition: 'all 0.18s', userSelect: 'none' }}>
                         <span style={{ fontSize: '14px', lineHeight: 1 }}>{isDark ? '☀️' : '🌙'}</span>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.textSecondary, letterSpacing: '0.3px' }}>{isDark ? t('theme_light') : t('theme_dark')}</span>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#ffffff', letterSpacing: '0.3px' }}>{isDark ? t('theme_light') : t('theme_dark')}</span>
                     </div>
 
                     {/* ── Language segmented control ── */}
-                    <div style={{ display: 'flex', padding: '3px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: '12px', border: `1px solid ${colors.border}`, gap: '2px' }}>
+                    <div style={{ display: 'flex', padding: '3px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', border: `1px solid rgba(255,255,255,0.3)`, gap: '2px' }}>
                         {[{ code: 'ro', label: 'RO' }, { code: 'en', label: 'EN' }, { code: 'ru', label: 'RU' }].map(l => (
                             <button key={l.code} onClick={() => setLang(l.code)}
                                 style={{
                                     padding: '4px 11px', borderRadius: '9px', border: 'none', cursor: 'pointer',
                                     fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
                                     transition: 'all 0.18s',
-                                    background: lang === l.code ? (isDark ? 'rgba(99,102,241,0.25)' : '#fff') : 'transparent',
-                                    color: lang === l.code ? '#2bbec8' : colors.textSecondary,
+                                    background: lang === l.code ? '#ffffff' : 'transparent',
+                                    color: lang === l.code ? '#2bbec8' : 'rgba(255,255,255,0.8)',
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
                                 }}>
                                 {l.label}

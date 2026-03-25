@@ -326,9 +326,9 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                         <div style={{
                             width: 36, height: 36, borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                            background: 'linear-gradient(135deg, #2bbec8, #008080)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+                            boxShadow: '0 4px 12px rgba(43,190,200,0.3)',
                         }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
@@ -340,7 +340,7 @@ export default function Dashboard() {
                         </h1>
                     </div>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: '2px 0 0 48px' }}>
-                        Monitorizare pierderi financiare • Actualizat: {now.toLocaleTimeString('ro-RO')}
+                        {lang === 'ru' ? 'Мониторинг финансовых потерь' : lang === 'en' ? 'Financial loss monitoring' : 'Monitorizare pierderi financiare'} • {lang === 'ru' ? 'Обновлено' : lang === 'en' ? 'Updated' : 'Actualizat'}: {now.toLocaleTimeString(lang === 'ru' ? 'ru-RU' : lang === 'en' ? 'en-US' : 'ro-RO')}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -393,7 +393,7 @@ export default function Dashboard() {
                                     {overallAvailability === null ? '—' : <><AnimCounter value={overallAvailability} />%</>}
                                 </div>
                                 <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '6px' }}>
-                                    {overallAvailability === null ? 'Fără verificări încă' : 'pe toate platformele'}
+                                    {overallAvailability === null ? (lang === 'ru' ? 'Пока нет проверок' : lang === 'en' ? 'No checks yet' : 'Fără verificări încă') : (lang === 'ru' ? 'на всех платформах' : lang === 'en' ? 'on all platforms' : 'pe toate platformele')}
                                 </div>
                             </div>
                             <Sparkline data={sparklineData} color={colors.green} />
@@ -408,12 +408,12 @@ export default function Dashboard() {
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Opriri Active</div>
+                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang === 'ru' ? 'Активные остановки' : lang === 'en' ? 'Active Stops' : 'Opriri Active'}</div>
                                 <div style={{ fontSize: '34px', fontWeight: '700', color: activeStops === 0 ? colors.green : colors.red, lineHeight: 1, letterSpacing: '-1px' }}>
                                     <AnimCounter value={activeStops} />
                                 </div>
                                 <div style={{ fontSize: '12px', color: activeStops > 0 ? colors.red : colors.textSecondary, marginTop: '6px', fontWeight: activeStops > 0 ? '600' : '400' }}>
-                                    {activeStops > 0 ? 'necesită atenție!' : 'totul în regulă'}
+                                    {activeStops > 0 ? (lang === 'ru' ? 'требует внимания!' : lang === 'en' ? 'needs attention!' : 'necesită atenție!') : (lang === 'ru' ? 'всё в порядке' : lang === 'en' ? 'all good' : 'totul în regulă')}
                                 </div>
                             </div>
                             <div style={{
@@ -441,12 +441,12 @@ export default function Dashboard() {
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Alerte</div>
+                                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.textSecondary, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang === 'ru' ? 'Уведомления' : lang === 'en' ? 'Alerts' : 'Alerte'}</div>
                                 <div style={{ fontSize: '34px', fontWeight: '700', color: criticalAlerts > 0 ? colors.red : colors.text, lineHeight: 1, letterSpacing: '-1px' }}>
                                     <AnimCounter value={alerts.length} />
                                 </div>
                                 <div style={{ fontSize: '12px', color: unreadAlerts > 0 ? '#FF9500' : colors.textSecondary, marginTop: '6px', fontWeight: unreadAlerts > 0 ? '600' : '400' }}>
-                                    {unreadAlerts > 0 ? `${unreadAlerts} necitite` : 'toate citite'}
+                                    {unreadAlerts > 0 ? `${unreadAlerts} ${lang === 'ru' ? 'непрочитанных' : lang === 'en' ? 'unread' : 'necitite'}` : (lang === 'ru' ? 'все прочитаны' : lang === 'en' ? 'all read' : 'toate citite')}
                                 </div>
                             </div>
                             <div style={{
@@ -528,10 +528,10 @@ export default function Dashboard() {
                 <div className="dash-card" style={{ ...glass, padding: '24px', animation: 'fadeUp 0.3s ease 0.3s both' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                         <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '650', color: colors.text, letterSpacing: '-0.2px' }}>
-                            Opriri per Oră (24h)
+                            {lang === 'ru' ? 'Остановки по часам (24ч)' : lang === 'en' ? 'Stops per Hour (24h)' : 'Opriri per Oră (24h)'}
                         </h3>
                         <span style={{ fontSize: '11px', color: colors.textSecondary }}>
-                            {stopEvents.length} total evenimente
+                            {stopEvents.length} {lang === 'ru' ? 'всего событий' : lang === 'en' ? 'total events' : 'total evenimente'}
                         </span>
                     </div>
                     <BarChart data={hourlyStops} isDark={isDark} height={140} />
@@ -555,7 +555,7 @@ export default function Dashboard() {
                 {/* City Breakdown */}
                 <div className="dash-card" style={{ ...glass, padding: '24px', animation: 'fadeUp 0.3s ease 0.35s both' }}>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '650', color: colors.text, letterSpacing: '-0.2px' }}>
-                        Restaurante pe Orașe
+                        {lang === 'ru' ? 'Рестораны по городам' : lang === 'en' ? 'Restaurants by City' : 'Restaurante pe Orașe'}
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {cityBreakdown.map((city, i) => {
@@ -601,7 +601,7 @@ export default function Dashboard() {
                 <div className="dash-card" style={{ ...glass, padding: '24px', animation: 'fadeUp 0.3s ease 0.4s both' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '650', color: colors.text, letterSpacing: '-0.2px' }}>
-                            Analiză Comparativă
+                            {lang === 'ru' ? 'Сравнительный анализ' : lang === 'en' ? 'Comparative Analysis' : 'Analiză Comparativă'}
                         </h3>
                     </div>
 
@@ -678,7 +678,7 @@ export default function Dashboard() {
                         {/* Chart 2: Platform Performance Comparison */}
                         <div style={{ ...glassInner, padding: '18px' }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text, marginBottom: '16px', letterSpacing: '-0.1px' }}>
-                                Performanță Platforme
+                                {lang === 'ru' ? 'Производительность платформ' : lang === 'en' ? 'Platform Performance' : 'Performanță Platforme'}
                             </div>
                             {(() => {
                                 const platformStats = platformData.map(p => ({
@@ -737,7 +737,7 @@ export default function Dashboard() {
                         {/* Chart 3: City Distribution */}
                         <div style={{ ...glassInner, padding: '18px' }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text, marginBottom: '16px', letterSpacing: '-0.1px' }}>
-                                Distribuție Restaurante
+                                {lang === 'ru' ? 'Распределение ресторанов' : lang === 'en' ? 'Restaurant Distribution' : 'Distribuție Restaurante'}
                             </div>
                             {(() => {
                                 const cityCount = {}
