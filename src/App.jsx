@@ -96,7 +96,7 @@ function Layout({ children }) {
     const [usersOpen, setUsersOpen] = useState(isUsersActive)
 
     const SIDEBAR_W = sidebarCollapsed ? 64 : 240
-    const HEADER_H = 68  // matches sidebar logo area: 20px top + 34px icon + 14px bottom
+    const HEADER_H = 80  // matches sidebar logo area: 20px top + 46px icon + 14px bottom
 
     const topItems = [
         { path: '/dashboard', iconKey: 'dashboard', label: t('nav_dashboard') },
@@ -203,7 +203,7 @@ function Layout({ children }) {
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
-                            width: 44, height: 44,
+                            width: 52, height: 52,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             flexShrink: 0,
                         }}>
@@ -211,10 +211,10 @@ function Layout({ children }) {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
-                            <img src="/logo.png" alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
+                            <img src="/logo.png" alt="Logo" style={{ height: '62px', objectFit: 'contain' }} />
                             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                                <span style={{ fontSize: '19px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
-                                <span style={{ fontSize: '16px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Displays</span>
+                                <span style={{ fontSize: '20px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px' }}>Smart</span>
+                                <span style={{ fontSize: '17px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Displays</span>
                             </div>
                         </div>
                     )}

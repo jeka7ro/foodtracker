@@ -84,8 +84,8 @@ export default function Login() {
                 {/* Logo + title */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
-                        height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 16px'
+                        height: 124, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 20px'
                     }}>
                         <img src="/logo.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
                     </div>
