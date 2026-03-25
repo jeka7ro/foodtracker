@@ -326,9 +326,9 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                         <div style={{
                             width: 36, height: 36, borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #1a9199, #008080)',
+                            background: 'linear-gradient(135deg, #116d74, #008080)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(26,145,153,0.3)',
+                            boxShadow: '0 4px 12px rgba(17,109,116,0.3)',
                         }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />

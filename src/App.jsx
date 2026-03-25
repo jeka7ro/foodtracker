@@ -188,7 +188,7 @@ function Layout({ children }) {
             {/* ─── Sidebar ─── */}
             <aside style={{
                 width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
-                background: isDark ? 'rgba(17,17,19,0.98)' : '#1a9199',
+                background: isDark ? 'rgba(17,17,19,0.98)' : '#116d74',
                 borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)'}`,
                 overflowY: 'auto', overflowX: 'hidden',
                 transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
@@ -200,7 +200,7 @@ function Layout({ children }) {
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                     flexShrink: 0,
-                    background: isDark ? 'transparent' : '#1a9199',
+                    background: isDark ? 'transparent' : '#116d74',
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
@@ -508,7 +508,7 @@ function Layout({ children }) {
                 <header style={{
                     height: HEADER_H, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                     padding: '0 20px', gap: '6px',
-                    background: isDark ? 'rgba(22,22,24,0.92)' : '#1a9199',
+                    background: isDark ? 'rgba(22,22,24,0.92)' : '#116d74',
                     backdropFilter: isDark ? 'blur(20px) saturate(180%)' : 'none',
                     WebkitBackdropFilter: isDark ? 'blur(20px) saturate(180%)' : 'none',
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
@@ -547,7 +547,7 @@ function Layout({ children }) {
                                     fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
                                     transition: 'all 0.18s',
                                     background: lang === l.code ? (isDark ? 'rgba(99,102,241,0.25)' : '#ffffff') : 'transparent',
-                                    color: lang === l.code ? (isDark ? '#2bbec8' : '#1a9199') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.8)'),
+                                    color: lang === l.code ? (isDark ? '#2bbec8' : '#116d74') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.8)'),
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
                                 }}>
                                 {l.label}
