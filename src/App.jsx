@@ -188,7 +188,7 @@ function Layout({ children }) {
             {/* ─── Sidebar ─── */}
             <aside style={{
                 width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
-                background: '#2bbec8',
+                background: '#1a9199',
                 borderRight: `1px solid rgba(255,255,255,0.1)`,
                 overflowY: 'auto', overflowX: 'hidden',
                 transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
@@ -200,7 +200,7 @@ function Layout({ children }) {
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                     flexShrink: 0,
-                    background: '#2bbec8',
+                    background: '#1a9199',
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
@@ -508,7 +508,7 @@ function Layout({ children }) {
                 <header style={{
                     height: HEADER_H, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                     padding: '0 20px', gap: '6px',
-                    background: '#2bbec8',
+                    background: '#1a9199',
                     backdropFilter: 'none',
                     WebkitBackdropFilter: 'none',
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
@@ -547,7 +547,7 @@ function Layout({ children }) {
                                     fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
                                     transition: 'all 0.18s',
                                     background: lang === l.code ? '#ffffff' : 'transparent',
-                                    color: lang === l.code ? '#2bbec8' : 'rgba(255,255,255,0.8)',
+                                    color: lang === l.code ? '#1a9199' : 'rgba(255,255,255,0.8)',
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
                                 }}>
                                 {l.label}
