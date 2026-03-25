@@ -189,8 +189,9 @@ export default function Login() {
                     </button>
                 </form>
 
-                <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.2)' }}>
-                    Aggregator Monitor · Loss Prevention Platform
+                <div style={{ marginTop: '28px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.2)' }}>Aggregator Monitor · Loss Prevention Platform</div>
+                    <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#ffffff', textDecoration: 'none', fontWeight: '500' }}>www.getapp.ro</a>
                 </div>
             </div>
 
