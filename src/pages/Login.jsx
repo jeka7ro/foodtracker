@@ -84,16 +84,11 @@ export default function Login() {
                 {/* Logo + title */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
-                        width: 56, height: 56, borderRadius: 16,
-                        background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 18px', boxShadow: '0 8px 24px rgba(99,102,241,0.4)',
+                        height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 18px'
                     }}>
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                        </svg>
+                        <img src="/logo.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>Aggregator Monitor</div>
                     <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', fontWeight: '400' }}>Sign in to your account</div>
                 </div>
 

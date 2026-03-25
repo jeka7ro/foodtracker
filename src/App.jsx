@@ -203,45 +203,15 @@ function Layout({ children }) {
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
-                            width: 36, height: 36, borderRadius: '10px',
-                            background: '#2bbec8',
+                            width: 36, height: 36,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0, boxShadow: '0 2px 8px rgba(43,190,200,0.4)',
+                            flexShrink: 0,
                         }}>
-                            <span style={{ color: '#fff', fontSize: '11px', fontWeight: '900', letterSpacing: '-0.3px' }}>SF</span>
+                            <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 }}>
-                            {/* GET+App pill — outer teal border, GET fully rounded inside */}
-                            <div style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                borderRadius: '50px',
-                                border: '2px solid #2bbec8',
-                                padding: '3px',
-                                gap: '4px',
-                                boxShadow: '0 2px 8px rgba(43,190,200,0.3)',
-                            }}>
-                                {/* GET — fully rounded left+right, teal fill */}
-                                <div style={{
-                                    background: '#2bbec8',
-                                    padding: '6px 16px',
-                                    borderRadius: '50px',
-                                    display: 'flex', alignItems: 'center',
-                                    flexShrink: 0,
-                                }}>
-                                    <span style={{ color: '#fff', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' }}>GET</span>
-                                </div>
-                                {/* App — text right side */}
-                                <span style={{ fontSize: '18px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#1b2d45', letterSpacing: '-0.5px', paddingRight: '12px' }}>App</span>
-                            </div>
-                            {/* Separator */}
-                            <span style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)', fontSize: '16px', fontWeight: '300', margin: '0 2px' }}>|</span>
-                            {/* Smart / Food — 2 lines, bold teal */}
-                            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, alignItems: 'center' }}>
-                                <span style={{ fontSize: '15px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Smart</span>
-                                <span style={{ fontSize: '15px', fontWeight: '800', color: '#2bbec8', letterSpacing: '-0.2px' }}>Food</span>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, overflow: 'hidden', height: 40 }}>
+                            <img src="/logo.png" alt="Logo" style={{ height: '100%', maxWidth: '200px', objectFit: 'contain' }} />
                         </div>
                     )}
                 </div>
