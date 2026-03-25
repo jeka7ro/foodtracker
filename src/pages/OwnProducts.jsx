@@ -213,9 +213,7 @@ export default function OwnProducts() {
                 <div>
                     <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: colors.text, letterSpacing: '-0.4px' }}>{lang === 'ru' ? 'Свои продукты (бренды)' : lang === 'en' ? 'Own Products' : 'Produse Branduri Proprii'}</h1>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
-                    <p style={{ margin: '3px 0 0', fontSize: '12px', color: colors.textSecondary }}>
                         {lang === 'ru' ? 'По городам и ресторанам' : lang === 'en' ? 'Organized by city and restaurant' : 'Organizate pe oras si restaurant'} · {products.length} {lang === 'ru' ? 'записей' : lang === 'en' ? 'records' : 'inregistrari'} · {totalUnique} {lang === 'ru' ? 'уник. продуктов' : lang === 'en' ? 'unique products' : 'produse unice'} · {totalRestaurants} {lang === 'ru' ? 'ресторанов' : lang === 'en' ? 'restaurants' : 'restaurante'}
-                    </p>
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -380,8 +378,8 @@ function ProductCard({ p, isDark, colors, lang }) {
                 
                 {/* Platform Pills */}
                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                    {p.platforms?.map(plat => (
-                        <span key={plat.platform} style={{ background: PLATFORM_COLORS[plat.platform] || '#888', color: '#fff', fontSize: '9px', fontWeight: '800', padding: '2px 5px', borderRadius: '4px', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                    {p.platforms?.map((plat, i) => (
+                        <span key={plat.platform + '_' + i} style={{ background: PLATFORM_COLORS[plat.platform] || '#888', color: '#fff', fontSize: '9px', fontWeight: '800', padding: '2px 5px', borderRadius: '4px', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
                             {plat.platform}
                         </span>
                     ))}
@@ -396,8 +394,8 @@ function ProductCard({ p, isDark, colors, lang }) {
                 <div style={{ fontSize: '12px', fontWeight: '700', color: colors.text, lineHeight: 1.3, marginBottom: '6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.product_name}</div>
                 
                 <div style={{ marginTop: 'auto', paddingTop: '4px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    {p.platforms?.map(plat => (
-                        <div key={plat.platform} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '3px 6px', borderRadius: '5px' }}>
+                    {p.platforms?.map((plat, i) => (
+                        <div key={plat.platform + '_' + i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '3px 6px', borderRadius: '5px' }}>
                             <span style={{ fontSize: '10px', fontWeight: '700', color: PLATFORM_COLORS[plat.platform] || colors.textSecondary, textTransform: 'uppercase' }}>{plat.platform}</span>
                             <span style={{ fontSize: '13px', fontWeight: '800', color: '#6366F1' }}>{plat.price ? `${Number(plat.price).toFixed(2)} RON` : '—'}</span>
                         </div>

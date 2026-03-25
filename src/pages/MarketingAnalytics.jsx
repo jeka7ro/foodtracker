@@ -482,7 +482,7 @@ export default function MarketingAnalytics() {
         })
         const points = Object.values(byDate)
             .map(d => ({
-                date: new Date(d.date).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' }),
+                date: new Date(d.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : lang === 'en' ? 'en-US' : 'ro-RO', { month: 'short', day: 'numeric' }),
                 IndexConcurenta: 100,
                 IndexNoi: Number(((d.ourSum / d.compSum) * 100).toFixed(1))
             }))
@@ -592,7 +592,7 @@ export default function MarketingAnalytics() {
                     </p>
                 </div>
                 <button onClick={() => setRefreshKey(k => k + 1)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#10B981', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#1a9199', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-13.51l5.25 5.12"/></svg>
                     {(lang === 'ru' ? 'Обновить данные' : (lang === 'en' ? 'Refresh Data' : 'Actualizare Date'))}
                 </button>
@@ -618,17 +618,17 @@ export default function MarketingAnalytics() {
                                     setSearch('')
                                 }
                             }}
-                                style={{ padding: '6px 14px', borderRadius: '20px', border: isActive ? 'none' : `1px solid ${colors.border}`, background: isActive ? '#6366F1' : (isDark ? 'rgba(255,255,255,0.05)' : '#fff'), color: isActive ? '#fff' : colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer', flexShrink: 0, boxShadow: isActive ? '0 4px 12px rgba(99,102,241,0.3)' : 'none', transition: 'all 0.2s ease' }}>
-                                {cat === '' ? 'Toate Categoriile' : cat}
+                                style={{ padding: '6px 14px', borderRadius: '20px', border: isActive ? 'none' : `1px solid ${colors.border}`, background: isActive ? '#1a9199' : (isDark ? 'rgba(255,255,255,0.05)' : '#fff'), color: isActive ? '#fff' : colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer', flexShrink: 0, boxShadow: isActive ? '0 4px 12px rgba(26,145,153,0.3)' : 'none', transition: 'all 0.2s ease' }}>
+                                {cat === '' ? (lang === 'ru' ? 'Все категории' : lang === 'en' ? 'All Categories' : 'Toate Categoriile') : cat}
                             </button>
                         )
                     })}
                     <div style={{ width: '1px', height: '20px', background: colors.border, margin: '0 4px', flexShrink: 0 }}></div>
-                    {[{ id: 'both', label: 'Toate Produsele' }, { id: 'food', label: 'Mâncare' }, { id: 'drink', label: 'Băuturi' }].map(pt => {
+                    {[{ id: 'both', label: (lang === 'ru' ? 'Все продукты' : lang === 'en' ? 'All Products' : 'Toate Produsele') }, { id: 'food', label: (lang === 'ru' ? 'Еда' : lang === 'en' ? 'Food' : 'Mâncare') }, { id: 'drink', label: (lang === 'ru' ? 'Напитки' : lang === 'en' ? 'Drinks' : 'Băuturi') }].map(pt => {
                         const isActive = productType === pt.id
                         return (
                             <button key={pt.id} onClick={() => setProductType(pt.id)}
-                                style={{ padding: '6px 14px', borderRadius: '20px', border: isActive ? 'none' : `1px solid ${colors.border}`, background: isActive ? '#10B981' : (isDark ? 'rgba(255,255,255,0.05)' : '#fff'), color: isActive ? '#fff' : colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer', flexShrink: 0, boxShadow: isActive ? '0 4px 12px rgba(16,185,129,0.3)' : 'none', transition: 'all 0.2s ease' }}>
+                                style={{ padding: '6px 14px', borderRadius: '20px', border: isActive ? 'none' : `1px solid ${colors.border}`, background: isActive ? '#1a9199' : (isDark ? 'rgba(255,255,255,0.05)' : '#fff'), color: isActive ? '#fff' : colors.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer', flexShrink: 0, boxShadow: isActive ? '0 4px 12px rgba(26,145,153,0.3)' : 'none', transition: 'all 0.2s ease' }}>
                                 {pt.label}
                             </button>
                         )
@@ -641,7 +641,7 @@ export default function MarketingAnalytics() {
                         {cities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', padding: '4px 8px', borderRadius: '8px', border: `1px solid ${colors.border}`, flexShrink: 0 }}>
-                        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '600' }}>Perioadă:</span>
+                        <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '600' }}>{lang === 'ru' ? 'Период:' : lang === 'en' ? 'Period:' : 'Perioadă:'}</span>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: '6px', border: 'none', background: 'transparent', color: colors.text, fontSize: '12px', outline: 'none' }} />
                         <span style={{ color: colors.textSecondary }}>-</span>
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: '6px', border: 'none', background: 'transparent', color: colors.text, fontSize: '12px', outline: 'none' }} />
@@ -668,11 +668,11 @@ export default function MarketingAnalytics() {
             </div>
 
             {loading ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: colors.textSecondary }}>Se procesează datele din Supabase...</div>
+                <div style={{ padding: '40px', textAlign: 'center', color: colors.textSecondary }}>{lang === 'ru' ? 'Обработка данных...' : lang === 'en' ? 'Processing data...' : 'Se procesează datele...'}</div>
             ) : (
                 <>
                     {/* KPIs */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '20px', marginBottom: '24px' }}>
                         {[
                             { title: (lang === 'ru' ? 'Средняя разница в цене' : (lang === 'en' ? 'Average Price Difference' : 'Diferență Medie Preț')), val: `${avgDiff > 0 ? '+' : ''}${avgDiff.toFixed(1)}%`, sub: (lang === 'ru' ? 'против выбранных' : (lang === 'en' ? 'vs selected competition' : 'vs concurența selectată')), color: avgDiff <= 0 ? '#10B981' : '#EF4444' },
                             { title: (lang === 'ru' ? 'Конкурентная категория' : (lang === 'en' ? 'Competitive Category' : 'Categorie Competitivă')), val: realData[0]?.category || 'Sushi', sub: (lang === 'ru' ? 'Автоматически извлечено за период' : (lang === 'en' ? 'Auto extracted from period' : 'Extragere automată din perioadă')), color: '#6366F1' },
@@ -693,8 +693,8 @@ export default function MarketingAnalytics() {
                         {/* Scatter Plot: Value for Money */}
                         <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ marginBottom: '16px' }}>
-                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>Value for Money (Preț vs Gramaj)</h3>
-                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>Produsele din stânga jos sunt ieftine dar mici. Cele din dreapta jos sunt <strong style={{color:'#10B981'}}>Best Value</strong>.</p>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>{lang === 'ru' ? 'Цена/Качество (Цена против Веса)' : lang === 'en' ? 'Value for Money (Price vs Weight)' : 'Value for Money (Preț vs Gramaj)'}</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>{lang === 'ru' ? <React.Fragment>Продукты слева внизу дешевые, но маленькие. Справа внизу <strong style={{color:'#1a9199'}}>Лучшая ценность</strong>.</React.Fragment> : lang === 'en' ? <React.Fragment>Products bottom-left are cheap but small. Bottom-right are <strong style={{color:'#1a9199'}}>Best Value</strong>.</React.Fragment> : <React.Fragment>Produsele din stânga jos sunt ieftine, dar mici. Cele din dreapta jos sunt <strong style={{color:'#1a9199'}}>Best Value</strong>.</React.Fragment>}</p>
                             </div>
                             {scatterMarketData.length > 0 ? (
                             <div style={{ flex: 1, minHeight: 280 }}>
@@ -728,8 +728,8 @@ export default function MarketingAnalytics() {
                         {/* Trend Line: Price Index Evolution */}
                         <div style={{ background: isDark ? 'rgba(30,30,32,0.6)' : '#fff', borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '24px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ marginBottom: '16px' }}>
-                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>Evoluție Index Preț (Trend Piață)</h3>
-                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>Linia albastră reprezintă media pieței. Cea roșie poziția brandului tău față de ea.</p>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: colors.text }}>{lang === 'ru' ? 'Эволюция индекса цен (Тенденция рынка)' : lang === 'en' ? 'Price Index Evolution (Market Trend)' : 'Evoluție Index Preț (Trend Piață)'}</h3>
+                                <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>{lang === 'ru' ? 'Синяя линия — среднее по рынку. Красная — позиция вашего бренда.' : lang === 'en' ? 'Blue line represents market average. Red is your brand\'s position.' : 'Linia albastră reprezintă media pieței. Cea roșie poziția brandului tău.'}</p>
                             </div>
                             {trendData.length > 0 ? (
                             <div style={{ flex: 1, minHeight: 280 }}>
@@ -740,9 +740,9 @@ export default function MarketingAnalytics() {
                                         <YAxis domain={['auto', 'auto']} tick={{ fill: colors.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
                                         <Tooltip contentStyle={{ background: isDark ? '#2c2c2e' : '#fff', border: `1px solid ${colors.border}`, borderRadius: '8px', fontSize: '12px' }} />
                                         <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                                        <ReferenceLine y={100} stroke="#6366F1" strokeDasharray="3 3" label={{ position: 'top', value: 'Echilibru Piață', fill: '#6366F1', fontSize: 10 }} />
-                                        <Line type="monotone" name="Media Pieței" dataKey="IndexConcurenta" stroke="#6366F1" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                                        <Line type="monotone" name="Media Ta (Index)" dataKey="IndexNoi" stroke="#EF4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                        <ReferenceLine y={100} stroke="#6366F1" strokeDasharray="3 3" label={{ position: 'top', value: lang === 'ru' ? 'Рыночное равновесие' : lang === 'en' ? 'Market Equilibrium' : 'Echilibru Piață', fill: '#6366F1', fontSize: 10 }} />
+                                        <Line type="monotone" name={lang === 'ru' ? 'Среднее по рынку' : lang === 'en' ? 'Market Avg' : 'Media Pieței'} dataKey="IndexConcurenta" stroke="#6366F1" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" name={lang === 'ru' ? 'Твое среднее (Индекс)' : lang === 'en' ? 'Your Avg (Index)' : 'Media Ta (Index)'} dataKey="IndexNoi" stroke="#EF4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                                     </ComposedChart>
                                 </ResponsiveContainer>
                             </div>
@@ -758,7 +758,7 @@ export default function MarketingAnalytics() {
                                 <p style={{ margin: 0, fontSize: '12px', color: colors.textSecondary }}>{(lang === 'ru' ? 'Каждая категория показывает ценовой диапазон конкурентов в сравнении с вашим средним значением (красная полоса).' : (lang === 'en' ? 'Each category shows competitor price range vs your average (red bar).' : 'Fiecare categorie arată intervalul de preț competitor comparat cu media voastră (bara roșie).'))}</p>
                             </div>
                             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                                {[['#94A3B8', 'Min Piață'], ['#6366F1', 'Mediu Piață'], ['#1E3A5F', 'Max Piață'], ['#EF4444', 'Noi (avg)']].map(([c, l]) => (
+                                {[[ '#94A3B8', lang === 'ru' ? 'Мин Рынок' : lang === 'en' ? 'Market Min' : 'Min Piață' ], [ '#6366F1', lang === 'ru' ? 'Ср Рынок' : lang === 'en' ? 'Market Avg' : 'Mediu Piață' ], [ '#1E3A5F', lang === 'ru' ? 'Макс Рынок' : lang === 'en' ? 'Market Max' : 'Max Piață' ], [ '#EF4444', lang === 'ru' ? 'Мы (ср)' : lang === 'en' ? 'Us (avg)' : 'Noi (avg)' ]].map(([c, l]) => (
                                     <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <div style={{ width: 12, height: 12, borderRadius: '3px', background: c }} />
                                         <span style={{ fontSize: '12px', color: colors.textSecondary }}>{l}</span>
@@ -787,15 +787,15 @@ export default function MarketingAnalytics() {
                                             }}
                                         />
                                         {/* Min bar — very light */}
-                                        <Bar dataKey="min" name="Min Piață" fill="#CBD5E1" radius={[4,4,0,0]} maxBarSize={32}>
+                                        <Bar dataKey="min" name={lang === 'ru' ? 'Мин Рынок' : lang === 'en' ? 'Market Min' : 'Min Piață'} fill="#CBD5E1" radius={[4,4,0,0]} maxBarSize={32}>
                                             <LabelList dataKey="min" position="top" fill={colors.textSecondary} fontSize={10} formatter={v => `${v}`} />
                                         </Bar>
                                         {/* Avg bar — medium */}
-                                        <Bar dataKey="avg" name="Mediu Piață" fill="#6366F1" radius={[4,4,0,0]} maxBarSize={32}>
+                                        <Bar dataKey="avg" name={lang === 'ru' ? 'Ср Рынок' : lang === 'en' ? 'Market Avg' : 'Mediu Piață'} fill="#6366F1" radius={[4,4,0,0]} maxBarSize={32}>
                                             <LabelList dataKey="avg" position="top" fill={'#6366F1'} fontSize={10} fontWeight="700" formatter={v => `${v}`} />
                                         </Bar>
                                         {/* Max bar — dark */}
-                                        <Bar dataKey="max" name="Max Piață" fill="#1e3a5f" radius={[4,4,0,0]} maxBarSize={32}>
+                                        <Bar dataKey="max" name={lang === 'ru' ? 'Макс Рынок' : lang === 'en' ? 'Market Max' : 'Max Piață'} fill="#1e3a5f" radius={[4,4,0,0]} maxBarSize={32}>
                                             <LabelList dataKey="max" position="top" fill={colors.textSecondary} fontSize={10} formatter={v => `${v}`} />
                                         </Bar>
                                         

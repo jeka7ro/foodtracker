@@ -187,7 +187,7 @@ function Layout({ children }) {
 
 
     return (
-        <div style={{ display: 'flex', height: '100vh', background: colors.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif' }}>
+        <div style={{ display: 'flex', height: '100vh', width: '100vw', background: colors.currentBg, color: colors.text, position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif' }}>
             {/* ─── Sidebar ─── */}
             <aside style={{
                 width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
@@ -520,14 +520,35 @@ function Layout({ children }) {
                         </div>
                     )}
                     {/* Sidebar Footer */}
-
                     <div style={{ padding: '16px', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-
-                        <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ color: isDark ? colors.textSecondary : '#ffffff', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>www.getapp.ro</a>
-
+                        {!sidebarCollapsed && (
+                            <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ color: isDark ? colors.textSecondary : '#ffffff', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>www.getapp.ro</a>
+                        )}
                     </div>
                 </nav>
             </aside>
+
+            {/* Float toggle button on edge of sidebar */}
+            <button onClick={() => setSidebarCollapsed(c => !c)}
+                style={{
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    left: SIDEBAR_W - 12,
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: isDark ? 'rgba(60,60,65,0.9)' : '#ffffff',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', zIndex: 100,
+                    color: isDark ? colors.textSecondary : '#116d74',
+                    transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
+                }}
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    {sidebarCollapsed ? <polyline points="9 18 15 12 9 6" /> : <polyline points="15 18 9 12 15 6" />}
+                </svg>
+            </button>
 
             {/* ─── Main area ─── */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -541,26 +562,10 @@ function Layout({ children }) {
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                     position: 'sticky', top: 0, zIndex: 50, flexShrink: 0,
                 }}>
-                    {/* ── Collapse button ── */}
-                    <button onClick={() => setSidebarCollapsed(c => !c)}
-                        style={{
-                            marginRight: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            width: 32, height: 32, borderRadius: '9px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.4)'}`,
-                            background: 'transparent', cursor: 'pointer', color: isDark ? colors.textSecondary : '#ffffff',
-                            transition: 'all 0.18s',
-                        }}
-                        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            {sidebarCollapsed
-                                ? <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>
-                                : <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="15" y2="6" /><line x1="3" y1="18" x2="15" y2="18" /></>
-                            }
-                        </svg>
-                    </button>
 
                     {/* ── Theme circle toggle ── */}
                     <div onClick={toggleTheme}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, transition: 'all 0.18s', userSelect: 'none', color: isDark ? colors.textSecondary : '#ffffff', flexShrink: 0 }}>
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, boxSizing: 'border-box', borderRadius: '50%', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, transition: 'all 0.18s', userSelect: 'none', color: isDark ? colors.textSecondary : '#ffffff', flexShrink: 0 }}>
                         {isDark ? (
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                         ) : (
@@ -569,8 +574,8 @@ function Layout({ children }) {
                     </div>
 
                     {/* ── Language segmented control ── */}
-                    <div style={{ display: 'flex', padding: '2px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', borderRadius: '22px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, gap: '2px', height: 34, alignItems: 'center', boxSizing: 'border-box' }}>
-                        {[{ code: 'ro', label: 'RO' }, { code: 'en', label: 'EN' }, { code: 'ru', label: 'RU' }].map(l => (
+                    <div style={{ display: 'flex', padding: '2px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', borderRadius: '22px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, gap: '2px', height: 36, alignItems: 'center', boxSizing: 'border-box' }}>
+                        {[{ code: 'ro', label: 'RO', flag: '🇷🇴' }, { code: 'en', label: 'EN', flag: '🇬🇧' }, { code: 'ru', label: 'RU', flag: '🇷🇺' }].map(l => (
                             <button key={l.code} onClick={() => setLang(l.code)}
                                 style={{
                                     height: '100%', padding: '0 11px', borderRadius: '20px', border: 'none', cursor: 'pointer',
@@ -580,6 +585,7 @@ function Layout({ children }) {
                                     color: lang === l.code ? (isDark ? '#2bbec8' : '#116d74') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.8)'),
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
                                 }}>
+                                {lang === l.code && <span style={{ marginRight: '4px', fontSize: '13px', lineHeight: 1 }}>{l.flag}</span>}
                                 {l.label}
                             </button>
                         ))}
@@ -592,7 +598,7 @@ function Layout({ children }) {
                     {showUserPanel && <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setShowUserPanel(false)} />}
                     <div style={{ position: 'relative' }}>
                         <div onClick={() => { setShowUserPanel(s => !s) }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 2px 2px 12px', height: 34, boxSizing: 'border-box', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', transition: 'all 0.18s' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 2px 2px 12px', height: 36, boxSizing: 'border-box', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', transition: 'all 0.18s' }}>
                             <span style={{ fontSize: '13px', fontWeight: '600', color: isDark ? colors.text : '#ffffff', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {dbUser?.display_name || dbUser?.full_name || user?.email?.split('@')[0] || 'User'}
                             </span>

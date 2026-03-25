@@ -699,9 +699,7 @@ export default function Marketing() {
                             )}
                             <button onClick={exportCurrentView}
                                 style={{ padding: '5px 12px', borderRadius: '7px', border: 'none', cursor: 'pointer', background: '#217346', color: '#fff', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3H14V1h-4v2H2.83L1 4.83V21h22V4.83L21.17 3zM14 19h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V9h4v2zm5 8h-3v-2h3v2zm0-4h-3v-2h3v2zm0-4h-3V9h3v2zM5 19H2v-2h3v2zm0-4H2v-2h3v2zm0-4H2V9h3v2z" /></svg>
-                                Export Excel
-                            </button>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3H14V1h-4v2H2.83L1 4.83V21h22V4.83L21.17 3zM14 19h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V9h4v2zm5 8h-3v-2h3v2zm0-4h-3v-2h3v2zm0-4h-3V9h3v2zM5 19H2v-2h3v2zm0-4H2v-2h3v2zm0-4H2V9h3v2z" /></svg>{lang === 'ru' ? 'Экспорт' : lang === 'en' ? 'Export' : 'Export Excel'}</button>
                         </div>
                     </div>
 
@@ -869,7 +867,7 @@ export default function Marketing() {
                                     { label: '7 zile', days: 7 },
                                     { label: '30 zile', days: 30 },
                                     { label: '90 zile', days: 90 },
-                                    { label: 'Tot', days: null },
+                                    { label: lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Tot', days: null },
                                 ]
 
                                 // Deduplicate + filter by period
@@ -1309,7 +1307,7 @@ export default function Marketing() {
                             ref={el => { if (el) el.indeterminate = selectedSearchIds.size > 0 && selectedSearchIds.size < searches.length }}
                             onChange={handleSelectAll}
                             style={{ accentColor: '#2bbec8', width: '14px', height: '14px' }} />
-                        {selectedSearchIds.size > 0 ? `${selectedSearchIds.size} selectate` : 'Toate'}
+                        {selectedSearchIds.size > 0 ? `${selectedSearchIds.size} ${lang === 'ru' ? 'выбрано' : lang === 'en' ? 'selected' : 'selectate'}` : (lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Toate')}
                     </label>
                     {selectedSearchIds.size > 0 && (
                         <button className="mkt-btn" onClick={handleDeleteSelected}
@@ -1336,7 +1334,7 @@ export default function Marketing() {
             {/* Istoric filter row — below tabs, only when Istoric is active */}
             {activeTab === 'prices' && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px', padding: '10px 14px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderRadius: '10px', border: `1px solid ${colors.border}` }}>
-                    {[{ label: 'Azi', days: 0 }, { label: '7z', days: 7 }, { label: '30z', days: 30 }, { label: '90z', days: 90 }].map(({ label, days }) => (
+                    {[{ label: lang === 'ru' ? 'Сегодня' : lang === 'en' ? 'Today' : 'Azi', days: 0 }, { label: lang === 'ru' ? '7д' : lang === 'en' ? '7d' : '7z', days: 7 }, { label: lang === 'ru' ? '30д' : lang === 'en' ? '30d' : '30z', days: 30 }, { label: lang === 'ru' ? '90д' : lang === 'en' ? '90d' : '90z', days: 90 }].map(({ label, days }) => (
                         <button key={label} className="mkt-btn" onClick={() => {
                             const f = days === 0 ? today : new Date(Date.now() - days * 86400000).toISOString().split('T')[0]
                             setDateFrom(f); setDateTo(today)
@@ -1358,20 +1356,16 @@ export default function Marketing() {
                     </select>
                     <select value={historyPlatform} onChange={e => setHistoryPlatform(e.target.value)}
                         style={{ padding: '5px 8px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.06)' : '#fff', color: colors.text, fontSize: '12px' }}>
-                        <option value="">Toate platformele</option>
+                        <option value="">{lang === 'ru' ? 'Все платформы' : lang === 'en' ? 'All platforms' : 'Toate platformele'}</option>
                         <option value="wolt">Wolt</option>
                         <option value="glovo">Glovo</option>
                     </select>
                     <div style={{ flex: 1 }} />
                     <button className="mkt-btn" onClick={() => loadHistory(dateFrom, dateTo, historyCity, historyPlatform)}
-                        style={{ padding: '5px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '12px', fontWeight: '600' }}>
-                        Caută
-                    </button>
+                        style={{ padding: '5px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '12px', fontWeight: '600' }}>{lang === 'ru' ? 'Поиск' : lang === 'en' ? 'Search' : 'Caută'}</button>
                     <button className="mkt-btn" onClick={exportCurrentView}
                         style={{ padding: '5px 12px', borderRadius: '7px', border: 'none', cursor: 'pointer', background: '#217346', color: '#fff', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3H14V1h-4v2H2.83L1 4.83V21h22V4.83L21.17 3zM14 19h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V9h4v2zm5 8h-3v-2h3v2zm0-4h-3v-2h3v2zm0-4h-3V9h3v2zM5 19H2v-2h3v2zm0-4H2v-2h3v2zm0-4H2V9h3v2z" /></svg>
-                        Export Excel
-                    </button>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3H14V1h-4v2H2.83L1 4.83V21h22V4.83L21.17 3zM14 19h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V9h4v2zm5 8h-3v-2h3v2zm0-4h-3v-2h3v2zm0-4h-3V9h3v2zM5 19H2v-2h3v2zm0-4H2v-2h3v2zm0-4H2V9h3v2z" /></svg>{lang === 'ru' ? 'Экспорт' : lang === 'en' ? 'Export' : 'Export Excel'}</button>
                 </div>
             )}
 
@@ -1409,11 +1403,11 @@ export default function Marketing() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
                                         <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: colors.text }}>"{search.search_term}"</h3>
                                         <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', background: search.is_active ? 'rgba(52,199,89,0.15)' : 'rgba(150,150,150,0.15)', color: search.is_active ? '#34C759' : colors.textSecondary }}>
-                                            {search.is_active ? '● Activ' : '○ Inactiv'}
+                                            {search.is_active ? (lang === 'ru' ? '● Активен' : lang === 'en' ? '● Active' : '● Activ') : (lang === 'ru' ? '○ Неактивен' : lang === 'en' ? '○ Inactive' : '○ Inactiv')}
                                         </span>
                                     </div>
                                     <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '6px' }}>
-                                        Brand: <strong style={{ color: colors.text }}>{search.brands?.name || 'Toți'}</strong>
+                                        Brand: <strong style={{ color: colors.text }}>{search.brands?.name || (lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Toți')}</strong>
                                         {search.notes && <> · {search.notes}</>}
                                     </div>
                                     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
@@ -1427,27 +1421,27 @@ export default function Marketing() {
                                     </div>
                                 </div>
                                 {/* Actions */}
-                                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                                    <button className="mkt-btn" onClick={() => handleSelectSearch(search)}
-                                        style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', color: colors.text, fontSize: '12px', fontWeight: '600' }}>
-                                        📊
-                                    </button>
-                                    <button className="mkt-btn" title="Editează" onClick={() => { setEditingSearch(search); setForm({ brand_id: search.brand_id || '', search_term: search.search_term || '', platforms: search.platforms || ['glovo','wolt','bolt'], cities: search.cities || ['Bucharest'], notes: search.notes || '', auto_cities: search.auto_cities !== false, glovo_category: search.glovo_category || '', wolt_category: search.wolt_category || '' }); setShowForm(true) }}
-                                        style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', color: colors.text, fontSize: '13px' }}>
-                                        ✏️
-                                    </button>
-                                    <button className="mkt-btn" title="Șterge" onClick={() => handleDeleteSearch(search.id)}
-                                        style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'rgba(43,190,200,0.12)', color: '#2bbec8', fontSize: '13px' }}>
-                                        🗑️
-                                    </button>
-                                    <button className="mkt-btn" onClick={() => handleRunSearch(search.id, search.search_term)} disabled={isRunning}
-                                        style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #2bbec8, #17a2b8)', color: 'white', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', opacity: isRunning ? 0.7 : 1 }}>
-                                        {isRunning
-                                            ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> Rulează...</>
-                                            : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> Rulează</>
-                                        }
-                                    </button>
-                                </div>
+                                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+    <button className="mkt-btn" onClick={() => handleSelectSearch(search)} title={lang === 'ru' ? 'Статистика' : lang === 'en' ? 'Stats' : 'Statistici'}
+        style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: 'pointer', background: 'transparent', color: colors.textSecondary }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </button>
+    <button className="mkt-btn" title={lang === 'ru' ? 'Редактировать' : lang === 'en' ? 'Edit' : 'Editează'} onClick={() => { setEditingSearch(search); setForm({ brand_id: search.brand_id || '', search_term: search.search_term || '', platforms: search.platforms || ['glovo','wolt','bolt'], cities: search.cities || ['Bucharest'], notes: search.notes || '', auto_cities: search.auto_cities !== false, glovo_category: search.glovo_category || '', wolt_category: search.wolt_category || '' }); setShowForm(true) }}
+        style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: 'pointer', background: 'transparent', color: colors.textSecondary }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    </button>
+    <button className="mkt-btn" title={lang === 'ru' ? 'Удалить' : lang === 'en' ? 'Delete' : 'Șterge'} onClick={() => handleDeleteSearch(search.id)}
+        style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: 'pointer', background: 'transparent', color: '#EF4444' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
+    <button className="mkt-btn" onClick={() => handleRunSearch(search.id, search.search_term)} disabled={isRunning}
+        style={{ padding: '0 16px', height: 36, borderRadius: '24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: 'pointer', background: 'transparent', color: isDark ? '#fff' : colors.text, fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', opacity: isRunning ? 0.7 : 1 }}>
+        {isRunning
+            ? <><svg style={{ animation: 'spin 1s linear infinite' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg> {lang === 'ru' ? 'Запуск...' : lang === 'en' ? 'Running...' : 'Rulează...'}</>
+            : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> {lang === 'ru' ? 'Запустить' : lang === 'en' ? 'Run' : 'Rulează'}</>
+        }
+    </button>
+</div>
                             </div>
                         )
                     })}
@@ -1658,9 +1652,7 @@ export default function Marketing() {
                                         onKeyDown={e => e.key === 'Enter' && loadPriceHistory(priceFilter)}
                                         style={{ flex: 1, padding: '9px 14px', borderRadius: '9px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', color: colors.text, fontSize: '13px', outline: 'none' }} />
                                     <button onClick={() => loadPriceHistory(priceFilter)}
-                                        style={{ padding: '9px 20px', borderRadius: '9px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600' }}>
-                                        Caută
-                                    </button>
+                                        style={{ padding: '9px 20px', borderRadius: '9px', border: 'none', cursor: 'pointer', background: '#2bbec8', color: 'white', fontSize: '13px', fontWeight: '600' }}>{lang === 'ru' ? 'Поиск' : lang === 'en' ? 'Search' : 'Caută'}</button>
                                 </div>
                                 {priceHistory.length > 0 && (
                                     <div style={{ border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, borderRadius: '12px', overflow: 'hidden' }}>
@@ -1858,7 +1850,7 @@ export default function Marketing() {
                                                     <span style={{ fontSize: '10px', fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Brand:</span>
                                                     <button onClick={() => setSelectedBrands(new Set())}
                                                         style={{ padding: '3px 8px', borderRadius: '20px', border: `1.5px solid ${selectedBrands.size === 0 ? '#2bbec8' : 'transparent'}`, background: selectedBrands.size === 0 ? 'rgba(43,190,200,0.12)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'), color: selectedBrands.size === 0 ? '#2bbec8' : colors.textSecondary, fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
-                                                        Toate
+                                                        {lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Toate'}
                                                     </button>
                                                     {uniqueBrands.map(b => {
                                                         const active = selectedBrands.has(b.name)
@@ -1879,7 +1871,7 @@ export default function Marketing() {
                                                 <div style={{ position: 'relative', width: 160, flexShrink: 0 }}>
                                                     <svg style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: colors.textSecondary, pointerEvents: 'none' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                                                     <input value={brandFilter} onChange={e => setBrandFilter(e.target.value)}
-                                                        placeholder="Caută concurent…"
+                                                        placeholder={lang === 'ru' ? 'Поиск конкурента...' : lang === 'en' ? 'Search competitor...' : 'Caută concurent…'}
                                                         style={{ width: '100%', paddingLeft: 23, padding: '4px 22px 4px 23px', borderRadius: '7px', border: `1px solid ${colors.border}`, background: isDark ? 'rgba(255,255,255,0.05)' : '#f5f5f7', color: colors.text, fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
                                                     {brandFilter && <button onClick={() => setBrandFilter('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: colors.textSecondary, fontSize: '13px', padding: 0 }}>×</button>}
                                                 </div>
@@ -1888,7 +1880,7 @@ export default function Marketing() {
                                                     {[15, 25, 50, 100, 0].map(sz => (
                                                         <button key={sz} onClick={() => setBrandPageSize(sz)}
                                                             style={{ padding: '3px 6px', borderRadius: '5px', border: `1px solid ${brandPageSize === sz ? '#2bbec8' : colors.border}`, background: brandPageSize === sz ? '#2bbec8' : 'transparent', color: brandPageSize === sz ? 'white' : colors.textSecondary, fontSize: '10px', fontWeight: '600', cursor: 'pointer' }}>
-                                                            {sz === 0 ? 'Tot' : sz}
+                                                            {sz === 0 ? (lang === 'ru' ? 'Все' : lang === 'en' ? 'All' : 'Tot') : sz}
                                                         </button>
                                                     ))}
                                                     <span style={{ fontSize: '10px', color: colors.textSecondary, marginLeft: '4px' }}>{totalItems}</span>
@@ -1911,9 +1903,8 @@ export default function Marketing() {
                                         ))}
                                     </div>
                                     {/* Table header */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 110px 60px 120px 60px 70px 60px 100px', gap: '8px', padding: '9px 18px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                                        {['#', 'Brand / Restaurant', 'Cuvânt căutat', '', 'Locații', 'Apariții', <span title="Cea mai ridicată (bună) poziție pe care a ocupat-o acest concurent în lista aplicațiilor de livrare, pentru căutările noastre.">Best rank ℹ</span>, t('rating'), t('products')].map((h, hi) => (
-                                            <span key={hi} style={{ fontSize: '10px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', textAlign: hi === 3 ? 'center' : 'left' }}>{h}</span>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '40px 48px 1fr 110px 60px 120px 60px 70px 60px 100px', gap: '8px', padding: '9px 18px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}> {['#', lang === 'ru' ? 'Бренд / Ресторан' : lang === 'en' ? 'Brand / Restaurant' : 'Brand / Restaurant', lang === 'ru' ? 'Слово поиска' : lang === 'en' ? 'Search Term' : 'Cuvânt căutat', '', lang === 'ru' ? 'Локации' : lang === 'en' ? 'Cities' : 'Locații', lang === 'ru' ? 'Появления' : lang === 'en' ? 'Appearances' : 'Apariții', <span title={lang === 'ru' ? "Наивысшая позиция в агрегаторах" : lang === 'en' ? "Highest position in apps" : "Cea mai ridicată poziție"}>Best Rank ℹ</span>, t('rating'), t('products')].map((h, hi) => (
+                                            <span key={hi} style={{ fontSize: '10px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.4px', textAlign: hi === 3 ? 'center' : 'left', gridColumn: hi === 1 ? 'span 2' : undefined }}>{h}</span>
                                         ))}
                                     </div>
                                     {/* Brand rows */}
@@ -1963,38 +1954,7 @@ export default function Marketing() {
                                             <span style={{ fontSize: '12px', color: colors.textSecondary }}>{b.appearances}×</span>
                                             <span style={{ fontSize: '13px', fontWeight: '700', color: b.bestRank && b.bestRank <= 3 ? '#2bbec8' : colors.text }}>{b.bestRank ? `#${b.bestRank}` : '—'}</span>
                                             <span style={{ fontSize: '12px', color: colors.textSecondary }}>{b.avgRating ? `${b.avgRating}/10` : '—'}</span>
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                {b.productCount > 0 ? (
-                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2bbec8' }}>{b.productCount}</span>
-                                                ) : (
-                                                    <button onClick={async (e) => {
-                                                        e.stopPropagation()
-                                                        if (!b.latestUrl) return alert("Nu există un link pentru extragerea produselor. Încearcă actualizarea rezultatelor din pagina de oraș.")
-                                                        if (fetchingProducts) return
-                                                        setFetchingProducts(true)
-                                                        try {
-                                                            const res = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/scrape-restaurant`, {
-                                                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ url: b.latestUrl, name: b.name, restaurantId: null })
-                                                            })
-                                                            const d = await res.json()
-                                                            if (d.success && d.count > 0) {
-                                                                loadHistory(dateFrom, dateTo, historyCity, historyPlatform) // Reload table data to show new product count
-                                                            } else {
-                                                                alert(`Nu s-au găsit produse noi la ${b.name}.`)
-                                                            }
-                                                        } catch(err) {
-                                                            alert("Eroare la meniu: " + err.message)
-                                                        } finally {
-                                                            setFetchingProducts(false)
-                                                        }
-                                                    }}
-                                                    disabled={fetchingProducts}
-                                                    style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: fetchingProducts ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') : 'rgba(43,190,200,0.15)', color: fetchingProducts ? colors.textSecondary : '#2bbec8', fontSize: '11px', fontWeight: '700', cursor: fetchingProducts ? 'not-allowed' : 'pointer', transition: 'background 0.1s' }}>
-                                                        {fetchingProducts ? '⌛' : '⚡ Descarcă'}
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>{b.productCount > 0 ? <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2bbec8' }}>{b.productCount}</span> : <span style={{ fontSize: '13px', color: colors.textSecondary }}>—</span>}</div>
                                         </div>
                                     ))}
                                     {/* Pagination controls */}
@@ -2190,7 +2150,7 @@ export default function Marketing() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '14px', fontWeight: '700', color: colors.text }}>{dateLabel}</span>
                                                     <span style={{ fontSize: '12px', color: colors.textSecondary }}>
-                                                        {totalCount} {(lang === 'ru' ? "конкуренты" : (lang === 'en' ? "competitors" : "concurenți"))} · {uniqueCities} {uniqueCities === 1 ? 'locație' : 'locații'} · {platforms.join(', ')}
+                                                        {totalCount} {(lang === 'ru' ? "конкуренты" : (lang === 'en' ? "competitors" : "concurenți"))} · {uniqueCities} {uniqueCities === 1 ? (lang === 'ru' ? 'локация' : lang === 'en' ? 'location' : 'locație') : (lang === 'ru' ? 'локации' : lang === 'en' ? 'locations' : 'locații')} · {platforms.join(', ')}
                                                     </span>
                                                 </div>
                                                 <span style={{ fontSize: '11px', color: colors.textSecondary }}>
