@@ -1575,8 +1575,9 @@ Dacă utilizatorul întreabă ceva general, tehnologic sau din afara platformei 
     }
 })
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
 
+    console.log(`[API] Server is listening on 0.0.0.0:${PORT} for Render compatibility`)
     console.log(`  POST /api/own-brands/scrape-all        - Scrape ALL own brand restaurants`)
     console.log(`  POST /api/own-brands/scrape-restaurant  - Scrape ONE restaurant`)
     console.log(`  GET  /api/own-brands/products           - Get products for a restaurant`)
