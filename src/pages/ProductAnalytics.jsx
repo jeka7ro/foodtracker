@@ -63,18 +63,23 @@ export default function ProductAnalytics() {
                 })
                 if (resp.ok) {
                     const data = await resp.json()
-                const cleanNameText = decodedName.split('[')[0].trim().toLowerCase()
-                let cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 2)
+                const cleanNameText = decodedName.split('[')[0].trim().toLowerCase();
+                const excludeWords = ['sushimaster', 'sushi', 'master', 'bucuresti', 'brasov', 'constanta', 'iasi'];
+                let cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ')
+                    .filter(w => w.length > 2 && !excludeWords.includes(w));
                 
-                let found = null
-                const fullList = [...(data.products || []), ...(data.groups || [])]
-                found = fullList.find(p => p.name?.toLowerCase().includes(cleanNameText))
+                let found = null;
+                const fullList = [...(data.products || []), ...(data.groups || [])];
+                
+                // Prioritize exact substring match first
+                found = fullList.find(p => p.name?.toLowerCase().includes(cleanNameText));
                 
                 if (!found && cleanWords.length > 0) {
+                    // Fuzzy match using important keywords
                     found = fullList.find(p => {
-                        const n = p.name?.toLowerCase() || ''
-                        return cleanWords.every(w => n.includes(w))
-                    })
+                        const n = p.name?.toLowerCase() || '';
+                        return cleanWords.every(w => n.includes(w));
+                    });
                 }
                 
                 if (found && found.imageLinks && found.imageLinks.length > 0) {
@@ -221,13 +226,15 @@ export default function ProductAnalytics() {
                 .product-hero {
                     display: flex; gap: 20px; align-items: stretch;
                     padding: 20px; border-radius: 16px;
-                    background: ${isDark ? 'linear-gradient(to right, rgba(13, 148, 136, 0.15), rgba(6, 182, 212, 0.1))' : 'linear-gradient(to right, #f0fdfa, #ecfeff)'};
-                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : '#ccfbf1'};
+                    background: ${isDark ? 'rgba(17,109,116,0.1)' : 'rgba(17,109,116,0.06)'};
+                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(17,109,116,0.15)'};
+                    box-shadow: inset 0 2px 10px rgba(255,255,255,0.4);
                 }
                 .hero-tabs-card {
                     display: flex; align-items: center; padding: 20px; border-radius: 16px;
-                    background: ${isDark ? 'linear-gradient(to right, rgba(13, 148, 136, 0.15), rgba(6, 182, 212, 0.1))' : 'linear-gradient(to right, #f0fdfa, #ecfeff)'};
-                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : '#ccfbf1'};
+                    background: ${isDark ? 'rgba(17,109,116,0.1)' : 'rgba(17,109,116,0.06)'};
+                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(17,109,116,0.15)'};
+                    box-shadow: inset 0 2px 10px rgba(255,255,255,0.4);
                 }
                 .hero-img {
                     width: 70px; height: 70px; border-radius: 12px; object-fit: cover;
@@ -290,7 +297,7 @@ export default function ProductAnalytics() {
                 </div>
 
                 <div className="hero-tabs-card">
-                    <div className="tab-row" style={{ padding: '6px', borderRadius: '12px', border: 'none', background: 'var(--glass-bg)' }}>
+                    <div className="tab-row" style={{ padding: '6px', borderRadius: '12px', border: 'none', background: 'rgba(255,255,255,0.3)' }}>
                         {['today', 'yesterday', 'week', 'month', 'lastmonth', 'year'].map(id => (
                             <button key={id} className={`tab-btn ${activePeriod === id ? 'active' : ''}`} onClick={() => setActivePeriod(id)} style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}>
                                 {t(id)}
@@ -322,7 +329,7 @@ export default function ProductAnalytics() {
                         <div style={{padding:'6px', background:'rgba(245,158,11,0.1)', borderRadius:'8px', color:'#f59e0b'}}><TrendingUp size={16} /></div>
                         {t('avgPrice')}
                     </div>
-                    <div className="compact-kpi-val">{isLoading ? '...' : units > 0 ? (rev/units).toFixed(2) : 0} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
+                    <div className="compact-kpi-val">{isLoading ? '...' : units > 0 ? (rev/units).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
                 </div>
             </div>
 
@@ -343,7 +350,7 @@ export default function ProductAnalytics() {
                                 <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => v.toLocaleString('ro-RO')} />
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', background: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)' }}
-                                    formatter={(value, name) => [name === t('sales') ? `${Number(value).toFixed(2)} RON` : value, name]}
+                                    formatter={(value, name) => [name === t('sales') ? `${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : value, name]}
                                 />
                                 <Area type="monotone" dataKey="rev" name={t('sales')} stroke="#6366f1" strokeWidth={4} fill="url(#colorDyn)" activeDot={{ r: 8, stroke: '#6366f1', strokeWidth: 4, fill: '#fff' }} />
                             </AreaChart>
@@ -366,7 +373,7 @@ export default function ProductAnalytics() {
                                 <Tooltip 
                                     cursor={{ fill: 'var(--glass-bg-hover)' }}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
-                                    formatter={(value) => [`${Number(value).toFixed(2)} RON`, t('sales')]}
+                                    formatter={(value) => [`${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON`, t('sales')]}
                                 />
                                 <Bar dataKey="rev" fill="#10b981" radius={[0, 8, 8, 0]} barSize={26} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO')} lei` }} />
                             </BarChart>
@@ -408,7 +415,7 @@ export default function ProductAnalytics() {
                                                 }}>{tx.platform}</span>
                                             </td>
                                             <td>{tx.qty}x</td>
-                                            <td style={{color: '#10b981'}}>{tx.revenue.toFixed(2)} RON</td>
+                                            <td style={{color: '#10b981'}}>{tx.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</td>
                                         </tr>
                                     ))}
                                 </tbody>

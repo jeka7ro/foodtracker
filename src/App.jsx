@@ -196,20 +196,21 @@ function Layout({ children }) {
         <div style={{ display: 'flex', height: '100vh', width: '100vw', background: colors.currentBg, color: colors.text, position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif' }}>
             {/* ─── Sidebar ─── */}
             <aside style={{
-                width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
-                background: isDark ? 'rgba(17,17,19,0.98)' : '#116d74',
-                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)'}`,
+                background: isDark ? 'rgba(20,20,22,0.65)' : 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(28px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
                 overflowY: 'auto', overflowX: 'hidden',
                 transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
+                zIndex: 10,
             }}>
                 {/* GET App Logo */}
                 <div style={{
                     height: HEADER_H, padding: '0 16px', display: 'flex', alignItems: 'center',
-                    gap: '8px',
                     borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                     flexShrink: 0,
-                    background: isDark ? 'transparent' : '#116d74',
+                    background: 'transparent',
                 }}>
                     {sidebarCollapsed ? (
                         <div style={{
@@ -217,15 +218,11 @@ function Layout({ children }) {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             flexShrink: 0,
                         }}>
-                            <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <img src="/getapp_smart_food_white.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                     ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
-                            <img src="/logo.png" alt="Logo" style={{ height: '76px', objectFit: 'contain' }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                                <span style={{ fontSize: '20px', fontWeight: '900', color: isDark ? '#e8eaf0' : '#ffffff', letterSpacing: '-0.5px' }}>Smart</span>
-                                <span style={{ fontSize: '17px', fontWeight: '800', color: isDark ? '#2bbec8' : '#ffffff', letterSpacing: '-0.2px' }}>Food</span>
-                            </div>
+                            <img src="/getapp_smart_food_white.png" alt="Logo" style={{ height: '52px', objectFit: 'contain', filter: isDark ? 'none' : 'invert(1) hue-rotate(180deg) brightness(0.5)' }} />
                         </div>
                     )}
                 </div>
@@ -542,8 +539,8 @@ function Layout({ children }) {
                     transform: 'translateY(-50%)',
                     left: SIDEBAR_W - 12,
                     width: 24, height: 24, borderRadius: '50%',
-                    background: isDark ? 'rgba(60,60,65,0.9)' : '#ffffff',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
+                    background: isDark ? 'rgba(20, 20, 22, 0.65)' : 'rgba(255, 255, 255, 0.65)',
+                    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`,
                     boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', zIndex: 100,
@@ -560,13 +557,13 @@ function Layout({ children }) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Header */}
                 <header style={{
-                    height: HEADER_H, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                    padding: '0 20px', gap: '6px',
-                    background: isDark ? 'rgba(22,22,24,0.92)' : '#116d74',
-                    backdropFilter: isDark ? 'blur(20px) saturate(180%)' : 'none',
-                    WebkitBackdropFilter: isDark ? 'blur(20px) saturate(180%)' : 'none',
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                    position: 'sticky', top: 0, zIndex: 50, flexShrink: 0,
+                    height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0 24px',
+                    background: isDark ? 'rgba(22,22,24,0.75)' : 'rgba(17,109,116,0.75)',
+                    backdropFilter: 'blur(28px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)'}`,
+                    position: 'sticky', top: 0, zIndex: 50,
                 }}>
 
                     {/* ── Theme circle toggle ── */}

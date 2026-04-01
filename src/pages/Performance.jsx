@@ -268,7 +268,16 @@ export default function Performance() {
     }, [realSalesArray, periodDays, l])
 
     const handleChartClick = (state) => {
-        if (!state || !state.activePayload) return;
+        if (!state || !state.activePayload) {
+            if (activePeriod === 'custom' && customStartDate === customEndDate && periodDays <= 1) {
+                setCustomStartDate('')
+                setCustomEndDate('')
+                setActivePeriod('week')
+            } else if (activePeriod === 'today' || activePeriod === 'yesterday') {
+                setActivePeriod('week')
+            }
+            return
+        }
         const d = state.activePayload[0].payload;
         if (d.year === undefined) return;
         
@@ -369,7 +378,7 @@ export default function Performance() {
 
     const totalSales = chartData.reduce((acc, curr) => acc + curr.sales, 0)
     const totalOrders = chartData.reduce((acc, curr) => acc + curr.orders, 0)
-    const avgBasket = totalOrders > 0 ? (totalSales / totalOrders).toFixed(2) : 0
+    const avgBasket = totalOrders > 0 ? (totalSales / totalOrders).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'
 
     const getHeatmapColor = (salesAmount) => {
         if (!salesAmount || salesAmount <= 0) return 'transparent'
@@ -390,7 +399,7 @@ export default function Performance() {
     }
 
     const platformTabs = [
-        { id: 'all', label: t('allPlatforms'), color: '#6366f1' },
+        { id: 'all', label: t('allPlatforms'), color: '#116d74' },
         { id: 'iiko', label: t('ecosystem'), color: '#FF3366' },
         { id: 'glovo', label: 'Glovo', color: '#FFC244' },
         { id: 'wolt', label: 'Wolt', color: '#009DE0' },
@@ -404,21 +413,11 @@ export default function Performance() {
                     <h1 className="perf-title">{t('title')}</h1>
                     <p className="perf-subtitle">{t('subtitle')}</p>
                 </div>
-                
-                <div className="perf-actions">
-                    <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
-                    <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary">
-                        <UploadCloud size={18} />
-                        {isUploading ? t('importing') : t('importExcel')}
-                    </button>
-                    <button onClick={handleExport} className="btn-secondary">
-                        <Download size={18} /> {t('export')}
-                    </button>
-                </div>
             </div>
 
-            <div className="filter-bar">
-                <div className="platform-tabs">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '8px' }}>
+                <div className="filter-bar" style={{ width: '100%' }}>
+                    <div className="platform-tabs">
                     {platformTabs.map(p => (
                         <button key={p.id} className="platform-tab" onClick={() => { setPlatformFilter(p.id); setSearchParams({ platform: p.id }) }} style={{
                             background: platformFilter === p.id ? p.color : 'var(--glass-bg-hover)',
@@ -440,25 +439,39 @@ export default function Performance() {
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
 
-                <select value={restaurantFilter} onChange={e => setRestaurantFilter(e.target.value)} className="select-filter">
-                    <option value="all">{t('allLocations')}</option>
-                    {activeRestaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+                    <select value={restaurantFilter} onChange={e => setRestaurantFilter(e.target.value)} className="select-filter">
+                        <option value="all">{t('allLocations')}</option>
+                        {activeRestaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
 
-                <div className="period-tabs">
-                    <div className="custom-date-wrap">
-                        <input type="date" value={customStartDate} onChange={e => { setCustomStartDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '6px 10px'}} />
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>-</span>
-                        <input type="date" value={customEndDate} onChange={e => { setCustomEndDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '6px 10px'}} />
-                    </div>
-                    {[
-                        ['today', t('today')], ['yesterday', t('yesterday')], ['week', t('thisWeek')], 
-                        ['month', t('thisMonth')], ['lastmonth', t('lastMonth')], ['year', t('thisYear')]
-                    ].map(([id, lbl]) => (
-                        <button key={id} className={`period-tab ${activePeriod === id ? 'active' : ''}`} onClick={() => { setActivePeriod(id); setCustomStartDate(''); setCustomEndDate('') }}>
-                            {lbl}
+                    <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+                        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
+                        <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary" style={{ background: '#116d74', boxShadow: '0 4px 12px rgba(17,109,116,0.3)' }}>
+                            <UploadCloud size={16} />
+                            {isUploading ? t('importing') : t('importExcel')}
                         </button>
-                    ))}
+                        <button onClick={handleExport} className="btn-secondary" style={{ color: '#116d74', borderColor: '#116d74' }}>
+                            <Download size={16} /> {t('export')}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="filter-bar" style={{ width: '100%', padding: '12px 16px' }}>
+                    <div className="period-tabs" style={{ marginLeft: 0 }}>
+                        <div className="custom-date-wrap">
+                            <input type="date" value={customStartDate} onChange={e => { setCustomStartDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
+                            <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>-</span>
+                            <input type="date" value={customEndDate} onChange={e => { setCustomEndDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
+                        </div>
+                        {[
+                            ['today', t('today')], ['yesterday', t('yesterday')], ['week', t('thisWeek')], 
+                            ['month', t('thisMonth')], ['lastmonth', t('lastMonth')], ['year', t('thisYear')]
+                        ].map(([id, lbl]) => (
+                            <button key={id} className={`period-tab ${activePeriod === id ? 'active' : ''}`} onClick={() => { setActivePeriod(id); setCustomStartDate(''); setCustomEndDate('') }}>
+                                {lbl}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -468,7 +481,7 @@ export default function Performance() {
                         <div style={{padding:'10px', background:'rgba(17,109,116,0.1)', borderRadius:'12px', color:'#116d74'}}><CreditCard size={24} /></div>
                         <span className="kpi-title">{t('totalRevenue')}</span>
                     </div>
-                    <div className="kpi-value">{totalSales.toLocaleString('ro-RO')} RON</div>
+                    <div className="kpi-value">{totalSales.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
                 </div>
 
                 <div className="glass-card">
@@ -476,7 +489,7 @@ export default function Performance() {
                         <div style={{padding:'10px', background:'rgba(16,185,129,0.1)', borderRadius:'12px', color:'#10b981'}}><ShoppingBag size={24} /></div>
                         <span className="kpi-title">{t('totalOrders')}</span>
                     </div>
-                    <div className="kpi-value">{totalOrders}</div>
+                    <div className="kpi-value">{isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}</div>
                 </div>
 
                 <div className="glass-card">
@@ -501,12 +514,12 @@ export default function Performance() {
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', background: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}
                                     labelStyle={{ fontWeight: '800', color: 'var(--text-color)', marginBottom: '8px' }}
-                                    formatter={(value, name) => [name === t('sales') ? `${Number(value).toFixed(2)} RON` : value, name]}
+                                    formatter={(value, name) => [name === t('sales') ? `${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : value, name]}
                                 />
                                 <Legend wrapperStyle={{ paddingTop: '16px', fontSize: '13px', fontWeight: '700' }} />
                                 
                                 <Bar yAxisId="left" dataKey="sales" name={t('sales')} fill="url(#colorSales)" radius={[6, 6, 0, 0]} maxBarSize={45} />
-                                <Line yAxisId="right" type="monotone" dataKey="orders" name={t('orders')} stroke="#10b981" strokeWidth={4} dot={{ strokeWidth: 2, r: 4, fill: '#fff' }} activeDot={{ r: 8, stroke: '#10b981', strokeWidth: 4, fill: '#fff' }} />
+                                <Line yAxisId="right" type="monotone" dataKey="orders" name={t('orders')} stroke="#f97316" strokeWidth={4} dot={{ strokeWidth: 2, r: 4, fill: '#fff' }} activeDot={{ r: 8, stroke: '#f97316', strokeWidth: 4, fill: '#fff' }} />
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#116d74" stopOpacity={1}/>
@@ -530,7 +543,7 @@ export default function Performance() {
                                     <Tooltip 
                                         cursor={{ fill: 'var(--glass-bg-hover)' }}
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
-                                        formatter={(value) => [`${Number(value).toFixed(2)} RON`, t('sales')]}
+                                        formatter={(value) => [`${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON`, t('sales')]}
                                     />
                                     <Bar dataKey="sales" onClick={handleLocationClick} fill="#10b981" radius={[0, 8, 8, 0]} barSize={24} style={{ cursor: 'pointer' }} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO')} lei` }}>
                                     </Bar>
@@ -561,7 +574,7 @@ export default function Performance() {
                                             color: getHeatmapTextColor(val),
                                             border: val === 0 ? 'var(--glass-border)' : 'none'
                                         }}>
-                                            <span style={{ fontSize: '13px', fontWeight: '800' }}>{val ? `${val.toFixed(2)} RON` : ''}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: '800' }}>{val ? `${val.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
                                             {cell.orders > 0 && <span style={{ fontSize: '10px', opacity: 0.9 }}>{cell.orders} {t('orders').toLowerCase()}</span>}
                                         </div>
                                     </div>
@@ -589,7 +602,7 @@ export default function Performance() {
                                                 color: getHeatmapTextColor(val),
                                                 border: val === 0 ? 'var(--glass-border)' : 'none'
                                             }}>
-                                                <span style={{ fontSize: '12px', fontWeight: '800' }}>{val ? `${val.toFixed(2)} RON` : ''}</span>
+                                                <span style={{ fontSize: '12px', fontWeight: '800' }}>{val ? `${val.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
                                                 {cell.orders > 0 && <span style={{ fontSize: '10px', fontWeight: '600', opacity: 0.85 }}>{cell.orders} cmd.</span>}
                                             </div>
                                         )
@@ -609,7 +622,7 @@ export default function Performance() {
                                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '12px',
                                         color: 'var(--text-color)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.05)'
                                     }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '900' }}>{totalDay > 0 ? `${totalDay.toFixed(2)} RON` : ''}</span>
+                                        <span style={{ fontSize: '12px', fontWeight: '900' }}>{totalDay > 0 ? `${totalDay.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
                                         {totalOrders > 0 && <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{totalOrders} cmd.</span>}
                                     </div>
                                 )
@@ -635,7 +648,7 @@ export default function Performance() {
                             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
                             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-color)' }}>{item.name}</div>
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} RON</div>
+                                <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
                                 <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>{item.count} {t('piecesOrdered')}</div>
                             </div>
                         </div>

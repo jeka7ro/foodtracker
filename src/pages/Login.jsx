@@ -87,7 +87,7 @@ export default function Login() {
                         height: 124, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         margin: '0 auto 20px'
                     }}>
-                        <img src="/logo.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
+                        <img src="/getapp_smart_food_white.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
                     </div>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>Smart Food</div>
                     <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', fontWeight: '400' }}>Sign in to your account</div>
