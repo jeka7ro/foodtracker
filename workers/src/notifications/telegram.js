@@ -58,6 +58,43 @@ export class TelegramNotifier {
     }
 
     /**
+     * Send alert for COMPETITOR stopped
+     */
+    async sendCompetitorStopAlert(restaurant, platform, details) {
+        if (!this.bot || !restaurant.telegram_group_id) return false
+
+        const message = `
+<b>🔥 OPORTUNITATE! CONCURENȚĂ ÎNCHISĂ</b>
+
+<b>Concurent:</b> ${restaurant.name} (${restaurant.city || 'N/A'})
+<b>Platformă:</b> ${platform.toUpperCase()}
+
+Apare <b>închis/pauzat</b> pe platformă în timpul programului normal!
+Cel mai probabil nivelul de comenzi e critic sau nu mai au stocuri. E momentul ideal să trageți clientela.
+
+<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
+        `.trim()
+
+        const keyboard = {
+            inline_keyboard: [
+                [{ text: `Deschide ${platform}`, url: restaurant[`${platform}_url`] || 'http://localhost:5173' }]
+            ]
+        }
+
+        try {
+            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
+                parse_mode: 'HTML',
+                reply_markup: keyboard
+            })
+            console.log(`   [Telegram] Competitor stop alert sent for ${restaurant.name}`)
+            return true
+        } catch (error) {
+            console.error('   [Telegram] Error sending competitor stop alert:', error.message)
+            return false
+        }
+    }
+
+    /**
      * Send alert for restaurant back online
      */
     async sendRecoveryAlert(restaurant, platform, durationMinutes) {
@@ -89,6 +126,34 @@ Problema rezolvata dupa <b>${this.formatDuration(durationMinutes)}</b>
             return true
         } catch (error) {
             console.error('   [Telegram] Error sending recovery alert:', error.message)
+            return false
+        }
+    }
+
+    /**
+     * Send alert for COMPETITOR back online
+     */
+    async sendCompetitorRecoveryAlert(restaurant, platform, durationMinutes) {
+        if (!this.bot || !restaurant.telegram_group_id) return false
+
+        const message = `
+<b>ℹ️ Concurent Revenit</b>
+
+<b>Concurent:</b> ${restaurant.name}
+<b>Platformă:</b> ${platform.toUpperCase()}
+
+Concurentul a pornit din nou livrările (a fost blocat aprox <b>${this.formatDuration(durationMinutes)}</b>).
+
+<i>${new Date().toLocaleString('ro-RO')}</i>
+        `.trim()
+
+        try {
+            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
+                parse_mode: 'HTML'
+            })
+            return true
+        } catch (error) {
+            console.error('   [Telegram] Error sending competitor recovery alert:', error.message)
             return false
         }
     }
@@ -221,6 +286,55 @@ Recomandam verificarea recenziilor recente.
             return true
         } catch (error) {
             console.error('   [Telegram] Error sending rating drop alert:', error.message)
+            return false
+        }
+    }
+
+    /**
+     * Send alert for negative review (Reputation MVP)
+     */
+    async sendNegativeReviewAlert(restaurant, review) {
+        if (!this.bot || !restaurant.telegram_group_id) return false
+
+        // Do not alert if it's just a rating without text (per client request)
+        if (!review.text || review.text.trim().length === 0) return false;
+
+        const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+        const message = `
+<b>🚨 RECENZIE NEGATIVĂ NOUĂ</b>
+
+<b>Locație:</b> ${restaurant.name} (${restaurant.city || 'N/A'})
+<b>Platformă:</b> ${review.platform.toUpperCase()}
+<b>Client:</b> ${review.author_name || 'Anonim'}
+<b>Scor:</b> ${stars}
+
+<b>Comentariu:</b>
+<i>"${review.text}"</i>
+
+Vă rugăm să investigați și să răspundeți cât mai curând posibil.
+
+<i>Alertă generată automat la ${new Date().toLocaleString('ro-RO')}</i>
+    `.trim()
+
+        const keyboard = {
+            inline_keyboard: [
+                [
+                    { text: 'Vezi pe Platformă', url: review.url || restaurant[`${review.platform}_url`] || 'http://localhost:5533' },
+                    { text: 'Dashboard Reputație', url: 'http://localhost:5173/reputation' }
+                ]
+            ]
+        }
+
+        try {
+            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
+                parse_mode: 'HTML',
+                reply_markup: keyboard
+            })
+            console.log(`   [Telegram] Negative review alert sent for ${restaurant.name}`)
+            return true
+        } catch (error) {
+            console.error('   [Telegram] Error sending negative review alert:', error.message)
             return false
         }
     }

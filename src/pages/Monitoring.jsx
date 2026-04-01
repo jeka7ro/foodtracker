@@ -555,6 +555,40 @@ export default function Monitoring() {
                 </div>
             </div>
 
+            {/* ═══════ B2B PORTALS (SUPERLATIVE) ═══════ */}
+            <div style={{ ...glass, padding: '24px 28px', marginBottom: '24px', border: `1px solid ${colors.positive}40`, background: isDark ? 'rgba(16, 185, 129, 0.04)' : '#f0fdf4', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: colors.positive, filter: 'blur(80px)', opacity: 0.1, borderRadius: '50%' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '24px' }}>🚀</span>
+                        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: colors.text, letterSpacing: '-0.3px' }}>
+                            {lang === 'ru' ? 'Сверхмощный Агрегатор (B2B Порталы)' : lang === 'en' ? 'Superlative Aggregator (B2B Portals)' : 'Arhitectură Superlativ: Integrare Deep B2B Portals'}
+                        </h2>
+                    </div>
+                    <span style={{ fontSize: '11px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', padding: '6px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>
+                        MOTOARE NOKIA/FAZA 2 DEBLOCATE
+                    </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', position: 'relative', zIndex: 2 }}>
+                     <div style={{ ...glassInner, padding: '16px', background: isDark ? 'rgba(0,0,0,0.2)' : '#ffffff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(16,185,129,0.2)'}` }}>
+                         <div style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ color: '#f59e0b' }}>⏸️</span> PAUZE FALSE (TABLETĂ)</div>
+                         <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, lineHeight: '1.4' }}>Citire directă din Merchant Portal. Precizie 100% fără interceptare publică.</div>
+                     </div>
+                     <div style={{ ...glassInner, padding: '16px', background: isDark ? 'rgba(0,0,0,0.2)' : '#ffffff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.2)'}` }}>
+                         <div style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ color: '#ef4444' }}>🗺️</span> TĂIERE ZONĂ LIVRARE</div>
+                         <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, lineHeight: '1.4' }}>Alerte stricte la restrângerea ascunsă a razei de livrare și pierderi de audiență.</div>
+                     </div>
+                     <div style={{ ...glassInner, padding: '16px', background: isDark ? 'rgba(0,0,0,0.2)' : '#ffffff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(59,130,246,0.2)'}` }}>
+                         <div style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ color: '#3b82f6' }}>🛒</span> PRODUSE (OUT OF STOCK)</div>
+                         <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, lineHeight: '1.4' }}>Detectare dacă staff-ul restaurantului a uitat produse premium dezactivate.</div>
+                     </div>
+                     <div style={{ ...glassInner, padding: '16px', background: isDark ? 'rgba(0,0,0,0.2)' : '#ffffff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(139,92,246,0.2)'}` }}>
+                         <div style={{ fontSize: '11px', color: colors.textSecondary, fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ color: '#8b5cf6' }}>💸</span> RECUPERARE PIERDERI</div>
+                         <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, lineHeight: '1.4' }}>Calcul matematic al banilor pierduți prin rularea cifrei reale de afaceri.</div>
+                     </div>
+                </div>
+            </div>
+
             {/* ═══════ STAT CARDS ═══════ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
                 {[

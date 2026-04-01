@@ -32,6 +32,8 @@ const translations = {
         nav_iiko_products: 'Meniu POS (iiko)',
         nav_overview: 'Opriri',
         nav_prices_compare: 'Comparație Prețuri',
+        nav_reputation: 'Reputație & Recenzii',
+        nav_performance: 'Vânzări & Performanță',
 
         // Theme
         theme_light: 'Light Mode',
@@ -168,6 +170,8 @@ const translations = {
         nav_iiko_products: 'POS Products (iiko)',
         nav_overview: 'Overview',
         nav_prices_compare: 'Prices',
+        nav_reputation: 'Reputation & Reviews',
+        nav_performance: 'Sales & Performance',
 
         // Theme
         theme_light: 'Light Mode',
@@ -304,6 +308,8 @@ const translations = {
         nav_iiko_products: 'Меню POS (iiko)',
         nav_overview: 'Остановки',
         nav_prices_compare: 'Сравнение цен',
+        nav_reputation: 'Репутация и Отзывы',
+        nav_performance: 'Продажи и Аналитика',
 
         // Theme
         theme_light: 'Светлая тема',

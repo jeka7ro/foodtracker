@@ -11,6 +11,7 @@ import Monitoring from './pages/Monitoring'
 import StopControl from './pages/StopControl'
 import StopPrices from './pages/StopPrices'
 import StopIstoric from './pages/StopIstoric'
+import Performance from './pages/Performance'
 import Marketing from './pages/Marketing'
 import MarketingAnalytics from './pages/MarketingAnalytics'
 import CompetitorProducts from './pages/CompetitorProducts'
@@ -29,6 +30,8 @@ import MarketingPromotions from './pages/MarketingPromotions'
 import MarketingAnalyticsCity from './pages/MarketingAnalyticsCity'
 import RoleSettings from './pages/RoleSettings'
 import IikoProducts from './pages/IikoProducts'
+import Reputation from './pages/Reputation'
+import ProductAnalytics from './pages/ProductAnalytics'
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -52,6 +55,7 @@ const NAV_ICONS = {
     delivery: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>,
     users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
     ownproducts: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    reputation: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
 }
 
 function SidebarItem({ to, icon, label, sub }) {
@@ -104,6 +108,8 @@ function Layout({ children }) {
     const topItems = [
         { path: '/dashboard', iconKey: 'dashboard', label: t('nav_dashboard') },
         { path: '/monitoring', iconKey: 'monitoring', label: t('nav_monitoring') },
+        { path: '/reputation', iconKey: 'reputation', label: t('nav_reputation') },
+        { path: '/performance', iconKey: 'monitoring', label: t('nav_performance') },
     ]
     const stopSubItems = [
         { path: '/stop-control', label: t('nav_overview'), icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg> },
@@ -658,9 +664,11 @@ export default function App() {
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                     <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                                     <Route path="/monitoring" element={<ProtectedRoute><Layout><Monitoring /></Layout></ProtectedRoute>} />
+                                    <Route path="/reputation" element={<ProtectedRoute><Layout><Reputation /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-control" element={<ProtectedRoute><Layout><StopControl /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-preturi" element={<ProtectedRoute><Layout><StopPrices /></Layout></ProtectedRoute>} />
                                     <Route path="/stop-istoric" element={<ProtectedRoute><Layout><StopIstoric /></Layout></ProtectedRoute>} />
+                                    <Route path="/performance" element={<ProtectedRoute><Layout><Performance /></Layout></ProtectedRoute>} />
                                     <Route path="/marketing" element={<ProtectedRoute><Layout><Marketing /></Layout></ProtectedRoute>} />
                                     <Route path="/marketing-analytics" element={<ProtectedRoute><Layout><MarketingAnalytics /></Layout></ProtectedRoute>} />
                                     <Route path="/marketing-promotions" element={<ProtectedRoute><Layout><MarketingPromotions /></Layout></ProtectedRoute>} />
@@ -678,6 +686,7 @@ export default function App() {
                                     <Route path="/role-settings" element={<ProtectedRoute><Layout><RoleSettings /></Layout></ProtectedRoute>} />
                                     <Route path="/own-products" element={<ProtectedRoute><Layout><OwnProducts /></Layout></ProtectedRoute>} />
                                     <Route path="/iiko-products" element={<ProtectedRoute><Layout><IikoProducts /></Layout></ProtectedRoute>} />
+                                    <Route path="/product-analytics/:productName" element={<ProtectedRoute><Layout><ProductAnalytics /></Layout></ProtectedRoute>} />
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Routes>
                             </UserProfileProvider>

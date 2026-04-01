@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useTheme } from '../lib/ThemeContext'
 import toast, { Toaster } from 'react-hot-toast'
@@ -359,6 +359,7 @@ export default function Reports() {
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
                 {[
+                    { id: 'sales', label: '🏆 Vânzări (Performanță Live)' },
                     { id: 'stops', label: 'Stop Control' },
                     { id: 'marketing', label: 'Marketing' },
                     { id: 'comparison', label: 'Comparison' }
@@ -430,6 +431,114 @@ export default function Reports() {
             </div>
 
             {/* Tab Content */}
+            {activeTab === 'sales' && (
+                <div style={{ animation: 'fadeIn 0.4s ease' }}>
+                    <div style={{ display: 'flex', gap: '12px', borderBottom: `1px solid ${colors.border}`, marginBottom: '20px', paddingBottom: '10px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '700', color: colors.blue, cursor: 'pointer', borderBottom: `2px solid ${colors.blue}`, paddingBottom: '10px', marginBottom: '-11px' }}>Vânzări</span>
+                        <span style={{ fontSize: '14px', fontWeight: '600', color: colors.textSecondary, cursor: 'pointer', paddingBottom: '10px' }}>Operațiuni</span>
+                        <span style={{ fontSize: '14px', fontWeight: '600', color: colors.textSecondary, cursor: 'pointer', paddingBottom: '10px' }}>Clienți</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                        {['Ultimele 7 zile', 'Ultimele 30 de zile', 'Ultimele 6 luni', '📅 Personalizat'].map((btn, i) => (
+                            <button key={i} style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', background: i === 0 ? 'transparent' : 'transparent', color: i === 0 ? colors.blue : colors.text, border: `1px solid ${i === 0 ? colors.blue : colors.border}`, cursor: 'pointer' }}>
+                                {btn}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* KPI CARDS (Glovo Clone) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>Vânzări ℹ️</div>
+                            <div style={{ fontSize: '28px', fontWeight: '800', color: colors.text, marginBottom: '16px' }}>3.805,82 RON</div>
+                            <div style={{ background: '#fef3c7', color: '#b45309', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', display: 'inline-block' }}>
+                                📉 48 % sub principalii dvs. concurenți.
+                            </div>
+                        </div>
+                        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>Comenzi ℹ️</div>
+                            <div style={{ fontSize: '28px', fontWeight: '800', color: colors.text, marginBottom: '16px' }}>32</div>
+                            <div style={{ background: '#fef3c7', color: '#b45309', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', display: 'inline-block' }}>
+                                📉 53 % sub principalii dvs. concurenți.
+                            </div>
+                        </div>
+                        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>Dimensiunea medie a coșului ℹ️</div>
+                            <div style={{ fontSize: '28px', fontWeight: '800', color: colors.text, marginBottom: '16px' }}>118,93 RON</div>
+                            <div style={{ background: '#d1fae5', color: '#047857', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', display: 'inline-block' }}>
+                                🏆 Sunteți un concurent de top
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Chart Area */}
+                    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Vânzări după zi ℹ️</h3>
+                            <button style={{ padding: '6px 12px', fontSize: '12px', border: `1px solid ${colors.border}`, background: 'transparent', borderRadius: '6px', color: colors.text, cursor: 'pointer' }}>📈 Raport de sfârșit de zi ⬇️</button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '4px' }}>Vânzări (32) ℹ️</div>
+                        <div style={{ fontSize: '20px', fontWeight: '800', marginBottom: '10px' }}>3.805,82 RON</div>
+                        <div style={{ display: 'inline-block', background: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', marginBottom: '24px' }}>📉 48 % sub principalii dvs. concurenți.</div>
+
+                        {/* Faux Spline Chart using a block to represent the generic canvas */}
+                        <div style={{ height: '200px', width: '100%', position: 'relative', borderBottom: `1px solid ${colors.border}` }}>
+                            {/* Bar Chart Mock for 7 days */}
+                            <div style={{ position: 'absolute', bottom: 0, left: '10%', width: '6%', height: '15%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: '25%', width: '6%', height: '60%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: '40%', width: '6%', height: '35%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: '55%', width: '6%', height: '70%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: '70%', width: '6%', height: '25%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: '85%', width: '6%', height: '80%', background: '#0f766e', borderRadius: '2px 2px 0 0' }}></div>
+                            
+                            {/* Line Chart Mock (Spline svg) */}
+                            <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+                                <path d="M 120 100 Q 200 120 280 80 T 450 70 T 580 120 T 700 100" fill="transparent" stroke="#9ca3af" strokeWidth="3" />
+                                <circle cx="120" cy="100" r="5" fill="#9ca3af" />
+                                <circle cx="280" cy="80" r="5" fill="#9ca3af" />
+                                <circle cx="450" cy="70" r="5" fill="#9ca3af" />
+                                <circle cx="580" cy="120" r="5" fill="#9ca3af" />
+                                <circle cx="700" cy="100" r="5" fill="#9ca3af" />
+                            </svg>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '11px', color: colors.textSecondary, marginTop: '10px' }}>
+                            <span>24.03</span><span>25.03</span><span>26.03</span><span>27.03</span><span>28.03</span><span>29.03</span><span>30.03</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px', fontSize: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 12, height: 12, background: '#9ca3af', borderRadius: '2px' }}></div> Concurent principal</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 12, height: 12, background: '#0f766e', borderRadius: '2px' }}></div> Magazinul dvs.</div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', paddingTop: '20px', borderTop: `1px solid ${colors.border}`, fontSize: '13px' }}>
+                            <div>Online <strong style={{ fontSize: '15px' }}>2.749,89 RON</strong></div>
+                            <div>Numerar <strong style={{ fontSize: '15px' }}>1.055,93 RON</strong></div>
+                            <div>Livrare <strong style={{ fontSize: '15px' }}>3.805,82 RON</strong></div>
+                            <div>Ridicare <strong style={{ fontSize: '15px' }}>0 RON</strong></div>
+                        </div>
+                    </div>
+
+                    {/* Vanzari dupa ora (Heatmap) */}
+                    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Vânzări după oră ℹ️</h3>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(4, 1fr)', gap: '4px' }}>
+                            {[11, 12, 13, 14, 15].map(hour => (
+                                <React.Fragment key={hour}>
+                                    <div style={{ fontSize: '11px', color: colors.textSecondary, display: 'flex', alignItems: 'center' }}>{hour}:00</div>
+                                    <div style={{ background: hour%2===0 ? '#a7f3d0' : '#d1fae5', padding: '10px', fontSize: '12px', textAlign: 'center', fontWeight: '600' }}>{Math.floor(Math.random() * 100) + 50} RON</div>
+                                    <div style={{ background: hour%3===0 ? '#a7f3d0' : '', padding: '10px', fontSize: '12px', textAlign: 'center', fontWeight: '600' }}>{hour%3===0 ? '100 RON' : ''}</div>
+                                    <div style={{ background: '#6ee7b7', padding: '10px', fontSize: '12px', textAlign: 'center', fontWeight: '600' }}>{Math.floor(Math.random() * 200) + 40} RON</div>
+                                    <div style={{ background: hour===14 ? '#059669' : '#a7f3d0', color: hour===14 ? 'white' : 'inherit', padding: '10px', fontSize: '12px', textAlign: 'center', fontWeight: '600' }}>{hour===14 ? '259 RON' : '50 RON'}</div>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {activeTab === 'stops' && (
                 <>
                     {/* STOP Stats */}

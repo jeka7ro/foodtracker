@@ -5,8 +5,9 @@ import { BoltChecker } from './checkers/bolt-checker.js'
 import { TelegramNotifier } from './notifications/telegram.js'
 import { RulesEngine } from './services/rules-engine.js'
 import { LossCalculator } from './services/loss-calculator.js'
-import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import { ownBrandScraper } from './scrapers/own-brand-scraper.js'
+import { ReputationScraper } from './scrapers/reputation-scraper.js'
+import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import cron from 'node-cron'
 import { config } from './config.js'
 
@@ -101,8 +102,8 @@ async function manageStopEvent(restaurant, platform, isAvailable, checkResult) {
             const stoppedAt = new Date(activeStop.stopped_at)
             const durationMinutes = Math.round((resumedAt - stoppedAt) / (1000 * 60))
 
-            // Calculate loss
-            const loss = lossCalculator.calculateStopLoss(restaurant, activeStop)
+            // Calculate loss ONLY if it's our own restaurant. Competitors generate 0 money lost for us when they crash.
+            const loss = restaurant.is_competitor ? { estimatedLoss: 0, details: { note: 'Competitor' } } : lossCalculator.calculateStopLoss(restaurant, activeStop)
 
             await supabase
                 .from('stop_events')
@@ -174,20 +175,32 @@ async function runMonitoringCycle() {
                         const stopResult = await manageStopEvent(restaurant, platform, isAvailable, checkResult)
 
                         if (stopResult.action === 'started') {
-                            console.log(`  >> STOP DETECTED on ${platform.toUpperCase()}`)
+                            console.log(`  >> ${restaurant.is_competitor ? 'COMPETITOR ' : ''}STOP DETECTED on ${platform.toUpperCase()}`)
+                            
+                            // For competitors we instantly fire the Opportunity alert right here!
+                            // (Since we skip RulesEngine for them to avoid polluting internal violation tracker)
+                            if (restaurant.is_competitor && restaurant.telegram_group_id) {
+                                await telegram.sendCompetitorStopAlert(restaurant, platform, checkResult)
+                            }
                         } else if (stopResult.action === 'resolved') {
-                            console.log(`  >> RECOVERED on ${platform.toUpperCase()} after ${stopResult.duration}min (loss: ${stopResult.loss} RON)`)
-                            totalLoss += stopResult.loss
-
-                            // Send recovery notification
-                            if (restaurant.telegram_group_id) {
-                                await telegram.sendRecoveryAlert(restaurant, platform, stopResult.duration)
+                            console.log(`  >> ${restaurant.is_competitor ? 'COMPETITOR ' : ''}RECOVERED on ${platform.toUpperCase()} after ${stopResult.duration}min (loss: ${stopResult.loss} RON)`)
+                            
+                            if (!restaurant.is_competitor) {
+                                totalLoss += stopResult.loss
+                                if (restaurant.telegram_group_id) {
+                                    await telegram.sendRecoveryAlert(restaurant, platform, stopResult.duration)
+                                }
+                            } else {
+                                if (restaurant.telegram_group_id) {
+                                    await telegram.sendCompetitorRecoveryAlert(restaurant, platform, stopResult.duration)
+                                }
                             }
                         }
                     }
 
-                    // ─── EVALUATE RULES ───
-                    const previousRating = await getPreviousRating(restaurant.id, platform)
+                    // ─── EVALUATE RULES (Only for our own restaurants. Competitors don't get Support Tickets/Violation spam) ───
+                    if (!restaurant.is_competitor) {
+                        const previousRating = await getPreviousRating(restaurant.id, platform)
 
                     const violations = await rulesEngine.evaluate(restaurant, checkResult, {
                         isWorkingTime,
@@ -295,7 +308,8 @@ async function runMonitoringCycle() {
                                 )
                             }
                         }
-                    }
+                    } // end if (violations.length > 0)
+                    } // end if (!restaurant.is_competitor)
                 } catch (err) {
                     console.error(`   Error checking ${restaurant.name} on ${platform}:`, err.message)
                 }
@@ -404,6 +418,17 @@ cron.schedule('0 9 * * *', async () => {
     }
 })
 
+// ─── BRAND REPUTATION: la fiecare oră ───
+const reputationScraper = new ReputationScraper()
+cron.schedule('0 * * * *', async () => {
+    console.log('\n🌟 [CRON] Starting hourly Reputation scraping (Phase 1 MVP)...')
+    try {
+        await reputationScraper.runAllScrapes()
+    } catch (err) {
+        console.error('❌ [CRON] Reputation scan error:', err.message)
+    }
+})
+
 // ─── DYNAMIC STOP SCAN SCHEDULER (Verificare Produse) ───
 cron.schedule('* * * * *', async () => {
     try {
@@ -451,4 +476,5 @@ console.log('Workers started successfully!')
 console.log('Monitoring schedule: 11:00, 13:00, 17:00, 18:00, 19:00')
 console.log('Daily summary scheduled for 23:00')
 console.log('Competitive intelligence scan scheduled for 09:00 daily')
+console.log('Brand reputation scan scheduled every hour')
 console.log('Press Ctrl+C to stop\n')

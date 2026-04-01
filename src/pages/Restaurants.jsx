@@ -29,6 +29,7 @@ export default function Restaurants() {
         bolt_url: '',
         telegram_group_id: '',
         is_active: true,
+        is_competitor: false,
         working_hours: {
             monday: { open: '10:00', close: '23:00' },
             tuesday: { open: '10:00', close: '23:00' },
@@ -142,6 +143,7 @@ export default function Restaurants() {
             bolt_url: restaurant.bolt_url || '',
             telegram_group_id: restaurant.telegram_group_id || '',
             is_active: restaurant.is_active,
+            is_competitor: restaurant.is_competitor || false,
             working_hours: restaurant.working_hours || formData.working_hours
         })
         setEditingRestaurant(restaurant)
@@ -158,6 +160,7 @@ export default function Restaurants() {
             bolt_url: '',
             telegram_group_id: '',
             is_active: true,
+            is_competitor: false,
             working_hours: {
                 monday: { open: '10:00', close: '23:00' },
                 tuesday: { open: '10:00', close: '23:00' },
@@ -392,7 +395,14 @@ export default function Restaurants() {
                                                 )}
                                             </div>
                                             <div>
-                                                <div>{restaurant.name}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    {restaurant.name}
+                                                    {restaurant.is_competitor && (
+                                                        <span style={{ padding: '2px 6px', background: `${colors.red}20`, color: colors.red, fontSize: '10px', fontWeight: '700', borderRadius: '4px', textTransform: 'uppercase' }}>
+                                                            Concurent
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '2px' }}>
                                                     {restaurant.brands?.name || ''}
                                                 </div>
@@ -709,16 +719,29 @@ export default function Restaurants() {
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.is_active}
-                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                        style={{ width: '16px', height: '16px' }}
-                                    />
-                                    <label style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>
-                                        Active monitoring
-                                    </label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.is_active}
+                                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                            style={{ width: '16px', height: '16px' }}
+                                        />
+                                        <label style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>
+                                            Active monitoring
+                                        </label>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.is_competitor}
+                                            onChange={(e) => setFormData({ ...formData, is_competitor: e.target.checked })}
+                                            style={{ width: '16px', height: '16px' }}
+                                        />
+                                        <label style={{ fontSize: '13px', fontWeight: '700', color: colors.red }}>
+                                            Acesta este un Concurent
+                                        </label>
+                                    </div>
                                 </div>
 
                                 {/* ── Working Hours Schedule ── */}

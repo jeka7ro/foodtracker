@@ -1,8 +1,10 @@
-import 'dotenv/config'
+import dotenv from 'dotenv';
+
+dotenv.config({ path: './.env.local' });
 
 export const config = {
     supabase: {
-        url: process.env.SUPABASE_URL,
+        url: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
         serviceKey: process.env.SUPABASE_SERVICE_KEY
     },
     telegram: {
