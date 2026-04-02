@@ -143,6 +143,8 @@ export default function Performance() {
     const [customEndDate, setCustomEndDate] = useState('')
     const [pageNumber, setPageNumber] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [locationsPageNumber, setLocationsPageNumber] = useState(1)
+    const [locationsItemsPerPage, setLocationsItemsPerPage] = useState(10)
 
     useEffect(() => {
         Promise.all([
@@ -403,16 +405,17 @@ export default function Performance() {
         }
     };
 
-    const locationData = useMemo(() => {
+    const allLocationData = useMemo(() => {
         if (!realSalesArray.length) return []
         const locMap = {}
         realSalesArray.forEach(sale => {
             const r = activeRestaurants.find(x => x.id === sale.restaurant_id)
             const rName = r ? r.name : `ID: ${sale.restaurant_id}`
-            if (!locMap[rName]) locMap[rName] = { name: rName, sales: 0 }
+            if (!locMap[rName]) locMap[rName] = { name: rName, sales: 0, orders: 0 }
             locMap[rName].sales += parseFloat(sale.total_amount) || 0
+            locMap[rName].orders += 1
         })
-        return Object.values(locMap).sort((a,b) => b.sales - a.sales).slice(0, 5)
+        return Object.values(locMap).sort((a,b) => b.sales - a.sales)
     }, [realSalesArray, activeRestaurants])
 
     const { days, hours, cellData, maxSales } = useMemo(() => {
@@ -748,10 +751,10 @@ export default function Performance() {
                         {t('topLocations')} 
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </h3>
-                    {locationData.length > 0 ? (
+                    {allLocationData.slice(0, 5).length > 0 ? (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', marginTop: '12px' }}>
-                            {locationData.map(loc => {
-                                const maxSales = Math.max(...locationData.map(l => l.sales), 1);
+                            {allLocationData.slice(0, 5).map(loc => {
+                                const maxSales = Math.max(...allLocationData.slice(0, 5).map(l => l.sales), 1);
                                 const pct = (loc.sales / maxSales) * 100;
                                 return (
                                     <div key={loc.name} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => handleLocationClick(loc)}>
@@ -977,42 +980,88 @@ export default function Performance() {
                     <div style={{ textAlign: 'right' }}>AOV</div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '500px', overflowY: 'auto' }}>
-                    {locationData.map((loc, idx) => {
-                        const restaurantObj = activeRestaurants.find(r => r.name === loc.name);
-                        const brandName = restaurantObj?.brands?.name || '-';
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {(() => {
+                        const locationsTotalPages = Math.ceil(allLocationData.length / locationsItemsPerPage) || 1;
+                        const validPageNumber = Math.min(locationsPageNumber, locationsTotalPages);
+                        const locsPaginated = allLocationData.slice((validPageNumber - 1) * locationsItemsPerPage, validPageNumber * locationsItemsPerPage);
+
                         return (
-                            <div 
-                                key={idx} 
-                                className="product-row-hover" 
-                                style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: idx < locationData.length - 1 ? '1px solid var(--glass-border)' : 'none' }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{loc.name}</span>
-                                        {restaurantObj?.city && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{restaurantObj.city}</span>}
+                            <>
+                                {locsPaginated.map((loc, idx) => {
+                                    const restaurantObj = activeRestaurants.find(r => r.name === loc.name);
+                                    const brandName = restaurantObj?.brands?.name || '-';
+                                    return (
+                                        <div 
+                                            key={idx} 
+                                            className="product-row-hover" 
+                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{loc.name}</span>
+                                                    {restaurantObj?.city && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{restaurantObj.city}</span>}
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'center' }}>
+                                                {brandName !== '-' ? (
+                                                    <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandName}</span>
+                                                ) : '-'}
+                                            </div>
+                                            <div style={{ textAlign: 'right', fontWeight: '800' }}>
+                                                {(loc.sales || 0).toLocaleString('ro-RO')} lei
+                                            </div>
+                                            <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                                {loc.orders || 0}
+                                            </div>
+                                            <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
+                                                {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                {allLocationData.length === 0 && (
+                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>Nu există date de locație...</div>
+                                )}
+
+                                {allLocationData.length > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '0px solid var(--glass-border)', paddingTop: '16px', marginTop: '8px', padding: '0 20px 14px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Rânduri:</span>
+                                            <select 
+                                                value={locationsItemsPerPage} 
+                                                onChange={e => { setLocationsItemsPerPage(Number(e.target.value)); setLocationsPageNumber(1) }}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    background: 'var(--input-bg)',
+                                                    border: 'var(--glass-border)',
+                                                    borderRadius: '8px',
+                                                    color: 'var(--text-color)',
+                                                    fontSize: '13px',
+                                                    outline: 'none',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <option value={10} style={{ color: '#000' }}>10</option>
+                                                <option value={20} style={{ color: '#000' }}>20</option>
+                                                <option value={50} style={{ color: '#000' }}>50</option>
+                                            </select>
+                                        </div>
+
+                                        {locationsTotalPages > 1 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-color)' }}>{t('pageOf').replace('{p}', validPageNumber).replace('{t}', locationsTotalPages)}</span>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => setLocationsPageNumber(Math.max(1, validPageNumber - 1))} disabled={validPageNumber === 1} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&lt;</button>
+                                                    <button onClick={() => setLocationsPageNumber(Math.min(locationsTotalPages, validPageNumber + 1))} disabled={validPageNumber === locationsTotalPages} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&gt;</button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                                <div style={{ textAlign: 'center' }}>
-                                    {brandName !== '-' ? (
-                                        <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandName}</span>
-                                    ) : '-'}
-                                </div>
-                                <div style={{ textAlign: 'right', fontWeight: '800' }}>
-                                    {(loc.sales || 0).toLocaleString('ro-RO')} lei
-                                </div>
-                                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                                    {loc.orders || 0}
-                                </div>
-                                <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
-                                    {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
-                                </div>
-                            </div>
+                                )}
+                            </>
                         )
-                    })}
-                    {locationData.length === 0 && (
-                        <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>Nu există date de locație...</div>
-                    )}
+                    })()}
                 </div>
             </div>
             
