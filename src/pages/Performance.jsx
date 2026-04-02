@@ -995,7 +995,7 @@ export default function Performance() {
                     <div style={{ textAlign: 'right' }}>Comenzi</div>
                     <div style={{ textAlign: 'right' }}>Produse</div>
                     <div style={{ textAlign: 'right' }}>Comanda Medie</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>Top Produs</div>
+                    <div style={{ paddingLeft: '20px' }}>Top Produs</div>
                     <div style={{ textAlign: 'right' }}>Vânzări</div>
                 </div>
 
@@ -1046,13 +1046,16 @@ export default function Performance() {
                                             <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
                                                 {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', overflow: 'hidden' }}>
+                                            <div style={{ paddingLeft: '20px', display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                                                 {loc.topProd ? (
                                                     <>
-                                                        {loc.topProd.image_url && (
-                                                            <img src={loc.topProd.image_url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
-                                                        )}
-                                                        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                                        {(() => {
+                                                            const validImageUrl = loc.topProd.image_url || getProductImage(loc.topProd.name);
+                                                            return validImageUrl && (
+                                                                <img src={validImageUrl} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                                                            );
+                                                        })()}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', textAlign: 'left' }}>
                                                             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px' }}>{loc.topProd.name}</span>
                                                             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{loc.topProd.count} buc.</span>
                                                         </div>
