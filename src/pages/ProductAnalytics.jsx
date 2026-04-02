@@ -312,7 +312,7 @@ export default function ProductAnalytics() {
                 }
                 .go-back-wrap {
                     display: flex; align-items: center; justify-content: space-between;
-                    margin-bottom: 16px; padding-bottom: 12px; border-bottom: var(--glass-border);
+                    margin-bottom: 10px; padding-bottom: 10px; border-bottom: var(--glass-border);
                 }
                 .back-btn {
                     display: inline-flex; align-items: center; gap: 8px;
@@ -335,7 +335,7 @@ export default function ProductAnalytics() {
                 .compact-kpi {
                     background: var(--glass-bg); border: var(--glass-border); padding: 16px; border-radius: 14px;
                 }
-                .compact-kpi-val { font-size: 26px; font-weight: 900; margin-top: 8px; color: var(--text-color); }
+                .compact-kpi-val { font-size: 22px; font-weight: 800; margin-top: 6px; color: var(--text-color); }
 
                 .tx-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
                 .tx-table th { text-align: left; padding: 10px 16px; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; border-bottom: var(--glass-border); }
@@ -612,7 +612,7 @@ export default function ProductAnalytics() {
             </div> {/* end locations card */}
             </div> {/* end charts row */}
 
-            <div className="glass-card" style={{ marginTop: '16px', padding: '20px' }}>
+            <div className="glass-card" style={{ marginTop: '14px', padding: '16px' }}>
                 <h3 className="card-heading" style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'14px'}}><Navigation size={16}/> {t('recentSalesTitle')} ({recentTransactions.length})</h3>
                 {recentTransactions.length > 0 ? (
                     <div>
