@@ -993,14 +993,13 @@ export default function Performance() {
                     <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) minmax(200px, 2fr) 70px 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) minmax(200px, 2.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div style={{ textAlign: 'center' }}>#</div>
                     <div>Brand Locație</div>
                     <div style={{ display: 'flex', justifyContent: 'flex-start' }}>Top Produs</div>
-                    <div style={{ textAlign: 'right' }}>Buc.</div>
                     <div style={{ textAlign: 'right' }}>Comenzi</div>
                     <div style={{ textAlign: 'right' }}>Produse</div>
-                    <div style={{ textAlign: 'right' }}>Comanda Medie</div>
+                    <div style={{ textAlign: 'right' }}>Coș Mediu</div>
                     <div style={{ textAlign: 'right' }}>Vânzări</div>
                 </div>
 
@@ -1021,7 +1020,7 @@ export default function Performance() {
                                         <div 
                                             key={idx} 
                                             className="product-row-hover" 
-                                            style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) minmax(200px, 2fr) 70px 100px 100px 120px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                            style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) minmax(200px, 2.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
                                         >
                                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 'bold', textAlign: 'center' }}>
                                                 {((validPageNumber - 1) * locationsItemsPerPage) + idx + 1}
@@ -1053,12 +1052,10 @@ export default function Performance() {
                                                         })()}
                                                         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', textAlign: 'left' }}>
                                                             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px' }}>{loc.topProd.name}</span>
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{loc.topProd.count} buc.</span>
                                                         </div>
                                                     </>
                                                 ) : <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>-</span>}
-                                            </div>
-                                            <div style={{ textAlign: 'right', color: 'var(--text-color)', fontWeight: 'bold' }}>
-                                                {loc.topProd ? loc.topProd.count : 0}
                                             </div>
                                             <div style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>
                                                 {loc.orders || 0}
