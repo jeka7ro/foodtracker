@@ -618,7 +618,7 @@ export default function Performance() {
                     onClick={() => { document.getElementById('products-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
                     title="Click pentru a naviga la lista detaliată de produse"
                 >
-                    <div style={{display:'flex', gap:'12px', alignItems:'center', marginBottom: '12px'}}>
+                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
                         <div style={{padding:'10px', background:'rgba(16,185,129,0.1)', borderRadius:'12px', color:'#10b981'}}><ShoppingBag size={24} /></div>
                         <span className="kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             Comenzi & Produse
@@ -626,19 +626,16 @@ export default function Performance() {
                         </span>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '4px' }}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '2px' }}>Comenzi</div>
-                            <div className="kpi-value" style={{ fontSize: '26px', margin: 0, lineHeight: 1 }}>{isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}</div>
-                        </div>
-                        <div style={{ width: '1px', background: 'var(--glass-border)', height: '36px', margin: '0 16px' }}></div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '2px' }}>Produse</div>
-                            <div className="kpi-value" style={{ fontSize: '26px', margin: 0, lineHeight: 1 }}>
-                                {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
-                                <span style={{ fontSize: '12px', opacity: 0.6, fontWeight: 700, marginLeft: '6px' }}>buc.</span>
-                            </div>
-                        </div>
+                    <div className="kpi-value" style={{ fontSize: '24px', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+                              {isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}
+                              <span style={{fontSize:'12px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comenzi</span>
+                         </div>
+                         <div style={{ width: '1px', background: 'var(--glass-border)', height: '24px' }}></div>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+                              {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
+                              <span style={{fontSize:'12px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Produse</span>
+                         </div>
                     </div>
                 </div>
 
@@ -977,9 +974,9 @@ export default function Performance() {
                     <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    <div>Locație</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) minmax(200px, 2fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div style={{ textAlign: 'center' }}>Brand</div>
+                    <div>Locație</div>
                     <div style={{ textAlign: 'center' }}>Comenzi</div>
                     <div style={{ textAlign: 'center' }}>Produse</div>
                     <div style={{ textAlign: 'center' }}>Comanda Medie</div>
@@ -1003,8 +1000,15 @@ export default function Performance() {
                                         <div 
                                             key={idx} 
                                             className="product-row-hover" 
-                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) minmax(200px, 2fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
                                         >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {brandObj?.logo_url ? (
+                                                    <img src={brandObj.logo_url} alt="" style={{ height: '24px', width: 'auto', objectFit: 'contain', borderRadius:'4px' }} title={brandObj.name} /> 
+                                                ) : brandObj?.name ? (
+                                                    <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandObj.name}</span>
+                                                ) : '-'}
+                                            </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
                                                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{loc.name}</span>
@@ -1013,13 +1017,6 @@ export default function Performance() {
                                                         <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '2px' }}></div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {brandObj?.logo_url ? (
-                                                    <img src={brandObj.logo_url} alt="" style={{ height: '24px', width: 'auto', objectFit: 'contain', borderRadius:'4px' }} title={brandObj.name} /> 
-                                                ) : brandObj?.name ? (
-                                                    <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandObj.name}</span>
-                                                ) : '-'}
                                             </div>
                                             <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
                                                 {loc.orders || 0}
