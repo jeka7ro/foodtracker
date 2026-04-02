@@ -390,6 +390,8 @@ export default function Performance() {
     const topItems = useMemo(() => {
         if (!realSalesArray.length) return []
         const itemsMap = {}
+        const dayMap = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă']
+        
         realSalesArray.forEach(sale => {
             if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
                 const totalQty = sale.items.reduce((sum, it) => sum + (parseInt(it.quantity) || 1), 0)
@@ -398,18 +400,32 @@ export default function Performance() {
                 const rInfo = restaurants.find(r => r.id === sale.restaurant_id)
                 const bInfo = rInfo ? brands.find(b => b.id === rInfo.brand_id) : null
 
+                const dt = new Date(sale.placed_at)
+                const dayStr = dayMap[dt.getDay()]
+                const locStr = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
+
                 sale.items.forEach(it => {
                     const price = approxPrice
                     const qty = parseInt(it.quantity) || 1
-                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo }
+                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {} }
                     itemsMap[it.name].count += qty
                     itemsMap[it.name].revenue += (price * qty)
+                    itemsMap[it.name].locs[locStr] = (itemsMap[it.name].locs[locStr] || 0) + qty
+                    itemsMap[it.name].days[dayStr] = (itemsMap[it.name].days[dayStr] || 0) + qty
                 })
             }
         })
         return Object.values(itemsMap)
             .sort((a, b) => b.revenue !== a.revenue ? b.revenue - a.revenue : b.count - a.count)
-            .map((it, idx) => ({ ...it, id: idx + 1 }))
+            .map((it, idx) => {
+                let bestLoc = 'N/A', bestLocVal = -1
+                Object.keys(it.locs).forEach(k => { if (it.locs[k] > bestLocVal) { bestLocVal = it.locs[k]; bestLoc = k } })
+                
+                let bestDay = 'N/A', bestDayVal = -1
+                Object.keys(it.days).forEach(k => { if (it.days[k] > bestDayVal) { bestDayVal = it.days[k]; bestDay = k } })
+
+                return { ...it, id: idx + 1, bestLoc, bestDay }
+            })
     }, [realSalesArray, restaurants, brands])
 
     const paginatedItems = topItems.slice((pageNumber - 1) * itemsPerPage, pageNumber * itemsPerPage)
@@ -693,16 +709,19 @@ export default function Performance() {
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '40px 60px 1fr auto', padding: '12px 20px', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '40px 50px 2fr 90px 1.5fr 100px auto', padding: '12px 20px', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         <div>#</div>
                         <div>Brand</div>
                         <div>{t('topProduct')}</div>
+                        <div>Vândute</div>
+                        <div>Top Locație</div>
+                        <div>Top Ziua</div>
                         <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                     </div>
                     {paginatedItems.map((item) => {
                         const imgUrl = getProductImage(item.name)
                         return (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px 60px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px 50px 2fr 90px 1.5fr 100px auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
                             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
                             
                             <div>
@@ -712,15 +731,30 @@ export default function Performance() {
                                     <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--glass-bg-hover)' }}></div>
                                 )}
                             </div>
-                            {imgUrl ? (
-                                <img src={imgUrl} alt={item.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '16px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
-                            ) : (
-                                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--glass-bg)', marginRight: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}><Package size={20} /></div>
-                            )}
-                            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-color)' }}>{item.name}</div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {imgUrl ? (
+                                    <img src={imgUrl} alt={item.name} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
+                                ) : (
+                                    <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--glass-bg)', marginRight: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}><Package size={18} /></div>
+                                )}
+                                <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-color)' }}>{item.name}</div>
+                            </div>
+                            
+                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-color)' }}>
+                                {item.count} <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>buc.</span>
+                            </div>
+                            
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px' }} title={item.bestLoc}>
+                                {item.bestLoc.length > 20 ? item.bestLoc.substring(0, 20) + '...' : item.bestLoc}
+                            </div>
+                            
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#6366f1' }}>
+                                {item.bestDay}
+                            </div>
+
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
-                                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>{item.count} {t('piecesOrdered')}</div>
+                                <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
                             </div>
                         </div>
                     )})}
