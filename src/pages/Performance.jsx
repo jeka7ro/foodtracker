@@ -403,15 +403,17 @@ export default function Performance() {
                 const dt = new Date(sale.placed_at)
                 const dayStr = dayMap[dt.getDay()]
                 const locStr = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
+                const platStr = sale.source || 'iiko'
 
                 sale.items.forEach(it => {
                     const price = approxPrice
                     const qty = parseInt(it.quantity) || 1
-                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {} }
+                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {}, plats: {} }
                     itemsMap[it.name].count += qty
                     itemsMap[it.name].revenue += (price * qty)
                     itemsMap[it.name].locs[locStr] = (itemsMap[it.name].locs[locStr] || 0) + qty
                     itemsMap[it.name].days[dayStr] = (itemsMap[it.name].days[dayStr] || 0) + qty
+                    itemsMap[it.name].plats[platStr] = (itemsMap[it.name].plats[platStr] || 0) + qty
                 })
             }
         })
@@ -424,7 +426,10 @@ export default function Performance() {
                 let bestDay = 'N/A', bestDayVal = -1
                 Object.keys(it.days).forEach(k => { if (it.days[k] > bestDayVal) { bestDayVal = it.days[k]; bestDay = k } })
 
-                return { ...it, id: idx + 1, bestLoc, bestDay }
+                let bestPlat = 'N/A', bestPlatVal = -1
+                Object.keys(it.plats).forEach(k => { if (it.plats[k] > bestPlatVal) { bestPlatVal = it.plats[k]; bestPlat = k } })
+
+                return { ...it, id: idx + 1, bestLoc, bestDay, bestPlat }
             })
     }, [realSalesArray, restaurants, brands])
 
@@ -698,19 +703,31 @@ export default function Performance() {
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(200px, 3fr) 90px minmax(130px, 2fr) 100px 130px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(180px, 2fr) 90px minmax(120px, 1.5fr) 100px 90px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         <div>#</div>
                         <div style={{ textAlign: 'center' }}>Brand</div>
                         <div>{t('topProduct')}</div>
                         <div>Vândute</div>
                         <div>Top Locație</div>
                         <div>Top Ziua</div>
+                        <div>Platformă</div>
                         <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                     </div>
                     {paginatedItems.map((item) => {
                         const imgUrl = getProductImage(item.name)
+                        
+                        const getPlatFormat = (plat) => {
+                            if (plat === 'glovo') return { name: 'Glovo', color: '#facc15' }
+                            if (plat === 'bolt') return { name: 'Bolt', color: '#22c55e' }
+                            if (plat === 'tazz') return { name: 'Tazz', color: '#ef4444' }
+                            if (plat === 'wolt') return { name: 'Wolt', color: '#3b82f6' }
+                            if (plat === 'takeaway') return { name: 'Takeaway', color: '#f97316' }
+                            return { name: plat.charAt(0).toUpperCase() + plat.slice(1), color: '#6366f1' } // iiko
+                        }
+                        const platInfo = getPlatFormat(item.bestPlat)
+
                         return (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(200px, 3fr) 90px minmax(130px, 2fr) 100px 130px', alignItems: 'center', padding: '14px 20px', cursor: 'pointer', transition: 'all 0.15s', borderBottom: '1px solid var(--glass-border)' }} title={`Deschide Analytics: ${item.name}`}>
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(180px, 2fr) 90px minmax(120px, 1.5fr) 100px 90px 120px', alignItems: 'center', padding: '14px 20px', cursor: 'pointer', transition: 'all 0.15s', borderBottom: '1px solid var(--glass-border)' }} title={`Deschide Analytics: ${item.name}`}>
                             <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
                             
                             <div>
@@ -738,8 +755,12 @@ export default function Performance() {
                                 {item.bestLoc.length > 20 ? item.bestLoc.substring(0, 20) + '...' : item.bestLoc}
                             </div>
                             
-                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#6366f1' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-color)' }}>
                                 {item.bestDay}
+                            </div>
+
+                            <div style={{ fontSize: '13px', fontWeight: '800', color: platInfo.color }}>
+                                {platInfo.name}
                             </div>
 
                             <div style={{ textAlign: 'right' }}>
