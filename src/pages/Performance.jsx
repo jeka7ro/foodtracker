@@ -481,7 +481,7 @@ export default function Performance() {
                 const dt = new Date(sale.placed_at)
                 const dayStr = dayMap[dt.getDay()]
                 const locStr = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
-                const platStr = sale.source || 'iiko'
+                const platStr = sale.platform || sale.source || 'iiko'
 
                 sale.items.forEach(it => {
                     const price = approxPrice
