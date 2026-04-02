@@ -237,7 +237,6 @@ function Layout({ children }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '0 12px',
                     boxSizing: 'border-box',
                 }}>
                     <img
@@ -245,13 +244,9 @@ function Layout({ children }) {
                         alt="Logo"
                         style={{
                             height: sidebarCollapsed ? '52px' : '68px',
-                            width: '100%',
-                            maxWidth: '100%',
+                            width: 'auto',
                             objectFit: 'contain',
-                            display: 'block',
-                            margin: '0 auto',
                             transition: 'height 0.2s',
-                            transform: 'translateX(-4px)', /* Compensare optica pentru vizualul asimetric al imaginii .png */
                         }}
                     />
                 </div>

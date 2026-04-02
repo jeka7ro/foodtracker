@@ -411,9 +411,14 @@ export default function Performance() {
         realSalesArray.forEach(sale => {
             const r = activeRestaurants.find(x => x.id === sale.restaurant_id)
             const rName = r ? r.name : `ID: ${sale.restaurant_id}`
-            if (!locMap[rName]) locMap[rName] = { name: rName, sales: 0, orders: 0 }
+            if (!locMap[rName]) locMap[rName] = { name: rName, sales: 0, orders: 0, products: 0 }
             locMap[rName].sales += parseFloat(sale.total_amount) || 0
             locMap[rName].orders += 1
+            if (sale.items && Array.isArray(sale.items)) {
+                sale.items.forEach(it => {
+                    locMap[rName].products += (it.quantity || 1)
+                })
+            }
         })
         return Object.values(locMap).sort((a,b) => b.sales - a.sales)
     }, [realSalesArray, activeRestaurants])
@@ -972,11 +977,12 @@ export default function Performance() {
                     <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 100px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div>Locație</div>
                     <div style={{ textAlign: 'center' }}>Brand</div>
                     <div style={{ textAlign: 'right' }}>Vânzări</div>
                     <div style={{ textAlign: 'center' }}>Comenzi</div>
+                    <div style={{ textAlign: 'center' }}>Produse</div>
                     <div style={{ textAlign: 'right' }}>AOV</div>
                 </div>
 
@@ -995,7 +1001,7 @@ export default function Performance() {
                                         <div 
                                             key={idx} 
                                             className="product-row-hover" 
-                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 100px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1015,6 +1021,9 @@ export default function Performance() {
                                             </div>
                                             <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
                                                 {loc.orders || 0}
+                                            </div>
+                                            <div style={{ textAlign: 'center', color: 'var(--text-color)' }}>
+                                                {loc.products || 0}
                                             </div>
                                             <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
                                                 {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
