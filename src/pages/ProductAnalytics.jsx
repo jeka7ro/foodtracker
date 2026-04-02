@@ -198,12 +198,14 @@ export default function ProductAnalytics() {
 
             const dt = new Date(sale.placed_at)
             let dk = ''
+            let ts = dt.getTime()
             if (activePeriod === 'today' || activePeriod === 'yesterday') {
                 dk = `${String(dt.getHours()).padStart(2,'0')}:00`
+                ts = dt.getHours()
             } else {
                 dk = dt.toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' })
             }
-            if (!mapDyn[dk]) mapDyn[dk] = { name: dk, rev: 0, units: 0 }
+            if (!mapDyn[dk]) mapDyn[dk] = { name: dk, rev: 0, units: 0, _ts: ts }
             mapDyn[dk].rev += thisRev
             mapDyn[dk].units += pQty
 
@@ -212,7 +214,7 @@ export default function ProductAnalytics() {
             mapLoc[rName].units += pQty
         })
 
-        // Price stats per location (approximated from total_amount / total items qty)
+        // Price stats per location — filter outliers via IQR before averaging
         const priceByLoc = {}
         salesData.forEach(sale => {
             const matchedItems = (sale.items || []).filter(it => it.name === decodedName)
@@ -230,15 +232,32 @@ export default function ProductAnalytics() {
                 priceByLoc[rName].revenue += pricePerUnit
             })
         })
-        const priceStats = Object.values(priceByLoc).map(loc => ({
-            name: loc.name,
-            min: Math.min(...loc.prices),
-            max: Math.max(...loc.prices),
-            avg: loc.total / loc.count,
-            count: loc.count,
-            revenue: loc.revenue,
-            score: 0
-        })).sort((a,b) => a.avg - b.avg)
+
+        // IQR outlier filter per location
+        const iqrFilter = (prices) => {
+            if (prices.length < 4) return prices  // not enough data to filter
+            const sorted = [...prices].sort((a, b) => a - b)
+            const q1 = sorted[Math.floor(sorted.length * 0.25)]
+            const q3 = sorted[Math.floor(sorted.length * 0.75)]
+            const iqr = q3 - q1
+            const lo = q1 - 1.5 * iqr
+            const hi = q3 + 1.5 * iqr
+            return sorted.filter(p => p >= lo && p <= hi)
+        }
+        const priceStats = Object.values(priceByLoc).map(loc => {
+            const cleanPrices = iqrFilter(loc.prices)
+            const avg = cleanPrices.reduce((s, p) => s + p, 0) / (cleanPrices.length || 1)
+            return {
+                name: loc.name,
+                min: Math.min(...cleanPrices),
+                max: Math.max(...cleanPrices),
+                avg,
+                count: loc.count,
+                revenue: loc.revenue,
+                score: 0,
+                outlierRemoved: loc.prices.length - cleanPrices.length
+            }
+        }).sort((a,b) => a.avg - b.avg)
 
         // Compute performance score per location (0-10)
         const maxRevenue = Math.max(...priceStats.map(l => l.revenue), 1)
@@ -257,7 +276,7 @@ export default function ProductAnalytics() {
         return {
             rev: totalRev,
             units: totalUnits,
-            chartDynamic: Object.values(mapDyn),
+            chartDynamic: Object.values(mapDyn).sort((a, b) => a._ts - b._ts),
             chartLocations: Object.values(mapLoc).sort((a,b)=>b.rev - a.rev),
             recentTransactions: transactionsList.sort((a,b) => b.date - a.date),
             priceStats
