@@ -245,7 +245,7 @@ function Layout({ children }) {
                         alt="Logo"
                         style={{
                             height: sidebarCollapsed ? '52px' : '68px',
-                            width: 'auto',
+                            width: '100%',
                             maxWidth: '100%',
                             objectFit: 'contain',
                             display: 'block',
