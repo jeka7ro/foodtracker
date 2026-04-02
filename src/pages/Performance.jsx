@@ -142,7 +142,7 @@ export default function Performance() {
     const [customStartDate, setCustomStartDate] = useState('')
     const [customEndDate, setCustomEndDate] = useState('')
     const [pageNumber, setPageNumber] = useState(1)
-    const [itemsPerPage, setItemsPerPage] = useState(8)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
     useEffect(() => {
         Promise.all([
@@ -875,25 +875,26 @@ export default function Performance() {
                 {topItems.length > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '20px', borderTop: 'var(--glass-border)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Rânduri:</span>
-                            <div style={{ display: 'flex', gap: '4px', background: 'var(--input-bg)', padding: '4px', borderRadius: '8px' }}>
-                                {[8, 15, 30, 100].map(n => (
-                                    <button 
-                                        key={n} 
-                                        onClick={() => { setItemsPerPage(n); setPageNumber(1); }} 
-                                        style={{ 
-                                            padding: '4px 12px', fontSize: '12px', fontWeight: '700', borderRadius: '6px', 
-                                            background: itemsPerPage === n ? (isDark ? 'rgba(255,255,255,0.1)' : '#fff') : 'transparent', 
-                                            color: itemsPerPage === n ? 'var(--text-color)' : 'var(--text-secondary)', 
-                                            border: 'none', 
-                                            boxShadow: itemsPerPage === n ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', 
-                                            cursor: 'pointer', transition: 'all 0.15s' 
-                                        }}
-                                    >
-                                        {n}
-                                    </button>
-                                ))}
-                            </div>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Rânduri pe pagină:</span>
+                            <select 
+                                value={itemsPerPage}
+                                onChange={e => { setItemsPerPage(Number(e.target.value)); setPageNumber(1); }}
+                                style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '6px',
+                                    border: '1px solid var(--glass-border)',
+                                    background: 'transparent',
+                                    color: 'var(--text-color)',
+                                    fontSize: '13px',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={10} style={{ color: '#000' }}>10</option>
+                                <option value={20} style={{ color: '#000' }}>20</option>
+                                <option value={50} style={{ color: '#000' }}>50</option>
+                                <option value={100} style={{ color: '#000' }}>100</option>
+                            </select>
                         </div>
 
                         {totalPages > 1 && (
