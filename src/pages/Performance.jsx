@@ -997,7 +997,7 @@ export default function Performance() {
                             <>
                                 {locsPaginated.map((loc, idx) => {
                                     const restaurantObj = activeRestaurants.find(r => r.name === loc.name);
-                                    const brandObj = restaurantObj?.brands;
+                                    const brandObj = restaurantObj ? brands.find(b => b.id === restaurantObj.brand_id) : null;
                                     const pct = Math.min((loc.sales / locsMaxSales) * 100, 100);
                                     return (
                                         <div 
