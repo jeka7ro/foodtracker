@@ -989,7 +989,7 @@ export default function Performance() {
                     <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(280px, 2fr) 100px 100px 120px minmax(250px, 3fr) 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) 100px 100px 120px minmax(200px, 2fr) 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div style={{ textAlign: 'center' }}>#</div>
                     <div>Brand Locație</div>
                     <div style={{ textAlign: 'center' }}>Comenzi</div>
@@ -1016,7 +1016,7 @@ export default function Performance() {
                                         <div 
                                             key={idx} 
                                             className="product-row-hover" 
-                                            style={{ display: 'grid', gridTemplateColumns: '40px minmax(280px, 2fr) 100px 100px 120px minmax(250px, 3fr) 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                            style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) 100px 100px 120px minmax(200px, 2fr) 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
                                         >
                                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 'bold', textAlign: 'center' }}>
                                                 {((validPageNumber - 1) * locationsItemsPerPage) + idx + 1}
@@ -1049,10 +1049,8 @@ export default function Performance() {
                                             <div style={{ paddingLeft: '20px', display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                                                 {loc.topProd ? (
                                                     <>
-                                                        {loc.topProd.image_url ? (
+                                                        {loc.topProd.image_url && (
                                                             <img src={loc.topProd.image_url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
-                                                        ) : (
-                                                            <div style={{ width: '28px', height: '28px', background: 'var(--glass-border)', borderRadius: '4px', flexShrink: 0 }}></div>
                                                         )}
                                                         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                                                             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px' }}>{loc.topProd.name}</span>
