@@ -695,23 +695,12 @@ export default function Performance() {
             <div className="glass-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 className="card-heading" style={{margin:0}}>{t('productSales')}</h3>
-                    <select 
-                        className="input-field" 
-                        value={itemsPerPage} 
-                        onChange={e => { setItemsPerPage(Number(e.target.value)); setPageNumber(1); }}
-                        style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', minHeight: 'unset', height: '32px' }}
-                    >
-                        <option value={8}>8 {t('piecesOrdered').split(' ')[0]}</option>
-                        <option value={15}>15 {t('piecesOrdered').split(' ')[0]}</option>
-                        <option value={30}>30 {t('piecesOrdered').split(' ')[0]}</option>
-                        <option value={100}>100 {t('piecesOrdered').split(' ')[0]}</option>
-                    </select>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '40px 50px 2fr 90px 1.5fr 100px auto', padding: '12px 20px', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(200px, 3fr) 90px minmax(130px, 2fr) 100px 130px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         <div>#</div>
-                        <div>Brand</div>
+                        <div style={{ textAlign: 'center' }}>Brand</div>
                         <div>{t('topProduct')}</div>
                         <div>Vândute</div>
                         <div>Top Locație</div>
@@ -721,8 +710,8 @@ export default function Performance() {
                     {paginatedItems.map((item) => {
                         const imgUrl = getProductImage(item.name)
                         return (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px 50px 2fr 90px 1.5fr 100px auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
-                            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '30px 48px minmax(200px, 3fr) 90px minmax(130px, 2fr) 100px 130px', alignItems: 'center', padding: '14px 20px', cursor: 'pointer', transition: 'all 0.15s', borderBottom: '1px solid var(--glass-border)' }} title={`Deschide Analytics: ${item.name}`}>
+                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
                             
                             <div>
                                 {item.brand?.logo_url ? (
@@ -761,16 +750,39 @@ export default function Performance() {
                     {paginatedItems.length === 0 && <div style={{padding:'32px', textAlign:'center', color:'var(--text-secondary)'}}>{t('noProducts')}</div>}
                 </div>
                 
-                {totalPages > 1 && (
+                {topItems.length > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '20px', borderTop: 'var(--glass-border)' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>{t('showItems').replace('{n}', itemsPerPage)}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-color)' }}>{t('pageOf').replace('{p}', pageNumber).replace('{t}', totalPages)}</span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={() => setPageNumber(Math.max(1, pageNumber - 1))} disabled={pageNumber === 1} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&lt;</button>
-                                <button onClick={() => setPageNumber(Math.min(totalPages, pageNumber + 1))} disabled={pageNumber === totalPages} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&gt;</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Rânduri:</span>
+                            <div style={{ display: 'flex', gap: '4px', background: 'var(--input-bg)', padding: '4px', borderRadius: '8px' }}>
+                                {[8, 15, 30, 100].map(n => (
+                                    <button 
+                                        key={n} 
+                                        onClick={() => { setItemsPerPage(n); setPageNumber(1); }} 
+                                        style={{ 
+                                            padding: '4px 12px', fontSize: '12px', fontWeight: '700', borderRadius: '6px', 
+                                            background: itemsPerPage === n ? (isDark ? 'rgba(255,255,255,0.1)' : '#fff') : 'transparent', 
+                                            color: itemsPerPage === n ? 'var(--text-color)' : 'var(--text-secondary)', 
+                                            border: 'none', 
+                                            boxShadow: itemsPerPage === n ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', 
+                                            cursor: 'pointer', transition: 'all 0.15s' 
+                                        }}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
                             </div>
                         </div>
+
+                        {totalPages > 1 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-color)' }}>{t('pageOf').replace('{p}', pageNumber).replace('{t}', totalPages)}</span>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button onClick={() => setPageNumber(Math.max(1, pageNumber - 1))} disabled={pageNumber === 1} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&lt;</button>
+                                    <button onClick={() => setPageNumber(Math.min(totalPages, pageNumber + 1))} disabled={pageNumber === totalPages} className="btn-secondary" style={{padding:'8px', borderRadius:'10px'}}>&gt;</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
