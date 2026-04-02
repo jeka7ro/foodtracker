@@ -87,9 +87,14 @@ const dict = {
     topProduct: { ro: 'Produs (Top)', en: 'Top Product', ru: 'Продукт (Топ)' },
     salesTotal: { ro: 'Vânzări Totale', en: 'Total Sales', ru: 'Всего Продано' },
     piecesOrdered: { ro: 'bucăți comandate', en: 'pieces ordered', ru: 'штук заказано' },
+    piecesShort: { ro: 'buc.', en: 'pcs.', ru: 'шт.' },
     noProducts: { ro: 'Niciun produs pentru perioada selectată.', en: 'No products for selected period.', ru: 'Нет продуктов за выбранный период.' },
     showItems: { ro: 'Afișare {n} rânduri pe pagină', en: 'Showing {n} rows per page', ru: 'Показано {n} строк на странице' },
     pageOf: { ro: 'Pagina {p} din {t}', en: 'Page {p} of {t}', ru: 'Страница {p} из {t}' },
+    soldPiecesHeader: { ro: 'Vândute', en: 'Sold', ru: 'Продано' },
+    topLocationItem: { ro: 'Top Locație', en: 'Top Location', ru: 'Топ Локация' },
+    topDayItem: { ro: 'Top Ziua', en: 'Top Day', ru: 'Лучший День' },
+    platformItem: { ro: 'Platformă', en: 'Platform', ru: 'Платформа' },
     days: {
         ro: ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'],
         en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -468,7 +473,7 @@ export default function Performance() {
     const topItems = useMemo(() => {
         if (!realSalesArray.length) return []
         const itemsMap = {}
-        const dayMap = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă']
+        const dayMap = t('days')
         
         realSalesArray.forEach(sale => {
             if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
@@ -509,7 +514,7 @@ export default function Performance() {
 
                 return { ...it, id: idx + 1, bestLoc, bestDay, bestPlat }
             })
-    }, [realSalesArray, restaurants, brands])
+    }, [realSalesArray, restaurants, brands, l])
 
     const paginatedItems = topItems.slice((pageNumber - 1) * itemsPerPage, pageNumber * itemsPerPage)
     const totalPages = Math.ceil(topItems.length / itemsPerPage)
@@ -914,10 +919,10 @@ export default function Performance() {
                         <div>#</div>
                         <div style={{ textAlign: 'center' }}>Brand</div>
                         <div>{t('topProduct')}</div>
-                        <div>Vândute</div>
-                        <div>Top Locație</div>
-                        <div>Top Ziua</div>
-                        <div>Platformă</div>
+                        <div>{t('soldPiecesHeader')}</div>
+                        <div>{t('topLocationItem')}</div>
+                        <div>{t('topDayItem')}</div>
+                        <div>{t('platformItem')}</div>
                         <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                     </div>
                     {paginatedItems.map((item) => {
@@ -955,7 +960,7 @@ export default function Performance() {
                             </div>
                             
                             <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-color)' }}>
-                                {item.count} <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>buc.</span>
+                                {item.count} <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>{t('piecesShort')}</span>
                             </div>
                             
                             <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px' }} title={item.bestLoc}>
