@@ -239,16 +239,28 @@ function Layout({ children }) {
                     justifyContent: 'center',
                     boxSizing: 'border-box',
                 }}>
-                    <img
-                        src="/getapp_smart_food_white.png"
-                        alt="Logo"
-                        style={{
-                            height: sidebarCollapsed ? '52px' : '68px',
-                            width: 'auto',
-                            objectFit: 'contain',
-                            transition: 'height 0.2s',
-                        }}
-                    />
+                    <div style={{
+                        height: sidebarCollapsed ? '42px' : '64px',
+                        width: sidebarCollapsed ? '42px' : '160px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                    }}>
+                        <img
+                            src="/getapp_smart_food_white.png"
+                            alt="Logo"
+                            style={{
+                                height: '100%',
+                                width: 'auto',
+                                objectFit: 'cover',
+                                objectPosition: 'left center',
+                                minWidth: sidebarCollapsed ? 'auto' : '260px', /* force scale against parent width constraint */
+                                marginLeft: sidebarCollapsed ? '-10px' : '0px',
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Nav */}
