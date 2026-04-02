@@ -245,7 +245,7 @@ function Layout({ children }) {
                         overflow: 'hidden',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        justifyContent: 'flex-start',
                         transition: 'all 0.2s',
                     }}>
                         <img
