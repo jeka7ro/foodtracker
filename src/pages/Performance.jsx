@@ -643,18 +643,21 @@ export default function Performance() {
                                             tick={(props) => {
                                                 const { x, y, payload } = props
                                                 const label = payload.value
+                                                const mainLabel = showDayNames ? label.split(' ')[0] : label
+                                                
                                                 if (!showDayNames) {
                                                     return <text x={x} y={y+12} textAnchor="middle" fill="var(--text-secondary)" fontSize={10}>{label}</text>
                                                 }
-                                                const monthMap = { 'ian':0,'feb':1,'mar':2,'apr':3,'mai':4,'iun':5,'iul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11 }
-                                                const parts = label.replace('.','').trim().split(' ')
-                                                const dayN = parseInt(parts[0])
-                                                const monN = monthMap[parts[1]] ?? 0
+                                                
+                                                const dateParts = mainLabel.split(/[\.\/]/)
+                                                const dayN = parseInt(dateParts[0])
+                                                const monN = parseInt(dateParts[1]) - 1
                                                 const yr = new Date().getFullYear()
                                                 
-                                                if (isNaN(dayN)) {
+                                                if (isNaN(dayN) || isNaN(monN)) {
                                                     return <text x={x} y={y+12} textAnchor="middle" fill="var(--text-secondary)" fontSize={10}>{label}</text>
                                                 }
+                                                
                                                 const d = new Date(yr, monN, dayN)
                                                 const dayNames = ['Du','Lu','Ma','Mi','Jo','Vi','Sâ']
                                                 const dayName = dayNames[d.getDay()]
@@ -664,11 +667,13 @@ export default function Performance() {
                                                 const holiday = holidays[ddMM]
                                                 const isLegal = holiday?.legal
                                                 const textColor = isLegal ? '#f59e0b' : isWeekend ? '#116d74' : 'var(--text-secondary)'
+                                                
                                                 return (
-                                                    <g>
-                                                        <text x={x} y={y+10} textAnchor="middle" fill={textColor} fontSize={10} fontWeight={isLegal || isWeekend ? '700' : '400'}>{label}</text>
+                                                    <g style={{ cursor: holiday ? 'help' : 'default' }}>
+                                                        {holiday && <title>{holiday.label} {isLegal ? '(Sărbătoare Legală)' : ''}</title>}
+                                                        <text x={x} y={y+10} textAnchor="middle" fill={textColor} fontSize={10} fontWeight={isLegal || isWeekend ? '700' : '400'}>{mainLabel}</text>
                                                         <text x={x} y={y+22} textAnchor="middle" fill={textColor} fontSize={9} fontWeight={isLegal ? '800' : '400'}>{dayName}</text>
-                                                        {holiday && <text x={x} y={y+34} textAnchor="middle" fontSize={9}>{holiday.label.split(' ')[0]}</text>}
+                                                        {holiday && <text x={x} y={y+34} textAnchor="middle" fill={textColor} fontSize={11}>{holiday.label.split(' ')[0]}</text>}
                                                     </g>
                                                 )
                                             }}
@@ -680,6 +685,18 @@ export default function Performance() {
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', background: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}
                                     labelStyle={{ fontWeight: '800', color: 'var(--text-color)', marginBottom: '8px' }}
+                                    labelFormatter={(label) => {
+                                        const cleanPart = label.split(' ')[0]
+                                        const dateParts = cleanPart.split(/[\.\/]/)
+                                        const dayN = parseInt(dateParts[0])
+                                        const monN = parseInt(dateParts[1]) - 1
+                                        if (!isNaN(dayN) && !isNaN(monN)) {
+                                            const ddMM = `${String(dayN).padStart(2,'0')}-${String(monN+1).padStart(2,'0')}`
+                                            const hol = getRomanianHolidays(new Date().getFullYear())[ddMM]
+                                            if (hol) return `${label} - ${hol.label}`
+                                        }
+                                        return label
+                                    }}
                                     formatter={(value, name) => [name === t('sales') ? `${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : value, name]}
                                 />
                                 <Legend wrapperStyle={{ paddingTop: '16px', fontSize: '13px', fontWeight: '700' }} />
