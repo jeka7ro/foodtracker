@@ -658,7 +658,7 @@ export default function Performance() {
                                             axisLine={false} 
                                             tickMargin={4} 
                                             height={showDayNames ? 42 : 20}
-                                            interval={activePeriod === 'year' ? 0 : 'preserveStartEnd'}
+                                            interval={0}
                                             tick={(props) => {
                                                 const { x, y, payload } = props
                                                 const label = payload.value
@@ -733,27 +733,28 @@ export default function Performance() {
                     </div>
                 </div>
 
-                <div className="glass-card">
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
                     <h3 className="card-heading">{t('topLocations')}</h3>
                     {locationData.length > 0 ? (
-                        <div style={{ height: '320px', marginLeft: '-20px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={locationData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="transparent" />
-                                    <XAxis type="number" hide />
-                                    <YAxis type="category" dataKey="name" stroke="var(--text-color)" fontSize={12} fontWeight={600} tickLine={false} axisLine={false} width={130} />
-                                    <Tooltip 
-                                        cursor={{ fill: 'var(--glass-bg-hover)' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
-                                        formatter={(value) => [`${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON`, t('sales')]}
-                                    />
-                                    <Bar dataKey="sales" onClick={handleLocationClick} fill="#10b981" radius={[0, 8, 8, 0]} barSize={24} style={{ cursor: 'pointer' }} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO')} lei` }}>
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', marginTop: '12px' }}>
+                            {locationData.map(loc => {
+                                const maxSales = Math.max(...locationData.map(l => l.sales), 1);
+                                const pct = (loc.sales / maxSales) * 100;
+                                return (
+                                    <div key={loc.name} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => handleLocationClick(loc)}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>
+                                            <span style={{ color: 'var(--text-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '12px' }} title={loc.name}>{loc.name}</span>
+                                            <span style={{ color: 'var(--text-color)', fontWeight: 800, flexShrink: 0 }}>{loc.sales.toLocaleString('ro-RO')} lei</span>
+                                        </div>
+                                        <div style={{ width: '100%', height: '8px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '4px' }}></div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     ) : (
-                        <div style={{ height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
                     )}
                 </div>
             </div>

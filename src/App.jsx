@@ -670,7 +670,7 @@ function Layout({ children }) {
                     {children}
                 </main>
             </div>
-            <SmartAssistant />
+            {/* <SmartAssistant /> */}
         </div>
     )
 }
