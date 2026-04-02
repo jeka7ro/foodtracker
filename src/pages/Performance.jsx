@@ -619,47 +619,51 @@ export default function Performance() {
             </div>
 
             <div className="kpi-grid">
-                <div className="glass-card">
-                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                        <div style={{padding:'10px', background:'rgba(17,109,116,0.1)', borderRadius:'12px', color:'#116d74'}}><CreditCard size={24} /></div>
-                        <span className="kpi-title">{t('totalRevenue')}</span>
+                <div className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}>
+                    <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
+                        <div style={{padding:'8px', background:'rgba(17,109,116,0.1)', borderRadius:'10px', color:'#116d74'}}><CreditCard size={20} /></div>
+                        <span className="kpi-title" style={{ margin: 0, fontSize: '13px', paddingTop: '2px' }}>{t('totalRevenue')}</span>
                     </div>
-                    <div className="kpi-value">{totalSales.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
+                    <div className="kpi-value" style={{ margin: 0, fontSize: '20px' }}>
+                        {totalSales.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON
+                    </div>
                 </div>
 
                 <div 
                     className="glass-card"
-                    style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }}
+                    style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}
                     onClick={() => { document.getElementById('products-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-                    title="Click pentru a naviga la lista detaliată de produse"
+                    title="Navighează la lista detaliată"
                 >
-                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                        <div style={{padding:'10px', background:'rgba(16,185,129,0.1)', borderRadius:'12px', color:'#10b981'}}><ShoppingBag size={24} /></div>
-                        <span className="kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
+                        <div style={{padding:'8px', background:'rgba(16,185,129,0.1)', borderRadius:'10px', color:'#10b981'}}><ShoppingBag size={20} /></div>
+                        <span className="kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0, fontSize: '13px', paddingTop: '2px' }}>
                             Comenzi & Produse
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                         </span>
                     </div>
                     
-                    <div className="kpi-value" style={{ fontSize: '24px', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
-                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+                    <div className="kpi-value" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap', margin: 0 }}>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '4px'}}>
                               {isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}
-                              <span style={{fontSize:'12px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comenzi</span>
+                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comenzi</span>
                          </div>
-                         <div style={{ width: '1px', background: 'var(--glass-border)', height: '24px' }}></div>
-                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+                         <div style={{ width: '1px', background: 'var(--glass-border)', height: '16px' }}></div>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '4px'}}>
                               {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
-                              <span style={{fontSize:'12px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Produse</span>
+                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Produse</span>
                          </div>
                     </div>
                 </div>
 
-                <div className="glass-card">
-                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                        <div style={{padding:'10px', background:'rgba(245,158,11,0.1)', borderRadius:'12px', color:'#f59e0b'}}><Activity size={24} /></div>
-                        <span className="kpi-title">{t('aov')}</span>
+                <div className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}>
+                    <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
+                        <div style={{padding:'8px', background:'rgba(245,158,11,0.1)', borderRadius:'10px', color:'#f59e0b'}}><Activity size={20} /></div>
+                        <span className="kpi-title" style={{ margin: 0, fontSize: '13px', paddingTop: '2px' }}>{t('aov')}</span>
                     </div>
-                    <div className="kpi-value">{avgBasket} RON</div>
+                    <div className="kpi-value" style={{ margin: 0, fontSize: '20px' }}>
+                        {avgBasket} RON
+                    </div>
                 </div>
             </div>
 
