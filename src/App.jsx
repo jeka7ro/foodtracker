@@ -251,6 +251,7 @@ function Layout({ children }) {
                             display: 'block',
                             margin: '0 auto',
                             transition: 'height 0.2s',
+                            transform: 'translateX(-4px)', /* Compensare optica pentru vizualul asimetric al imaginii .png */
                         }}
                     />
                 </div>
