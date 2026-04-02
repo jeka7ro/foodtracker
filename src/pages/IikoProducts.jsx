@@ -79,7 +79,7 @@ export default function IikoProducts() {
 
                 if (upCat.includes('IKURA') || upName.includes('IKURA')) computedBrandName = 'Ikura Sushi';
                 else if (upCat.includes('SMASH') || upName.includes('SMASH')) computedBrandName = 'Smash Me';
-                else if (upCat.includes('W LS') || upCat.includes('WE LOVE')) computedBrandName = 'We Love Sushi';
+                else if (upCat.includes('W LS') || upCat.includes('WE LOVE') || upName.includes('W LS') || upName.includes('WE LOVE') || upName.includes('W LOVE')) computedBrandName = 'We Love Sushi';
                 else if (upCat.includes('BOWL')) computedBrandName = 'Super Bowl';
 
                 return {
@@ -107,7 +107,7 @@ export default function IikoProducts() {
         let list = products;
         if (selectedBrand !== 'all') {
             const bb = brands.find(b => b.id === selectedBrand);
-            if(bb) list = list.filter(p => p.brand_name === bb.name);
+            if(bb) list = list.filter(p => p.brand_name.toLowerCase().replace(/\s/g, '') === bb.name.toLowerCase().replace(/\s/g, ''));
         }
         if (search) {
             const q = search.toLowerCase().trim()
@@ -200,9 +200,16 @@ export default function IikoProducts() {
                                     ) : (
                                         <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ccc' }}>{t('noImage')}</div>
                                     )}
-                                    <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>
-                                        {p.brand_name}
-                                    </div>
+                                    {(() => {
+                                        const matchedBrand = brands.find(b => b.name.toLowerCase().replace(/\s/g,'') === p.brand_name.toLowerCase().replace(/\s/g,''));
+                                        return matchedBrand?.logo_url ? (
+                                            <img src={matchedBrand.logo_url} alt="" style={{ position: 'absolute', top: 12, right: 12, width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.8)', objectFit: 'cover', background:'#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }} title={p.brand_name} />
+                                        ) : (
+                                            <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>
+                                                {p.brand_name}
+                                            </div>
+                                        );
+                                    })()}
                                     <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(255,255,255,0.9)', color: '#000', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
                                         #{idx + 1 + (currentPage - 1) * pageSize}
                                     </div>
@@ -231,7 +238,6 @@ export default function IikoProducts() {
                     )}
                 </>
             )}
-            <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } } button { padding: 8px 16px; border-radius: 8px; cursor: pointer; border: none; background: #6366f1; color: white; } button:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none;}`}</style>
         </div>
     )
 }

@@ -99,6 +99,8 @@ const dict = {
     detailedLocationAnalysis: { ro: 'Analiză Detaliată Locații', en: 'Detailed Location Analysis', ru: 'Детальный анализ по локациям' },
     brandLocationHeader: { ro: 'Brand Locație', en: 'Brand Location', ru: 'Бренд Локация' },
     rowsPerPage: { ro: 'Rânduri pe pagină:', en: 'Rows per page:', ru: 'Строк на странице:' },
+    rowsLabel: { ro: 'Rânduri:', en: 'Rows:', ru: 'Строки:' },
+    noLocationData: { ro: 'Nu există date de locație...', en: 'No location data...', ru: 'Нет данных о локации...' },
     currency: { ro: 'lei', en: 'RON', ru: 'лей' },
     days: {
         ro: ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'],
@@ -1090,7 +1092,7 @@ export default function Performance() {
                                                         })()}
                                                         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', textAlign: 'left' }}>
                                                             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px' }}>{loc.topProd.name}</span>
-                                                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{loc.topProd.count} buc.</span>
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{loc.topProd.count} {t('piecesShort')}</span>
                                                         </div>
                                                     </>
                                                 ) : <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>-</span>}
@@ -1102,22 +1104,22 @@ export default function Performance() {
                                                 {loc.products || 0}
                                             </div>
                                             <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
-                                                {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
+                                                {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} {t('currency')}
                                             </div>
                                             <div style={{ textAlign: 'right', fontWeight: '800' }}>
-                                                {(loc.sales || 0).toLocaleString('ro-RO')} lei
+                                                {(loc.sales || 0).toLocaleString('ro-RO')} {t('currency')}
                                             </div>
                                         </div>
                                     )
                                 })}
                                 {allLocationData.length === 0 && (
-                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>Nu există date de locație...</div>
+                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>{t('noLocationData')}</div>
                                 )}
 
                                 {allLocationData.length > 0 && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '0px solid var(--glass-border)', paddingTop: '16px', marginTop: '8px', padding: '0 20px 14px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Rânduri:</span>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{t('rowsLabel')}</span>
                                             <select 
                                                 value={locationsItemsPerPage} 
                                                 onChange={e => { setLocationsItemsPerPage(Number(e.target.value)); setLocationsPageNumber(1) }}
