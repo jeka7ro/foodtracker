@@ -79,6 +79,7 @@ const dict = {
     salesStats: { ro: 'Dinamica Vânzărilor', en: 'Sales Dynamics', ru: 'Динамика Продаж' },
     sales: { ro: 'Vânzări', en: 'Sales', ru: 'Продажи' },
     orders: { ro: 'Comenzi', en: 'Orders', ru: 'Заказы' },
+    products: { ro: 'Produse', en: 'Products', ru: 'Продукты' },
     topLocations: { ro: 'Top Locații', en: 'Top Locations', ru: 'Топ Локации' },
     noData: { ro: 'Fără date.', en: 'No data.', ru: 'Нет данных.' },
     heatmap: { ro: 'Intensitatea Vânzărilor pe Ore (Heatmap)', en: 'Sales Heatmap by Hour', ru: 'Интенсивность продаж по часам (Тепловая карта)' },
@@ -95,6 +96,10 @@ const dict = {
     topLocationItem: { ro: 'Top Locație', en: 'Top Location', ru: 'Топ Локация' },
     topDayItem: { ro: 'Top Ziua', en: 'Top Day', ru: 'Лучший День' },
     platformItem: { ro: 'Platformă', en: 'Platform', ru: 'Платформа' },
+    detailedLocationAnalysis: { ro: 'Analiză Detaliată Locații', en: 'Detailed Location Analysis', ru: 'Детальный анализ по локациям' },
+    brandLocationHeader: { ro: 'Brand Locație', en: 'Brand Location', ru: 'Бренд Локация' },
+    rowsPerPage: { ro: 'Rânduri pe pagină:', en: 'Rows per page:', ru: 'Строк на странице:' },
+    currency: { ro: 'lei', en: 'RON', ru: 'лей' },
     days: {
         ro: ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'],
         en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -986,7 +991,7 @@ export default function Performance() {
                 {topItems.length > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '20px', borderTop: 'var(--glass-border)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Rânduri pe pagină:</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>{t('rowsPerPage')}</span>
                             <select 
                                 value={itemsPerPage}
                                 onChange={e => { setItemsPerPage(Number(e.target.value)); setPageNumber(1); }}
@@ -1023,17 +1028,17 @@ export default function Performance() {
 
             <div className="glass-card" id="locations-table-section" style={{ scrollMarginTop: '80px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
+                    <h3 className="card-heading" style={{margin:0}}>{t('detailedLocationAnalysis')}</h3>
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) minmax(200px, 2.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div style={{ textAlign: 'center' }}>#</div>
-                    <div>Brand Locație</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>Top Produs</div>
-                    <div style={{ textAlign: 'right' }}>Comenzi</div>
-                    <div style={{ textAlign: 'right' }}>Produse</div>
-                    <div style={{ textAlign: 'right' }}>Coș Mediu</div>
-                    <div style={{ textAlign: 'right' }}>Vânzări</div>
+                    <div>{t('brandLocationHeader')}</div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>{t('topProduct')}</div>
+                    <div style={{ textAlign: 'right' }}>{t('orders')}</div>
+                    <div style={{ textAlign: 'right' }}>{t('products')}</div>
+                    <div style={{ textAlign: 'right' }}>{t('aov')}</div>
+                    <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
