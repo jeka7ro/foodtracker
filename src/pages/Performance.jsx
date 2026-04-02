@@ -992,10 +992,10 @@ export default function Performance() {
                 <div style={{ display: 'grid', gridTemplateColumns: '40px minmax(200px, 2.5fr) 100px 100px 120px minmax(200px, 2fr) 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div style={{ textAlign: 'center' }}>#</div>
                     <div>Brand Locație</div>
-                    <div style={{ textAlign: 'center' }}>Comenzi</div>
-                    <div style={{ textAlign: 'center' }}>Produse</div>
-                    <div style={{ textAlign: 'center' }}>Comanda Medie</div>
-                    <div style={{ paddingLeft: '20px' }}>Top Produs</div>
+                    <div style={{ textAlign: 'right' }}>Comenzi</div>
+                    <div style={{ textAlign: 'right' }}>Produse</div>
+                    <div style={{ textAlign: 'right' }}>Comanda Medie</div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>Top Produs</div>
                     <div style={{ textAlign: 'right' }}>Vânzări</div>
                 </div>
 
@@ -1037,16 +1037,16 @@ export default function Performance() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                            <div style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>
                                                 {loc.orders || 0}
                                             </div>
-                                            <div style={{ textAlign: 'center', color: 'var(--text-color)' }}>
+                                            <div style={{ textAlign: 'right', color: 'var(--text-color)' }}>
                                                 {loc.products || 0}
                                             </div>
-                                            <div style={{ textAlign: 'center', color: '#10b981', fontWeight: '700' }}>
+                                            <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
                                                 {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
                                             </div>
-                                            <div style={{ paddingLeft: '20px', display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', overflow: 'hidden' }}>
                                                 {loc.topProd ? (
                                                     <>
                                                         {loc.topProd.image_url && (
