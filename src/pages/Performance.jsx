@@ -619,6 +619,22 @@ export default function Performance() {
                     </div>
                     <div className="kpi-value">{avgBasket} RON</div>
                 </div>
+
+                <div 
+                    className="glass-card" 
+                    style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }}
+                    onClick={() => { document.getElementById('products-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+                    title="Click pentru a naviga la lista detaliată"
+                >
+                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+                        <div style={{padding:'10px', background:'rgba(99, 102, 241, 0.1)', borderRadius:'12px', color:'#6366f1'}}><Package size={24} /></div>
+                        <span className="kpi-title">Produse Vândute</span>
+                    </div>
+                    <div className="kpi-value">
+                        {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')} 
+                        <span style={{ fontSize: '14px', opacity: 0.6, fontWeight: 700, marginLeft: '8px' }}>buc.</span>
+                    </div>
+                </div>
             </div>
 
             <div className="charts-row">
@@ -815,7 +831,7 @@ export default function Performance() {
                 )}
             </div>
 
-            <div className="glass-card">
+            <div className="glass-card" id="products-table-section" style={{ scrollMarginTop: '80px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 className="card-heading" style={{margin:0}}>{t('productSales')}</h3>
                 </div>
