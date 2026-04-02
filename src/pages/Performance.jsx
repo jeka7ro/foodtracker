@@ -8,6 +8,53 @@ import { Download, UploadCloud, Activity, ShoppingBag, CreditCard, Package } fro
 import * as XLSX from 'xlsx'
 import './Performance.css'
 
+// ── Romanian holiday utilities ──────────────────────────────────────────────
+function orthodoxEaster(year) {
+    const a = year % 19, b = year % 4, c = year % 7
+    const d = (19 * a + 15) % 30
+    const e = (2 * b + 4 * c + 6 * d + 6) % 7
+    const month = Math.floor((d + e + 114) / 31)
+    const day = ((d + e + 114) % 31) + 1
+    const julian = new Date(year, month - 1, day)
+    julian.setDate(julian.getDate() + 13)   // Julian → Gregorian
+    return julian
+}
+
+function getRomanianHolidays(year) {
+    const easter = orthodoxEaster(year)
+    const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r }
+    const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`
+    const e = easter
+    const legal = [
+        { d: `01-01`, label: '🎆 Anul Nou' },
+        { d: `02-01`, label: '🎆 Anul Nou' },
+        { d: `24-01`, label: '🇷🇴 Unirea' },
+        { d: `01-05`, label: '⚒ Muncii' },
+        { d: `01-06`, label: '🧒 Copilului' },
+        { d: `15-08`, label: '✝️ Sf. Maria' },
+        { d: `30-11`, label: '✝️ Sf. Andrei' },
+        { d: `01-12`, label: '🇷🇴 Ziua Națională' },
+        { d: `25-12`, label: '🎄 Crăciun' },
+        { d: `26-12`, label: '🎄 Crăciun' },
+        { d: fmt(addDays(e, -2)), label: '✝️ Vinerea Mare' },
+        { d: fmt(e),             label: '✝️ Paști' },
+        { d: fmt(addDays(e, 1)), label: '✝️ Paști' },
+        { d: fmt(addDays(e, 39)), label: '✝️ Înălțarea' },
+        { d: fmt(addDays(e, 49)), label: '✝️ Rusalii' },
+        { d: fmt(addDays(e, 50)), label: '✝️ Rusalii' },
+    ]
+    const special = [
+        { d: `14-02`, label: '❤️ Dragobete' },
+        { d: `01-03`, label: '🌸 Mărțișor' },
+        { d: `08-03`, label: '🌷 8 Martie' },
+        { d: `31-12`, label: '🥂 Revelion' },
+    ]
+    const map = {}
+    ;[...legal, ...special].forEach(h => { map[h.d] = { label: h.label, legal: legal.some(l => l.d === h.d) } })
+    return map
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── TRANSLATIONS DICTIONARY ───
 const dict = {
     title: { ro: 'Performanță Vânzări', en: 'Sales Performance', ru: 'Эффективность Продаж' },
@@ -83,7 +130,15 @@ export default function Performance() {
     const [brandFilter, setBrandFilter] = useState('all')
     const [cityFilter, setCityFilter] = useState('all')
     const [restaurantFilter, setRestaurantFilter] = useState('all')
-    const [activePeriod, setActivePeriod] = useState('week')
+    const initialPeriod = localStorage.getItem('analyticsActivePeriod') || 'week'
+    const [activePeriodState, setActivePeriodState] = useState(initialPeriod)
+    const setActivePeriod = (p) => {
+        setActivePeriodState(p)
+        if (p !== 'custom') {
+            localStorage.setItem('analyticsActivePeriod', p)
+        }
+    }
+    const activePeriod = activePeriodState
     const [customStartDate, setCustomStartDate] = useState('')
     const [customEndDate, setCustomEndDate] = useState('')
     const [pageNumber, setPageNumber] = useState(1)
@@ -573,7 +628,53 @@ export default function Performance() {
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartData} onClick={handleChartClick} style={{ cursor: 'pointer' }} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} vertical={false} />
-                                <XAxis dataKey="date" stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickMargin={12} interval={activePeriod==='year' ? 0 : 'preserveStartEnd'} />
+                                {(() => {
+                                    const showDayNames = ['month', 'lastmonth', 'year'].includes(activePeriod) && chartData.length > 7
+                                    return (
+                                        <XAxis 
+                                            dataKey="date" 
+                                            stroke="var(--text-secondary)" 
+                                            fontSize={10} 
+                                            tickLine={false} 
+                                            axisLine={false} 
+                                            tickMargin={4} 
+                                            height={showDayNames ? 42 : 20}
+                                            interval={activePeriod === 'year' ? 0 : 'preserveStartEnd'}
+                                            tick={(props) => {
+                                                const { x, y, payload } = props
+                                                const label = payload.value
+                                                if (!showDayNames) {
+                                                    return <text x={x} y={y+12} textAnchor="middle" fill="var(--text-secondary)" fontSize={10}>{label}</text>
+                                                }
+                                                const monthMap = { 'ian':0,'feb':1,'mar':2,'apr':3,'mai':4,'iun':5,'iul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11 }
+                                                const parts = label.replace('.','').trim().split(' ')
+                                                const dayN = parseInt(parts[0])
+                                                const monN = monthMap[parts[1]] ?? 0
+                                                const yr = new Date().getFullYear()
+                                                
+                                                if (isNaN(dayN)) {
+                                                    return <text x={x} y={y+12} textAnchor="middle" fill="var(--text-secondary)" fontSize={10}>{label}</text>
+                                                }
+                                                const d = new Date(yr, monN, dayN)
+                                                const dayNames = ['Du','Lu','Ma','Mi','Jo','Vi','Sâ']
+                                                const dayName = dayNames[d.getDay()]
+                                                const isWeekend = d.getDay() === 0 || d.getDay() === 6
+                                                const ddMM = `${String(dayN).padStart(2,'0')}-${String(monN+1).padStart(2,'0')}`
+                                                const holidays = getRomanianHolidays(yr)
+                                                const holiday = holidays[ddMM]
+                                                const isLegal = holiday?.legal
+                                                const textColor = isLegal ? '#f59e0b' : isWeekend ? '#116d74' : 'var(--text-secondary)'
+                                                return (
+                                                    <g>
+                                                        <text x={x} y={y+10} textAnchor="middle" fill={textColor} fontSize={10} fontWeight={isLegal || isWeekend ? '700' : '400'}>{label}</text>
+                                                        <text x={x} y={y+22} textAnchor="middle" fill={textColor} fontSize={9} fontWeight={isLegal ? '800' : '400'}>{dayName}</text>
+                                                        {holiday && <text x={x} y={y+34} textAnchor="middle" fontSize={9}>{holiday.label.split(' ')[0]}</text>}
+                                                    </g>
+                                                )
+                                            }}
+                                        />
+                                    )
+                                })()}
                                 <YAxis yAxisId="left" stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => v.toLocaleString('ro-RO')} />
                                 <YAxis yAxisId="right" orientation="right" stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} hide />
                                 <Tooltip 
