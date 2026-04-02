@@ -87,11 +87,11 @@ export default function Performance() {
     const [customStartDate, setCustomStartDate] = useState('')
     const [customEndDate, setCustomEndDate] = useState('')
     const [pageNumber, setPageNumber] = useState(1)
-    const ITEMS_PER_PAGE = 8
+    const [itemsPerPage, setItemsPerPage] = useState(8)
 
     useEffect(() => {
         Promise.all([
-            supabase.from('brands').select('id, name').order('name'),
+            supabase.from('brands').select('id, name, logo_url').order('name'),
             supabase.from('restaurants').select('id, name, city, brand_id').eq('is_active', true).order('name')
         ]).then(([{ data: b }, { data: r }]) => {
             setBrands(b || [])
@@ -395,10 +395,13 @@ export default function Performance() {
                 const totalQty = sale.items.reduce((sum, it) => sum + (parseInt(it.quantity) || 1), 0)
                 const approxPrice = parseFloat(sale.total_amount) / (totalQty || 1)
                 
+                const rInfo = restaurants.find(r => r.id === sale.restaurant_id)
+                const bInfo = rInfo ? brands.find(b => b.id === rInfo.brand_id) : null
+
                 sale.items.forEach(it => {
                     const price = approxPrice
                     const qty = parseInt(it.quantity) || 1
-                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0 }
+                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo }
                     itemsMap[it.name].count += qty
                     itemsMap[it.name].revenue += (price * qty)
                 })
@@ -407,10 +410,10 @@ export default function Performance() {
         return Object.values(itemsMap)
             .sort((a, b) => b.revenue !== a.revenue ? b.revenue - a.revenue : b.count - a.count)
             .map((it, idx) => ({ ...it, id: idx + 1 }))
-    }, [realSalesArray])
+    }, [realSalesArray, restaurants, brands])
 
-    const paginatedItems = topItems.slice((pageNumber - 1) * ITEMS_PER_PAGE, pageNumber * ITEMS_PER_PAGE)
-    const totalPages = Math.ceil(topItems.length / ITEMS_PER_PAGE)
+    const paginatedItems = topItems.slice((pageNumber - 1) * itemsPerPage, pageNumber * itemsPerPage)
+    const totalPages = Math.ceil(topItems.length / itemsPerPage)
 
     const [isUploading, setIsUploading] = useState(false)
 
@@ -676,19 +679,39 @@ export default function Performance() {
             <div className="glass-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 className="card-heading" style={{margin:0}}>{t('productSales')}</h3>
+                    <select 
+                        className="input-field" 
+                        value={itemsPerPage} 
+                        onChange={e => { setItemsPerPage(Number(e.target.value)); setPageNumber(1); }}
+                        style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', minHeight: 'unset', height: '32px' }}
+                    >
+                        <option value={8}>8 {t('piecesOrdered').split(' ')[0]}</option>
+                        <option value={15}>15 {t('piecesOrdered').split(' ')[0]}</option>
+                        <option value={30}>30 {t('piecesOrdered').split(' ')[0]}</option>
+                        <option value={100}>100 {t('piecesOrdered').split(' ')[0]}</option>
+                    </select>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', padding: '12px 20px', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '40px 60px 1fr auto', padding: '12px 20px', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                         <div>#</div>
+                        <div>Brand</div>
                         <div>{t('topProduct')}</div>
                         <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                     </div>
                     {paginatedItems.map((item) => {
                         const imgUrl = getProductImage(item.name)
                         return (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px 60px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
                             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
+                            
+                            <div>
+                                {item.brand?.logo_url ? (
+                                    <img src={item.brand.logo_url} title={item.brand.name} alt={item.brand.name} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain', background: 'var(--glass-bg)', border: 'var(--glass-border)' }} />
+                                ) : (
+                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--glass-bg-hover)' }}></div>
+                                )}
+                            </div>
                             {imgUrl ? (
                                 <img src={imgUrl} alt={item.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '16px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
                             ) : (
@@ -706,7 +729,7 @@ export default function Performance() {
                 
                 {totalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '20px', borderTop: 'var(--glass-border)' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>{t('showItems').replace('{n}', ITEMS_PER_PAGE)}</span>
+                        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>{t('showItems').replace('{n}', itemsPerPage)}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-color)' }}>{t('pageOf').replace('{p}', pageNumber).replace('{t}', totalPages)}</span>
                             <div style={{ display: 'flex', gap: '8px' }}>
