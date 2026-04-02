@@ -34,24 +34,41 @@ async function syncIikoCatalog() {
         
         // 3. Download Nomenclature
         console.log('[3/4] Descarcare meniu global...');
-        const resMenu = await fetch(`${IIKO_BASE}/nomenclature`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ organizationId: organizations[0].id })
-        });
-        const menuData = await resMenu.json();
-
-        console.log('[4/4] Parsare si salvare in Supabase...');
-
-        const groupsMap = new Map((menuData.groups || []).map(g => [g.id, g.name]));
         
-        const rawProducts = (menuData.products || [])
-            .filter(p => p.type && (p.type.toLowerCase() === 'dish' || p.type.toLowerCase() === 'good'));
+        const allProductsMap = new Map();
+        
+        console.log(`[3/4] Descarcare meniu din ${organizations.length} organizatii pentru a capta toate brandurile...`);
+        for(let i=0; i<organizations.length; i++) {
+            const org = organizations[i];
+            console.log(`  -> Descarcare nomenclature pt ${org.name} (${i+1}/${organizations.length})...`);
+            const resMenu = await fetch(`${IIKO_BASE}/nomenclature`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ organizationId: org.id })
+            });
+            const menuData = await resMenu.json();
+            
+            const groupsMap = new Map((menuData.groups || []).map(g => [g.id, g.name]));
+            
+            const items = (menuData.products || [])
+                .filter(p => p.type && (p.type.toLowerCase() === 'dish' || p.type.toLowerCase() === 'good'));
+                
+            for(const p of items) {
+                if(!allProductsMap.has(p.id)) {
+                    p.resolvedCategory = groupsMap.get(p.parentGroup) || 'Meniu General';
+                    allProductsMap.set(p.id, p);
+                }
+            }
+        }
+        
+        const rawProducts = Array.from(allProductsMap.values());
+        console.log(`[4/4] S-au gasit ${rawProducts.length} produse unice in toata reteaua! Parsare si salvare in Supabase...`);
+
 
         let newCount = 0;
         let updateCount = 0;
 
         for (const p of rawProducts) {
-            const category = groupsMap.get(p.parentGroup) || 'Meniu General';
+            const category = p.resolvedCategory;
             let computedBrandName = 'Sushi Master'; 
             
             const upCat = category.toUpperCase();
