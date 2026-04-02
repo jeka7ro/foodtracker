@@ -604,12 +604,31 @@ export default function Performance() {
                     <div className="kpi-value">{totalSales.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
                 </div>
 
-                <div className="glass-card">
-                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+                <div 
+                    className="glass-card"
+                    style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }}
+                    onClick={() => { document.getElementById('products-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+                    title="Click pentru a naviga la lista detaliată de produse"
+                >
+                    <div style={{display:'flex', gap:'12px', alignItems:'center', marginBottom: '12px'}}>
                         <div style={{padding:'10px', background:'rgba(16,185,129,0.1)', borderRadius:'12px', color:'#10b981'}}><ShoppingBag size={24} /></div>
-                        <span className="kpi-title">{t('totalOrders')}</span>
+                        <span className="kpi-title">Comenzi & Produse</span>
                     </div>
-                    <div className="kpi-value">{isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}</div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '4px' }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '2px' }}>Comenzi</div>
+                            <div className="kpi-value" style={{ fontSize: '26px', margin: 0, lineHeight: 1 }}>{isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}</div>
+                        </div>
+                        <div style={{ width: '1px', background: 'var(--glass-border)', height: '36px', margin: '0 16px' }}></div>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '2px' }}>Produse</div>
+                            <div className="kpi-value" style={{ fontSize: '26px', margin: 0, lineHeight: 1 }}>
+                                {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
+                                <span style={{ fontSize: '12px', opacity: 0.6, fontWeight: 700, marginLeft: '6px' }}>buc.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="glass-card">
@@ -618,22 +637,6 @@ export default function Performance() {
                         <span className="kpi-title">{t('aov')}</span>
                     </div>
                     <div className="kpi-value">{avgBasket} RON</div>
-                </div>
-
-                <div 
-                    className="glass-card" 
-                    style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }}
-                    onClick={() => { document.getElementById('products-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-                    title="Click pentru a naviga la lista detaliată"
-                >
-                    <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                        <div style={{padding:'10px', background:'rgba(99, 102, 241, 0.1)', borderRadius:'12px', color:'#6366f1'}}><Package size={24} /></div>
-                        <span className="kpi-title">Produse Vândute</span>
-                    </div>
-                    <div className="kpi-value">
-                        {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')} 
-                        <span style={{ fontSize: '14px', opacity: 0.6, fontWeight: 700, marginLeft: '8px' }}>buc.</span>
-                    </div>
                 </div>
             </div>
 
