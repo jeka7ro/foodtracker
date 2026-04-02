@@ -669,7 +669,35 @@ export default function Performance() {
 
             <div className="charts-row">
                 <div className="glass-card">
-                    <h3 className="card-heading">{t('salesStats')}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                        <h3 className="card-heading" style={{ margin: 0 }}>{t('salesStats')}</h3>
+                        {(() => {
+                            if (!chartData || chartData.length === 0) return null;
+                            const foundSet = new Set();
+                            const activeHolidays = [];
+                            chartData.forEach(d => {
+                                if (d.year !== undefined && d.month !== undefined && d.day !== undefined) {
+                                    const hYear = getRomanianHolidays(d.year);
+                                    const ddMM = `${String(d.day).padStart(2, '0')}-${String(d.month + 1).padStart(2, '0')}`;
+                                    if (hYear[ddMM] && !foundSet.has(ddMM + d.year)) {
+                                        foundSet.add(ddMM + d.year);
+                                        activeHolidays.push({ dateStr: `${String(d.day).padStart(2, '0')}.${String(d.month + 1).padStart(2, '0')}`, label: hYear[ddMM].label });
+                                    }
+                                }
+                            });
+                            if (activeHolidays.length === 0) return null;
+                            return (
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {activeHolidays.map((h, i) => (
+                                        <span key={i} style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', color: 'var(--text-color)', fontSize: '12px', fontWeight: '600', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{ opacity: 0.5, fontSize: '11px', fontWeight: '800' }}>{h.dateStr}</span>
+                                            {h.label}
+                                        </span>
+                                    ))}
+                                </div>
+                            );
+                        })()}
+                    </div>
                     <div style={{ height: '320px', marginLeft: '-15px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartData} onClick={handleChartClick} style={{ cursor: 'pointer' }} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
