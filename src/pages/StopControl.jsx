@@ -31,55 +31,68 @@ const dict = {
     unmapped: { ro: 'Produs Lipsă sau Necunoscut', en: 'Missing or Unknown Product', ru: 'Неизвестный Продукт' }
 }
 
-// ─── iiko API Setup ───
-const IIKO_API_KEY = 'a1fe30cdeb934aa0af01b6a35244b7f0';
-const IIKO_BASE = 'http://localhost:3005/api/iiko';
+const ENV_CONFIGS = [
+    { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko' },
+    { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve' }
+];
 
 const fetchIikoStopsWithMenu = async () => {
-    const resAuth = await fetch(`${IIKO_BASE}/access_token`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiLogin: IIKO_API_KEY })
-    });
-    const { token } = await resAuth.json();
-
-    const resOrgs = await fetch(`${IIKO_BASE}/organizations`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({})
-    });
-    const { organizations } = await resOrgs.json();
-    const orgIds = organizations.map(o => o.id);
-
-    // Get Stops
-    const resStops = await fetch(`${IIKO_BASE}/stop_lists`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ organizationIds: orgIds })
-    });
-    const { terminalGroupStopLists } = await resStops.json();
-
-    // Decode Terminal Group items properly
-    const stoppedOrgIds = new Set();
     const rawStops = [];
-    if (terminalGroupStopLists) {
-        for (const orgGroup of terminalGroupStopLists) {
-            const orgInfo = organizations.find(o => o.id === orgGroup.organizationId);
-            const terminalGroups = orgGroup.items || [];
+    let totalOrganizations = 0;
+    const stoppedOrgIds = new Set();
+    
+    for (const env of ENV_CONFIGS) {
+        try {
+            const resAuth = await fetch(`${env.baseUrl}/access_token`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiLogin: env.key })
+            });
+            if (!resAuth.ok) continue;
+            const { token } = await resAuth.json();
+
+            const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({})
+            });
+            const { organizations } = await resOrgs.json();
+            if (!organizations) continue;
             
-            if (terminalGroups.length > 0) {
-                for (const tGroup of terminalGroups) {
-                    const products = tGroup.items || [];
-                    if (products.length > 0) {
-                        stoppedOrgIds.add(orgGroup.organizationId);
-                        for (const p of products) {
-                            rawStops.push({ 
-                                orgId: orgGroup.organizationId, 
-                                orgName: orgInfo?.name || '?',
-                                productId: p.productId, 
-                                balance: p.balance,
-                                dateAdd: p.dateAdd
-                            });
+            totalOrganizations += organizations.length;
+            const orgIds = organizations.map(o => o.id);
+
+            if (orgIds.length > 0) {
+                const resStops = await fetch(`${env.baseUrl}/stop_lists`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ organizationIds: orgIds })
+                });
+                const { terminalGroupStopLists } = await resStops.json();
+
+                if (terminalGroupStopLists) {
+                    for (const orgGroup of terminalGroupStopLists) {
+                        const orgInfo = organizations.find(o => o.id === orgGroup.organizationId);
+                        const terminalGroups = orgGroup.items || [];
+                        
+                        if (terminalGroups.length > 0) {
+                            for (const tGroup of terminalGroups) {
+                                const products = tGroup.items || [];
+                                if (products.length > 0) {
+                                    stoppedOrgIds.add(orgGroup.organizationId);
+                                    for (const p of products) {
+                                        rawStops.push({ 
+                                            orgId: orgGroup.organizationId, 
+                                            orgName: orgInfo?.name || '?',
+                                            productId: p.productId, 
+                                            balance: p.balance,
+                                            dateAdd: p.dateAdd
+                                        });
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
+        } catch (e) {
+            console.error('Failed to fetch from env:', env.baseUrl, e);
         }
     }
 
@@ -96,7 +109,7 @@ const fetchIikoStopsWithMenu = async () => {
         productName: menuMap.get(s.productId) || null
     }));
 
-    return { stops: finalStops, totalOrgs: organizations.length, stoppedOrgs: Array.from(stoppedOrgIds) };
+    return { stops: finalStops, totalOrgs: totalOrganizations, stoppedOrgs: Array.from(stoppedOrgIds) };
 };
 
 export default function StopControl() {
