@@ -990,7 +990,7 @@ export default function Performance() {
                             <>
                                 {locsPaginated.map((loc, idx) => {
                                     const restaurantObj = activeRestaurants.find(r => r.name === loc.name);
-                                    const brandName = restaurantObj?.brands?.name || '-';
+                                    const brandObj = restaurantObj?.brands;
                                     return (
                                         <div 
                                             key={idx} 
@@ -1003,9 +1003,11 @@ export default function Performance() {
                                                     {restaurantObj?.city && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{restaurantObj.city}</span>}
                                                 </div>
                                             </div>
-                                            <div style={{ textAlign: 'center' }}>
-                                                {brandName !== '-' ? (
-                                                    <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandName}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {brandObj?.logo_url ? (
+                                                    <img src={brandObj.logo_url} alt="" style={{ height: '24px', width: 'auto', objectFit: 'contain', borderRadius:'4px' }} title={brandObj.name} /> 
+                                                ) : brandObj?.name ? (
+                                                    <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandObj.name}</span>
                                                 ) : '-'}
                                             </div>
                                             <div style={{ textAlign: 'right', fontWeight: '800' }}>
