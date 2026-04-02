@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
@@ -16,13 +16,16 @@ export default function ProductAnalytics() {
     const { lang } = useLanguage()
     const navigate = useNavigate()
 
-    const [activePeriod, setActivePeriod] = useState('week')
+    const [searchParams] = useSearchParams()
+    const initialPeriod = searchParams.get('period') || 'week'
+    const [activePeriod, setActivePeriod] = useState(initialPeriod)
     const [pageNumber, setPageNumber] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(20)
     const [salesData, setSalesData] = useState([])
     const [restaurants, setRestaurants] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [productImage, setProductImage] = useState(null)
+    const [lightboxOpen, setLightboxOpen] = useState(false)
     const [selectedRows, setSelectedRows] = useState(new Set())
 
     const t = (key) => {
@@ -142,7 +145,7 @@ export default function ProductAnalytics() {
                 allData = chunks.flat()
             }
 
-            if (!allData || allData.length === 0) return setSalesData([])
+            if (!allData || allData.length === 0) { setSalesData([]); setIsLoading(false); return }
 
             // Exactly match the product name
             const matchItems = allData.filter(d => {
@@ -157,7 +160,7 @@ export default function ProductAnalytics() {
         load()
     }, [activePeriod, decodedName])
 
-    const { rev, units, chartDynamic, chartLocations, recentTransactions } = useMemo(() => {
+    const { rev, units, chartDynamic, chartLocations, recentTransactions, priceStats } = useMemo(() => {
         let totalRev = 0
         let totalUnits = 0
         const mapDyn = {}
@@ -209,12 +212,55 @@ export default function ProductAnalytics() {
             mapLoc[rName].units += pQty
         })
 
+        // Price stats per location (approximated from total_amount / total items qty)
+        const priceByLoc = {}
+        salesData.forEach(sale => {
+            const matchedItems = (sale.items || []).filter(it => it.name === decodedName)
+            if (!matchedItems.length) return
+            const rInfo = restaurants.find(r => r.id === sale.restaurant_id)
+            const rName = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
+            const totalQtyAllItems = (sale.items || []).reduce((sum, i) => sum + (parseInt(i.quantity) || 1), 0)
+            const pricePerUnit = parseFloat(sale.total_amount || 0) / (totalQtyAllItems || 1)
+            if (pricePerUnit <= 0) return
+            if (!priceByLoc[rName]) priceByLoc[rName] = { name: rName, prices: [], total: 0, count: 0, revenue: 0 }
+            matchedItems.forEach(() => {
+                priceByLoc[rName].prices.push(pricePerUnit)
+                priceByLoc[rName].total += pricePerUnit
+                priceByLoc[rName].count++
+                priceByLoc[rName].revenue += pricePerUnit
+            })
+        })
+        const priceStats = Object.values(priceByLoc).map(loc => ({
+            name: loc.name,
+            min: Math.min(...loc.prices),
+            max: Math.max(...loc.prices),
+            avg: loc.total / loc.count,
+            count: loc.count,
+            revenue: loc.revenue,
+            score: 0
+        })).sort((a,b) => a.avg - b.avg)
+
+        // Compute performance score per location (0-10)
+        const maxRevenue = Math.max(...priceStats.map(l => l.revenue), 1)
+        const maxCount = Math.max(...priceStats.map(l => l.count), 1)
+        const allAvgs = priceStats.map(l => l.avg).sort((a,b) => a-b)
+        const medianPrice = allAvgs[Math.floor(allAvgs.length / 2)] || 1
+        priceStats.forEach(loc => {
+            const revenueRatio = loc.revenue / maxRevenue           // 0-1, higher = better
+            const volumeRatio = loc.count / maxCount                 // 0-1, higher = better
+            const priceDeviation = Math.abs(loc.avg - medianPrice) / medianPrice  // 0+, lower = better
+            const priceHealth = Math.max(0, 1 - priceDeviation * 1.5) // penalize extreme prices
+            const raw = revenueRatio * 0.5 + volumeRatio * 0.3 + priceHealth * 0.2
+            loc.score = Math.round(raw * 10 * 10) / 10  // 0.0-10.0
+        })
+
         return {
             rev: totalRev,
             units: totalUnits,
             chartDynamic: Object.values(mapDyn),
             chartLocations: Object.values(mapLoc).sort((a,b)=>b.rev - a.rev),
-            recentTransactions: transactionsList.sort((a,b) => b.date - a.date)
+            recentTransactions: transactionsList.sort((a,b) => b.date - a.date),
+            priceStats
         }
     }, [salesData, activePeriod, decodedName, restaurants])
 
@@ -285,9 +331,55 @@ export default function ProductAnalytics() {
             <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'stretch' }}>
                 <div className="product-hero" style={{ flex: 1, marginBottom: 0 }}>
                     {productImage ? (
-                        <img src={productImage} alt={decodedName} className="hero-img" />
+                        <img
+                            src={productImage}
+                            alt={decodedName}
+                            className="hero-img"
+                            onClick={() => setLightboxOpen(true)}
+                            style={{ cursor: 'zoom-in' }}
+                        />
                     ) : (
                         <div className="hero-img"><Package size={32} color="var(--text-secondary)" opacity={0.5} /></div>
+                    )}
+
+                    {/* Lightbox */}
+                    {lightboxOpen && productImage && (
+                        <div
+                            onClick={() => setLightboxOpen(false)}
+                            style={{
+                                position: 'fixed', inset: 0, zIndex: 9999,
+                                background: 'rgba(0,0,0,0.85)',
+                                backdropFilter: 'blur(12px)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'zoom-out',
+                                animation: 'fadeIn 0.18s ease',
+                            }}
+                        >
+                            <img
+                                src={productImage}
+                                alt={decodedName}
+                                style={{
+                                    maxWidth: '90vw',
+                                    maxHeight: '85vh',
+                                    objectFit: 'contain',
+                                    borderRadius: '20px',
+                                    boxShadow: '0 40px 120px rgba(0,0,0,0.6)',
+                                    userSelect: 'none',
+                                }}
+                            />
+                            <button
+                                onClick={() => setLightboxOpen(false)}
+                                style={{
+                                    position: 'fixed', top: '24px', right: '28px',
+                                    background: 'rgba(255,255,255,0.12)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '50%', width: '44px', height: '44px',
+                                    color: '#fff', fontSize: '22px', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    backdropFilter: 'blur(8px)',
+                                }}
+                            >✕</button>
+                        </div>
                     )}
                     
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -335,6 +427,117 @@ export default function ProductAnalytics() {
                     <div className="compact-kpi-val">{isLoading ? '...' : units > 0 ? (rev/units).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
                 </div>
             </div>
+
+            {/* ── Price Intelligence ── */}
+            {!isLoading && priceStats.length > 0 && (() => {
+                const cheapest = priceStats[0]
+                const priciest = priceStats[priceStats.length - 1]
+                const globalMin = cheapest.min
+                const globalMax = priciest.max
+                const spread = globalMax - globalMin
+                return (
+                    <div className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
+                        <h3 className="card-heading" style={{ fontSize: '14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <DollarSign size={16} color="#10b981" /> Price Intelligence · Cross-Location Report
+                        </h3>
+
+                        {/* Top summary row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                            <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', padding: '14px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 Cel Mai Ieftin</div>
+                                <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{globalMin.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{cheapest.name}</div>
+                            </div>
+                            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 Cel Mai Scump</div>
+                                <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{globalMax.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{priciest.name}</div>
+                            </div>
+                            <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '14px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚡ Variație Preț</div>
+                                <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{spread.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{priceStats.length} locații comparate</div>
+                            </div>
+                        </div>
+
+                        {/* Score legend */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                            {[
+                                { label: 'A', color: '#10b981', bg: 'rgba(16,185,129,0.1)', tip: 'Preț echilibrat + vânzări mari' },
+                                { label: 'B', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', tip: 'Performanță bună' },
+                                { label: 'C', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tip: 'Echilibru mediocru' },
+                                { label: 'D', color: '#f97316', bg: 'rgba(249,115,22,0.1)', tip: 'Preț sau volum dezechilibrat' },
+                                { label: 'F', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', tip: 'Preț mare + puține vânzări' },
+                            ].map(g => (
+                                <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '16px', borderRadius: '4px', background: g.bg, color: g.color, fontSize: '11px', fontWeight: '900' }}>{g.label}</span>
+                                    {g.tip}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Per-location price bars */}
+                        {/* Column headers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 110px 52px 52px', gap: '10px', marginBottom: '6px', padding: '0 0 6px 0', borderBottom: '1px solid var(--glass-border)' }}>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locație</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Distribuție preț</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Preț mediu</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Buc.</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Scor</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {priceStats.map(loc => {
+                                const pct = spread > 0 ? ((loc.avg - globalMin) / spread) * 100 : 50
+                                const isMin = loc.name === cheapest.name
+                                const isMax = loc.name === priciest.name
+                                return (
+                                    <div key={loc.name} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 110px 52px 52px', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {isMin ? '🟢 ' : isMax ? '🔴 ' : '⚪ '}{loc.name}
+                                        </div>
+                                        <div style={{ position: 'relative', height: '8px', background: 'var(--glass-bg-hover)', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                position: 'absolute', left: 0, top: 0, height: '100%',
+                                                width: `${Math.max(pct, 5)}%`,
+                                                background: isMin ? '#10b981' : isMax ? '#ef4444' : '#6366f1',
+                                                borderRadius: '4px',
+                                                transition: 'width 0.6s ease'
+                                            }} />
+                                        </div>
+                                        <div style={{ fontSize: '12px', fontWeight: '800', color: isMin ? '#10b981' : isMax ? '#ef4444' : 'var(--text-color)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                            {loc.avg.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON
+                                        </div>
+                                        <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                            {loc.count} buc.
+                                        </div>
+                                        {/* Score badge */}
+                                        {(() => {
+                                            const s = loc.score
+                                            const grade = s >= 8 ? { label: 'A', bg: 'rgba(16,185,129,0.15)', color: '#10b981', tip: 'Optim: preț echilibrat + vânzări bune' }
+                                                : s >= 6 ? { label: 'B', bg: 'rgba(99,102,241,0.15)', color: '#6366f1', tip: 'Bun: performanță peste medie' }
+                                                : s >= 4 ? { label: 'C', bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', tip: 'Acceptabil: echilibru preț/volum mediocru' }
+                                                : s >= 2 ? { label: 'D', bg: 'rgba(249,115,22,0.15)', color: '#f97316', tip: 'Slab: preț prea mare sau prea mic vs volum' }
+                                                : { label: 'F', bg: 'rgba(239,68,68,0.15)', color: '#ef4444', tip: 'Critic: preț mare + putine vânzări = pierdere' }
+                                            return (
+                                                <div title={`Scor: ${s}/10 · ${grade.tip}`} style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '32px', height: '22px', borderRadius: '6px',
+                                                    background: grade.bg, color: grade.color,
+                                                    fontSize: '12px', fontWeight: '900',
+                                                    cursor: 'help', userSelect: 'none',
+                                                    marginLeft: 'auto'
+                                                }}>
+                                                    {grade.label}
+                                                </div>
+                                            )
+                                        })()}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )
+            })()}
 
             <div className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
                 <h3 className="card-heading" style={{ fontSize: '14px', marginBottom: '16px' }}>{t('chartDyn')}</h3>

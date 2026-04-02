@@ -687,7 +687,7 @@ export default function Performance() {
                     {paginatedItems.map((item) => {
                         const imgUrl = getProductImage(item.name)
                         return (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name))} style={{ display: 'grid', gridTemplateColumns: '40px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name) + '?period=' + activePeriod)} style={{ display: 'grid', gridTemplateColumns: '40px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
                             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
                             {imgUrl ? (
                                 <img src={imgUrl} alt={item.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '16px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
