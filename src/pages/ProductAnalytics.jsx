@@ -284,7 +284,7 @@ export default function ProductAnalytics() {
     }, [salesData, activePeriod, decodedName, restaurants])
 
     return (
-        <div className={`perf-container ${isDark ? 'dark-theme' : 'light-theme'}`} style={{ overflowY: 'auto' }}>
+        <div className={`perf-container ${isDark ? 'dark-theme' : 'light-theme'}`} style={{ overflowY: 'auto', padding: '20px 28px', gap: '14px' }}>
             <style>{`
                 :root {
                     --text-color: ${isDark ? '#f8fafc' : '#1e293b'};
@@ -421,8 +421,8 @@ export default function ProductAnalytics() {
                 </div>
             </div>
 
-            <div className="kpi-grid" style={{ marginBottom: '16px' }}>
-                <div className="compact-kpi">
+            <div className="kpi-grid" style={{ marginBottom: '14px', gap: '12px' }}>
+                    <div className="compact-kpi" style={{ padding: '12px 16px' }}>
                     <div style={{display:'flex', gap:'8px', alignItems:'center', fontSize:'12px', fontWeight:'700', color:'var(--text-secondary)'}}>
                         <div style={{padding:'6px', background:'rgba(16,185,129,0.1)', borderRadius:'8px', color:'#10b981'}}><DollarSign size={16} /></div>
                         {t('totalRev')}
@@ -430,7 +430,7 @@ export default function ProductAnalytics() {
                     <div className="compact-kpi-val">{isLoading ? '...' : rev.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
                 </div>
 
-                <div className="compact-kpi">
+                <div className="compact-kpi" style={{ padding: '12px 16px' }}>
                     <div style={{display:'flex', gap:'8px', alignItems:'center', fontSize:'12px', fontWeight:'700', color:'var(--text-secondary)'}}>
                         <div style={{padding:'6px', background:'rgba(99,102,241,0.1)', borderRadius:'8px', color:'#6366f1'}}><Activity size={16} /></div>
                         {t('totalUnits')}
@@ -438,7 +438,7 @@ export default function ProductAnalytics() {
                     <div className="compact-kpi-val">{isLoading ? '...' : units.toLocaleString('ro-RO')} <span style={{fontSize:'14px', opacity:0.7}}>buc.</span></div>
                 </div>
 
-                <div className="compact-kpi">
+                <div className="compact-kpi" style={{ padding: '12px 16px' }}>
                     <div style={{display:'flex', gap:'8px', alignItems:'center', fontSize:'12px', fontWeight:'700', color:'var(--text-secondary)'}}>
                         <div style={{padding:'6px', background:'rgba(245,158,11,0.1)', borderRadius:'8px', color:'#f59e0b'}}><TrendingUp size={16} /></div>
                         {t('avgPrice')}
@@ -455,7 +455,7 @@ export default function ProductAnalytics() {
                 const globalMax = priciest.max
                 const spread = globalMax - globalMin
                 return (
-                    <div className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
+                    <div className="glass-card" style={{ padding: '16px', marginBottom: '14px' }}>
                         <h3 className="card-heading" style={{ fontSize: '14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <DollarSign size={16} color="#10b981" /> Price Intelligence · Cross-Location Report
                         </h3>
@@ -558,10 +558,12 @@ export default function ProductAnalytics() {
                 )
             })()}
 
-            <div className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
+            {/* Charts row: Dynamics + Locations side by side */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '14px', marginBottom: '0' }}>
+            <div className="glass-card" style={{ padding: '16px' }}>
                 <h3 className="card-heading" style={{ fontSize: '14px', marginBottom: '16px' }}>{t('chartDyn')}</h3>
                 {chartDynamic.length > 0 ? (
-                    <div style={{ height: '280px', marginLeft: '-15px' }}>
+                    <div style={{ height: '220px', marginLeft: '-15px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartDynamic} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                                 <defs>
@@ -582,14 +584,14 @@ export default function ProductAnalytics() {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
+                    <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
                 )}
-            </div>
+            </div> {/* end dynamics card */}
 
-            <div className="glass-card" style={{ padding: '20px' }}>
+            <div className="glass-card" style={{ padding: '16px' }}>
                 <h3 className="card-heading" style={{ fontSize: '14px', marginBottom: '16px' }}>{t('chartLoc')}</h3>
                 {chartLocations.length > 0 ? (
-                    <div style={{ height: `${Math.max(280, chartLocations.length * 45)}px`, marginLeft: '-20px' }}>
+                    <div style={{ height: `${Math.min(Math.max(220, chartLocations.length * 32), 320)}px`, marginLeft: '-20px', overflowY: 'auto' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartLocations} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="transparent" />
@@ -605,9 +607,10 @@ export default function ProductAnalytics() {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
+                    <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
                 )}
-            </div>
+            </div> {/* end locations card */}
+            </div> {/* end charts row */}
 
             <div className="glass-card" style={{ marginTop: '16px', padding: '20px' }}>
                 <h3 className="card-heading" style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'14px'}}><Navigation size={16}/> {t('recentSalesTitle')} ({recentTransactions.length})</h3>
