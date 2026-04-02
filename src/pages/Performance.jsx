@@ -742,12 +742,16 @@ export default function Performance() {
                                 const pct = (loc.sales / maxSales) * 100;
                                 return (
                                     <div key={loc.name} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => handleLocationClick(loc)}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>
-                                            <span style={{ color: 'var(--text-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '12px' }} title={loc.name}>{loc.name}</span>
-                                            <span style={{ color: 'var(--text-color)', fontWeight: 800, flexShrink: 0 }}>{loc.sales.toLocaleString('ro-RO')} lei</span>
+                                        <div style={{ color: 'var(--text-color)', fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={loc.name}>
+                                            {loc.name}
                                         </div>
-                                        <div style={{ width: '100%', height: '8px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                            <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '4px' }}></div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ flex: 1, height: '8px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '4px' }}></div>
+                                            </div>
+                                            <div style={{ color: 'var(--text-color)', fontSize: '12px', fontWeight: 800, flexShrink: 0 }}>
+                                                {loc.sales.toLocaleString('ro-RO')} lei
+                                            </div>
                                         </div>
                                     </div>
                                 )
