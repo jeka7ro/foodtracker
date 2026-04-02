@@ -5,6 +5,23 @@ import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { Search, Loader2 } from 'lucide-react'
 
+// ─── TRANSLATIONS ───
+const dict = {
+    title: { ro: 'Meniu POS (iiko)', en: 'POS Menu (iiko)', ru: 'Меню POS (iiko)' },
+    subtitle: { ro: 'Acesta este catalogul oficial, preluat din serverul Cloud iiko.', en: 'This is the official catalog, fetched from the iiko Cloud server.', ru: 'Это официальный каталог, загруженный с облачного сервера iiko.' },
+    refetch: { ro: '↻ Sincronizare', en: '↻ Sync', ru: '↻ Синхронизация' },
+    syncing: { ro: 'Se descarcă datele...', en: 'Downloading data...', ru: 'Загрузка данных...' },
+    allBrands: { ro: 'Toate Brandurile', en: 'All Brands', ru: 'Все Бренды' },
+    search: { ro: 'Caută produs sau cod...', en: 'Search product or code...', ru: 'Поиск продукта или кода...' },
+    uniqueProducts: { ro: 'produse unice', en: 'unique products', ru: 'уникальных продуктов' },
+    parsing: { ro: 'Se încarcă catalogul iiko...', en: 'Loading iiko catalog...', ru: 'Загрузка каталога iiko...' },
+    notFound: { ro: 'Niciun produs găsit.', en: 'No product found.', ru: 'Продукт не найден.' },
+    noImage: { ro: 'Fără Poză', en: 'No Image', ru: 'Нет Фото' },
+    commonStock: { ro: 'Conectat Glovo/Wolt (Stoc Comun)', en: 'Connected Glovo/Wolt (Common Stock)', ru: 'Подключено (Общий Сток)' },
+    prev: { ro: 'Înapoi', en: 'Prev', ru: 'Назад' },
+    next: { ro: 'Înainte', en: 'Next', ru: 'Вперед' }
+}
+
 // ─── iiko API Connection ───
 const IIKO_API_KEY = 'a1fe30cdeb934aa0af01b6a35244b7f0';
 const IIKO_BASE = 'http://localhost:3005/api/iiko';
@@ -12,6 +29,8 @@ const IIKO_BASE = 'http://localhost:3005/api/iiko';
 export default function IikoProducts() {
     const { colors, isDark } = useTheme()
     const { lang } = useLanguage()
+    const l = lang || 'ro'
+    const t = (key) => dict[key]?.[l] || dict[key]?.['ro'] || key
 
     const [brands, setBrands] = useState([])
     const [selectedBrand, setSelectedBrand] = useState('all')
@@ -51,7 +70,7 @@ export default function IikoProducts() {
             
             // 4. Map into standard frontend format + DYNAMIC BRAND DETECTION
             const groupsMap = new Map((menuData.groups || []).map(g => [g.id, g.name]));
-            const items = (menuData.products || []).filter(p => p.type === 'dish' || p.type === 'good').map(p => {
+            const items = (menuData.products || []).filter(p => p.type && (p.type.toLowerCase() === 'dish' || p.type.toLowerCase() === 'good')).map(p => {
                 const category = groupsMap.get(p.parentGroup) || 'Meniu General';
                 let computedBrandName = 'Sushi Master'; // default central brand
                 
@@ -114,10 +133,10 @@ export default function IikoProducts() {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: colors.text }}>
-                        Rețetar Centralizat (Global POS Catalog)
+                        {t('title')}
                     </h1>
                     <p style={{ margin: '6px 0 0', fontSize: '14px', color: colors.textSecondary, fontWeight: '500' }}>
-                        Acesta este catalogul oficial, preluat o singură dată din serverul Cloud iiko. Brandurile sunt acum detectate corect, fără dubluri.
+                        {t('subtitle')}
                     </p>
                 </div>
                 <button onClick={() => refetch()} disabled={isSyncing}
@@ -125,7 +144,7 @@ export default function IikoProducts() {
                         padding: '10px 20px', borderRadius: '12px', border: 'none', 
                         background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer'
                     }}>
-                    {isSyncing ? 'Se descarcă 750+ produse...' : '↻ Refetch iiko API'}
+                    {isSyncing ? t('syncing') : t('refetch')}
                 </button>
             </div>
 
@@ -138,7 +157,7 @@ export default function IikoProducts() {
                             background: selectedBrand === 'all' ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)') : inputBg,
                             color: selectedBrand === 'all' ? '#6366f1' : colors.text, fontWeight: 'bold'
                         }}>
-                        Toate Brandurile
+                        {t('allBrands')}
                     </button>
                     {brands.map(b => (
                         <button key={b.id} onClick={() => setSelectedBrand(b.id)}
@@ -156,20 +175,20 @@ export default function IikoProducts() {
 
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Caută produs sau cod..." 
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} 
                             style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: glassBorder, background: inputBg, color: colors.text, outline: 'none' }} />
                     </div>
                     <div style={{ background: 'rgba(99,102,241,0.1)', padding: '8px 16px', borderRadius: '12px', color: '#6366f1', fontWeight: 'bold' }}>
-                        {filteredProducts.length} produse unice
+                        {filteredProducts.length} {t('uniqueProducts')}
                     </div>
                 </div>
             </div>
 
             {/* Content Area */}
             {isSyncing ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h3 style={{color: colors.textSecondary}}>Se parsează rețetarul companiei din Rusia/Europa...</h3></div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h3 style={{color: colors.textSecondary}}>{t('parsing')}</h3></div>
             ) : paginatedProducts.length === 0 ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h3 style={{color: colors.textSecondary}}>Niciun produs găsit.</h3></div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h3 style={{color: colors.textSecondary}}>{t('notFound')}</h3></div>
             ) : (
                 <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
@@ -179,7 +198,7 @@ export default function IikoProducts() {
                                     {p.image ? (
                                         <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
-                                        <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ccc' }}>Fără Poză</div>
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ccc' }}>{t('noImage')}</div>
                                     )}
                                     <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>
                                         {p.brand_name}
@@ -196,7 +215,7 @@ export default function IikoProducts() {
                                         {p.weight && <span style={{ fontSize: '12px', color: colors.textSecondary }}>⚖️ {p.weight} kg</span>}
                                     </div>
                                     <div style={{ marginTop: '16px', fontSize: '12px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%' }} /> Conectat Glovo/Wolt (Stoc Comun)
+                                        <div style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%' }} /> {t('commonStock')}
                                     </div>
                                 </div>
                             </div>
@@ -205,9 +224,9 @@ export default function IikoProducts() {
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
-                            <span style={{color: colors.text}}>Pagina {currentPage} din {totalPages}</span>
-                            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
+                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>{t('prev')}</button>
+                            <span style={{color: colors.text}}>{t('pageTxt').replace('{p}', currentPage).replace('{t}', totalPages)}</span>
+                            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>{t('next')}</button>
                         </div>
                     )}
                 </>
