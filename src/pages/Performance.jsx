@@ -977,13 +977,13 @@ export default function Performance() {
                     <h3 className="card-heading" style={{margin:0}}>Analiză Detaliată Locații</h3>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 100px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <div>Locație</div>
                     <div style={{ textAlign: 'center' }}>Brand</div>
-                    <div style={{ textAlign: 'right' }}>Vânzări</div>
                     <div style={{ textAlign: 'center' }}>Comenzi</div>
                     <div style={{ textAlign: 'center' }}>Produse</div>
-                    <div style={{ textAlign: 'right' }}>AOV</div>
+                    <div style={{ textAlign: 'center' }}>Comanda Medie</div>
+                    <div style={{ textAlign: 'right' }}>Vânzări</div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -991,22 +991,27 @@ export default function Performance() {
                         const locationsTotalPages = Math.ceil(allLocationData.length / locationsItemsPerPage) || 1;
                         const validPageNumber = Math.min(locationsPageNumber, locationsTotalPages);
                         const locsPaginated = allLocationData.slice((validPageNumber - 1) * locationsItemsPerPage, validPageNumber * locationsItemsPerPage);
+                        const locsMaxSales = Math.max(...allLocationData.map(l => l.sales), 1);
 
                         return (
                             <>
                                 {locsPaginated.map((loc, idx) => {
                                     const restaurantObj = activeRestaurants.find(r => r.name === loc.name);
                                     const brandObj = restaurantObj?.brands;
+                                    const pct = Math.min((loc.sales / locsMaxSales) * 100, 100);
                                     return (
                                         <div 
                                             key={idx} 
                                             className="product-row-hover" 
-                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 100px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
+                                            style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) minmax(120px, 1.5fr) 100px 100px 120px 120px', padding: '14px 20px', fontSize: '14px', alignItems: 'center', fontWeight: '600', color: 'var(--text-color)', transition: 'all 0.2s', borderBottom: '1px solid var(--glass-border)' }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
                                                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{loc.name}</span>
                                                     {restaurantObj?.city && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{restaurantObj.city}</span>}
+                                                    <div style={{ marginTop: '6px', height: '4px', background: 'var(--glass-border)', borderRadius: '2px', overflow: 'hidden', maxWidth: '85%' }}>
+                                                        <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '2px' }}></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1016,17 +1021,17 @@ export default function Performance() {
                                                     <span style={{ padding: '4px 10px', background: 'var(--glass-bg-hover)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-color)' }}>{brandObj.name}</span>
                                                 ) : '-'}
                                             </div>
-                                            <div style={{ textAlign: 'right', fontWeight: '800' }}>
-                                                {(loc.sales || 0).toLocaleString('ro-RO')} lei
-                                            </div>
                                             <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
                                                 {loc.orders || 0}
                                             </div>
                                             <div style={{ textAlign: 'center', color: 'var(--text-color)' }}>
                                                 {loc.products || 0}
                                             </div>
-                                            <div style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
+                                            <div style={{ textAlign: 'center', color: '#10b981', fontWeight: '700' }}>
                                                 {loc.orders > 0 ? (loc.sales / loc.orders).toLocaleString('ro-RO', {maximumFractionDigits:0}) : 0} lei
+                                            </div>
+                                            <div style={{ textAlign: 'right', fontWeight: '800' }}>
+                                                {(loc.sales || 0).toLocaleString('ro-RO')} lei
                                             </div>
                                         </div>
                                     )
