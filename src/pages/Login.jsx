@@ -82,15 +82,17 @@ export default function Login() {
                 animation: 'fadeUp 0.5s ease',
             }}>
                 {/* Logo + title */}
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <div style={{
-                        height: 124, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 20px'
-                    }}>
-                        <img src="/getapp_smart_food_white.png" alt="App Logo" style={{ height: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>Smart Food</div>
-                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', fontWeight: '400' }}>Sign in to your account</div>
+                <div style={{ marginBottom: '32px' }}>
+                    <img
+                        src="/getapp_smart_food_white.png"
+                        alt="App Logo"
+                        style={{
+                            height: '90px',
+                            display: 'block',
+                            margin: '0 auto',
+                            objectFit: 'contain',
+                        }}
+                    />
                 </div>
 
                 <form onSubmit={handleSubmit}>

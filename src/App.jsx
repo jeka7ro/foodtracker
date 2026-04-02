@@ -193,38 +193,66 @@ function Layout({ children }) {
 
 
     return (
-        <div style={{ display: 'flex', height: '100vh', width: '100vw', background: colors.currentBg, color: colors.text, position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif' }}>
+        <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif',
+            background: isDark
+                ? 'linear-gradient(135deg, #0f0f14 0%, #1a1a2e 30%, #0d1b2a 60%, #12121a 100%)'
+                : 'linear-gradient(135deg, #e0f4f5 0%, #b2e8ec 20%, #d4f0e8 45%, #c8dff0 70%, #dde8f5 100%)',
+            color: colors.text,
+        }}>
+            {/* Background blobs for glass effect */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+                <div style={{
+                    position: 'absolute', width: '600px', height: '600px', borderRadius: '50%',
+                    background: isDark ? 'rgba(0,180,190,0.12)' : 'rgba(15,150,160,0.25)',
+                    filter: 'blur(80px)', top: '-100px', left: '-100px',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '500px', height: '500px', borderRadius: '50%',
+                    background: isDark ? 'rgba(99,102,241,0.1)' : 'rgba(80,120,200,0.18)',
+                    filter: 'blur(80px)', bottom: '0px', right: '100px',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '400px', height: '400px', borderRadius: '50%',
+                    background: isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.2)',
+                    filter: 'blur(70px)', top: '40%', left: '40%',
+                }} />
+            </div>
             {/* ─── Sidebar ─── */}
             <aside style={{
-                background: isDark ? 'rgba(20,20,22,0.65)' : 'rgba(255,255,255,0.7)',
-                backdropFilter: 'blur(28px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(8,90,97,0.55)',
+                backdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
+                WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
+                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)'}`,
+                boxShadow: isDark ? '2px 0 32px rgba(0,0,0,0.5)' : '2px 0 32px rgba(0,80,80,0.2)',
                 overflowY: 'auto', overflowX: 'hidden',
                 transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
-                zIndex: 10,
+                zIndex: 10, position: 'relative',
             }}>
                 {/* GET App Logo */}
                 <div style={{
-                    height: HEADER_H, padding: '0 16px', display: 'flex', alignItems: 'center',
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
-                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                    height: HEADER_H,
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)'}`,
                     flexShrink: 0,
                     background: 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 12px',
+                    boxSizing: 'border-box',
                 }}>
-                    {sidebarCollapsed ? (
-                        <div style={{
-                            width: 64, height: 64,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0,
-                        }}>
-                            <img src="/getapp_smart_food_white.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, overflow: 'hidden' }}>
-                            <img src="/getapp_smart_food_white.png" alt="Logo" style={{ height: '52px', objectFit: 'contain', filter: isDark ? 'none' : 'invert(1) hue-rotate(180deg) brightness(0.5)' }} />
-                        </div>
-                    )}
+                    <img
+                        src="/getapp_smart_food_white.png"
+                        alt="Logo"
+                        style={{
+                            height: sidebarCollapsed ? '52px' : '68px',
+                            width: 'auto',
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            margin: '0 auto',
+                            transition: 'height 0.2s',
+                        }}
+                    />
                 </div>
 
                 {/* Nav */}
@@ -557,12 +585,13 @@ function Layout({ children }) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Header */}
                 <header style={{
-                    height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 24px',
-                    background: isDark ? 'rgba(22,22,24,0.75)' : 'rgba(17,109,116,0.75)',
-                    backdropFilter: 'blur(28px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)'}`,
+                    height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                    padding: '0 24px', gap: '16px',
+                    background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(8,90,97,0.55)',
+                    backdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
+                    WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)'}`,
+                    boxShadow: isDark ? '0 2px 32px rgba(0,0,0,0.5)' : '0 2px 32px rgba(0,80,80,0.2)',
                     position: 'sticky', top: 0, zIndex: 50,
                 }}>
 

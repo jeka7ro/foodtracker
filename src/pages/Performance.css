@@ -21,10 +21,11 @@
 
 .perf-title {
     margin: 0;
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 800;
     background: linear-gradient(135deg, var(--text-color, #111), var(--primary-color, #116d74));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -42,17 +43,19 @@
 .btn-primary {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
+    gap: 6px;
+    padding: 8px 16px;
+    height: 36px;
     background: linear-gradient(135deg, #116d74 0%, #0d5156 100%);
     color: #fff;
     border: none;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
-    box-shadow: 0 8px 16px rgba(17,109,116,0.25);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(17,109,116,0.25);
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .btn-primary:not(:disabled):hover {
@@ -63,16 +66,18 @@
 .btn-secondary {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
+    gap: 6px;
+    padding: 8px 16px;
+    height: 36px;
     background: var(--glass-bg, rgba(255, 255, 255, 0.05));
     border: var(--glass-border, 1px solid rgba(0,0,0,0.1));
     color: var(--text-color, #111);
-    border-radius: 14px;
+    border-radius: 10px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .btn-secondary:hover {
@@ -102,18 +107,21 @@
 }
 
 .platform-tab {
-    padding: 8px 18px;
-    border-radius: 12px;
+    padding: 0 14px;
+    height: 36px;
+    border-radius: 10px;
     border: none;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .select-filter {
-    padding: 8px 14px;
-    border-radius: 12px;
+    padding: 0 12px;
+    height: 36px;
+    border-radius: 10px;
     border: var(--glass-border, 1px solid rgba(0,0,0,0.1));
     background: var(--input-bg, rgba(255, 255, 255, 0.8));
     color: var(--text-color, #111);
@@ -131,19 +139,21 @@
 }
 
 .period-tab {
-    padding: 6px 14px;
-    border-radius: 10px;
+    padding: 0 12px;
+    height: 30px;
+    border-radius: 8px;
     border: none;
-    font-weight: 700;
-    font-size: 12px;
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
     background: transparent;
+    white-space: nowrap;
 }
 .period-tab.active {
     background: #116d74;
     color: #fff;
-    box-shadow: 0 4px 12px rgba(17,109,116,0.3);
+    box-shadow: 0 3px 8px rgba(17,109,116,0.3);
 }
 
 .kpi-grid {
@@ -176,11 +186,12 @@
 }
 
 .kpi-value {
-    font-size: 38px;
-    font-weight: 900;
-    margin: 12px 0 0;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 10px 0 0;
     background: linear-gradient(to right, var(--text-color, #111), #6b7280);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -191,9 +202,9 @@
 }
 
 .card-heading {
-    margin: 0 0 24px 0;
-    font-size: 18px;
-    font-weight: 800;
+    margin: 0 0 20px 0;
+    font-size: 15px;
+    font-weight: 700;
 }
 
 .heatmap-grid {

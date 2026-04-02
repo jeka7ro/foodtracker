@@ -23,6 +23,7 @@ export default function ProductAnalytics() {
     const [restaurants, setRestaurants] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [productImage, setProductImage] = useState(null)
+    const [selectedRows, setSelectedRows] = useState(new Set())
 
     const t = (key) => {
         const d = {
@@ -150,6 +151,7 @@ export default function ProductAnalytics() {
             })
             
             setSalesData(matchItems)
+            setSelectedRows(new Set())
             setIsLoading(false)
         }
         load()
@@ -183,6 +185,7 @@ export default function ProductAnalytics() {
             const rName = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
 
             transactionsList.push({
+                id: sale.id + '-' + Math.random().toString(36).substring(7),
                 date: new Date(sale.placed_at),
                 locationName: rName,
                 platform: sale.platform,
@@ -313,7 +316,7 @@ export default function ProductAnalytics() {
                         <div style={{padding:'6px', background:'rgba(16,185,129,0.1)', borderRadius:'8px', color:'#10b981'}}><DollarSign size={16} /></div>
                         {t('totalRev')}
                     </div>
-                    <div className="compact-kpi-val">{isLoading ? '...' : rev.toLocaleString('ro-RO', {minimumFractionDigits:2})} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
+                    <div className="compact-kpi-val">{isLoading ? '...' : rev.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{fontSize:'14px', opacity:0.7}}>RON</span></div>
                 </div>
 
                 <div className="compact-kpi">
@@ -321,7 +324,7 @@ export default function ProductAnalytics() {
                         <div style={{padding:'6px', background:'rgba(99,102,241,0.1)', borderRadius:'8px', color:'#6366f1'}}><Activity size={16} /></div>
                         {t('totalUnits')}
                     </div>
-                    <div className="compact-kpi-val">{isLoading ? '...' : units} <span style={{fontSize:'14px', opacity:0.7}}>buc.</span></div>
+                    <div className="compact-kpi-val">{isLoading ? '...' : units.toLocaleString('ro-RO')} <span style={{fontSize:'14px', opacity:0.7}}>buc.</span></div>
                 </div>
 
                 <div className="compact-kpi">
@@ -375,7 +378,7 @@ export default function ProductAnalytics() {
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
                                     formatter={(value) => [`${Number(value).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON`, t('sales')]}
                                 />
-                                <Bar dataKey="rev" fill="#10b981" radius={[0, 8, 8, 0]} barSize={26} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO')} lei` }} />
+                                <Bar dataKey="rev" fill="#10b981" radius={[0, 8, 8, 0]} barSize={26} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lei` }} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -392,6 +395,17 @@ export default function ProductAnalytics() {
                             <table className="tx-table">
                                 <thead>
                                     <tr>
+                                        <th style={{ width: 40, textAlign: 'center' }}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={recentTransactions.length > 0 && selectedRows.size === recentTransactions.length}
+                                                onChange={e => {
+                                                    if (e.target.checked) setSelectedRows(new Set(recentTransactions.map(t => t.id)))
+                                                    else setSelectedRows(new Set())
+                                                }}
+                                                style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                                            />
+                                        </th>
                                         <th>{t('colDate')}</th>
                                         <th>{t('colLocation')}</th>
                                         <th>{t('colPlatform')}</th>
@@ -400,8 +414,28 @@ export default function ProductAnalytics() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentTransactions.slice((pageNumber - 1) * itemsPerPage, pageNumber * itemsPerPage).map((tx, idx) => (
-                                        <tr key={idx}>
+                                    {recentTransactions.slice((pageNumber - 1) * itemsPerPage, pageNumber * itemsPerPage).map((tx, idx) => {
+                                        const isSelected = selectedRows.has(tx.id)
+                                        return (
+                                        <tr key={tx.id} onClick={() => {
+                                            const next = new Set(selectedRows)
+                                            if (next.has(tx.id)) next.delete(tx.id)
+                                            else next.add(tx.id)
+                                            setSelectedRows(next)
+                                        }} style={{ cursor: 'pointer', background: isSelected ? (isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)') : '' }}>
+                                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={isSelected}
+                                                    onChange={() => {
+                                                        const next = new Set(selectedRows)
+                                                        if (next.has(tx.id)) next.delete(tx.id)
+                                                        else next.add(tx.id)
+                                                        setSelectedRows(next)
+                                                    }}
+                                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                                                />
+                                            </td>
                                             <td style={{color: 'var(--text-secondary)'}}>
                                                 <div style={{display:'flex', alignItems:'center', gap:'6px'}}><Calendar size={14}/> {tx.date.toLocaleDateString('ro-RO')}</div>
                                                 <div style={{display:'flex', alignItems:'center', gap:'6px', marginTop:'4px', fontSize:'12px'}}><Clock size={12}/> {tx.date.toLocaleTimeString('ro-RO')}</div>
@@ -417,7 +451,8 @@ export default function ProductAnalytics() {
                                             <td>{tx.qty}x</td>
                                             <td style={{color: '#10b981'}}>{tx.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</td>
                                         </tr>
-                                    ))}
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>

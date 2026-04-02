@@ -4,7 +4,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { LineChart, Line, BarChart, Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Download, UploadCloud, Activity, ShoppingBag, CreditCard } from 'lucide-react'
+import { Download, UploadCloud, Activity, ShoppingBag, CreditCard, Package } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import './Performance.css'
 
@@ -98,6 +98,47 @@ export default function Performance() {
             setRestaurants(r || [])
         })
     }, [])
+
+    const [iikoProducts, setIikoProducts] = useState([])
+
+    useEffect(() => {
+        async function fetchNomenclature() {
+            try {
+                const { data: rests } = await supabase.from('restaurants').select('iiko_config').not('iiko_config', 'is', null)
+                if (!rests || rests.length === 0) return
+                const orgId = rests.find(r => r.iiko_config?.organizationId)?.iiko_config?.organizationId
+                if (!orgId) return
+
+                const resp = await fetch(`http://localhost:3005/api/nomenclature?orgId=${orgId}`, {
+                    headers: { 'x-iiko-token': 'a1fe30cdeb934aa0af01b6a35244b7f0' }
+                })
+                if (resp.ok) {
+                    const data = await resp.json()
+                    const fullList = [...(data.products || []), ...(data.groups || [])]
+                    setIikoProducts(fullList)
+                }
+            } catch (e) {
+                console.log('Iiko fetch fail', e)
+            }
+        }
+        fetchNomenclature()
+    }, [])
+
+    const getProductImage = (productName) => {
+        if (!iikoProducts || iikoProducts.length === 0) return null
+        const cleanNameText = productName.split('[')[0].trim().toLowerCase()
+        const excludeWords = ['sushimaster', 'sushi', 'master', 'bucuresti', 'brasov', 'constanta', 'iasi']
+        let cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 2 && !excludeWords.includes(w))
+        let found = iikoProducts.find(p => p.name?.toLowerCase().includes(cleanNameText))
+        if (!found && cleanWords.length > 0) {
+            found = iikoProducts.find(p => {
+                const n = p.name?.toLowerCase() || ''
+                return cleanWords.every(w => n.includes(w))
+            })
+        }
+        if (found && found.imageLinks && found.imageLinks.length > 0) return found.imageLinks[0]
+        return null
+    }
 
     useEffect(() => {
         setPlatformFilter(searchParams.get('platform') || 'all')
@@ -643,16 +684,23 @@ export default function Performance() {
                         <div>{t('topProduct')}</div>
                         <div style={{ textAlign: 'right' }}>{t('salesTotal')}</div>
                     </div>
-                    {paginatedItems.map((item) => (
-                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name))} style={{ cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
+                    {paginatedItems.map((item) => {
+                        const imgUrl = getProductImage(item.name)
+                        return (
+                        <div key={item.id} className="list-row product-row-hover" onClick={() => navigate('/product-analytics/' + encodeURIComponent(item.name))} style={{ display: 'grid', gridTemplateColumns: '40px auto 1fr auto', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', transition: 'all 0.15s' }} title={`Deschide Analytics: ${item.name}`}>
                             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-secondary)', opacity: 0.5 }}>{item.id}</div>
+                            {imgUrl ? (
+                                <img src={imgUrl} alt={item.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '16px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
+                            ) : (
+                                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--glass-bg)', marginRight: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}><Package size={20} /></div>
+                            )}
                             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-color)' }}>{item.name}</div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-color)' }}>{item.revenue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON</div>
                                 <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>{item.count} {t('piecesOrdered')}</div>
                             </div>
                         </div>
-                    ))}
+                    )})}
                     {paginatedItems.length === 0 && <div style={{padding:'32px', textAlign:'center', color:'var(--text-secondary)'}}>{t('noProducts')}</div>}
                 </div>
                 

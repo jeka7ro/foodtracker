@@ -39,7 +39,7 @@
 }
 
 .dash-title {
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 800;
     margin: 0;
     background: linear-gradient(135deg, var(--text-color, #111), var(--primary-color, #116d74));
@@ -128,9 +128,9 @@
 }
 
 .kpi-val {
-    font-size: 40px;
+    font-size: 26px;
     font-weight: 800;
-    letter-spacing: -1px;
+    letter-spacing: -0.5px;
     margin-bottom: 6px;
     line-height: 1;
 }
@@ -149,7 +149,7 @@
 }
 
 .section-title {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 800;
     color: var(--text-color, #111);
     text-transform: uppercase;
