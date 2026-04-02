@@ -9,6 +9,53 @@ import './Performance.css'
 
 const IIKO_API_KEY = 'a1fe30cdeb934aa0af01b6a35244b7f0'
 
+// ── Romanian holiday utilities ──────────────────────────────────────────────
+function orthodoxEaster(year) {
+    const a = year % 19, b = year % 4, c = year % 7
+    const d = (19 * a + 15) % 30
+    const e = (2 * b + 4 * c + 6 * d + 6) % 7
+    const month = Math.floor((d + e + 114) / 31)
+    const day = ((d + e + 114) % 31) + 1
+    const julian = new Date(year, month - 1, day)
+    julian.setDate(julian.getDate() + 13)   // Julian → Gregorian
+    return julian
+}
+
+function getRomanianHolidays(year) {
+    const easter = orthodoxEaster(year)
+    const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r }
+    const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`
+    const e = easter
+    const legal = [
+        { d: `01-01`, label: '🎆 Anul Nou' },
+        { d: `02-01`, label: '🎆 Anul Nou' },
+        { d: `24-01`, label: '🇷🇴 Unirea' },
+        { d: `01-05`, label: '⚒ Muncii' },
+        { d: `01-06`, label: '🧒 Copilului' },
+        { d: `15-08`, label: '✝️ Sf. Maria' },
+        { d: `30-11`, label: '✝️ Sf. Andrei' },
+        { d: `01-12`, label: '🇷🇴 Ziua Națională' },
+        { d: `25-12`, label: '🎄 Crăciun' },
+        { d: `26-12`, label: '🎄 Crăciun' },
+        { d: fmt(addDays(e, -2)), label: '✝️ Vinerea Mare' },
+        { d: fmt(e),             label: '✝️ Paști' },
+        { d: fmt(addDays(e, 1)), label: '✝️ Paști' },
+        { d: fmt(addDays(e, 39)), label: '✝️ Înălțarea' },
+        { d: fmt(addDays(e, 49)), label: '✝️ Rusalii' },
+        { d: fmt(addDays(e, 50)), label: '✝️ Rusalii' },
+    ]
+    const special = [
+        { d: `14-02`, label: '❤️ Dragobete' },
+        { d: `01-03`, label: '🌸 Mărțișor' },
+        { d: `08-03`, label: '🌷 8 Martie' },
+        { d: `31-12`, label: '🥂 Revelion' },
+    ]
+    const map = {}
+    ;[...legal, ...special].forEach(h => { map[h.d] = { label: h.label, legal: legal.some(l => l.d === h.d) } })
+    return map
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function ProductAnalytics() {
     const { productName } = useParams()
     const decodedName = decodeURIComponent(productName)
@@ -17,8 +64,13 @@ export default function ProductAnalytics() {
     const navigate = useNavigate()
 
     const [searchParams] = useSearchParams()
-    const initialPeriod = searchParams.get('period') || 'week'
-    const [activePeriod, setActivePeriod] = useState(initialPeriod)
+    const initialPeriod = searchParams.get('period') || localStorage.getItem('analyticsActivePeriod') || 'week'
+    const [activePeriod, setActivePeriodState] = useState(initialPeriod)
+
+    const setActivePeriod = (p) => {
+        setActivePeriodState(p)
+        localStorage.setItem('analyticsActivePeriod', p)
+    }
     const [pageNumber, setPageNumber] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(20)
     const [salesData, setSalesData] = useState([])
@@ -282,6 +334,8 @@ export default function ProductAnalytics() {
             priceStats
         }
     }, [salesData, activePeriod, decodedName, restaurants])
+
+    const showDayNames = ['month', 'lastmonth', 'year'].includes(activePeriod) && chartDynamic.length > 7
 
     return (
         <div className={`perf-container ${isDark ? 'dark-theme' : 'light-theme'}`} style={{ overflowY: 'auto', padding: '20px 28px', gap: '14px' }}>
@@ -573,7 +627,44 @@ export default function ProductAnalytics() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} vertical={false} />
-                                <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickMargin={12} />
+                <XAxis
+                                    dataKey="name"
+                                    stroke="var(--text-secondary)"
+                                    fontSize={10}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={4}
+                                    height={showDayNames ? 42 : 20}
+                                    tick={(props) => {
+                                        const { x, y, payload } = props
+                                        const label = payload.value  // e.g. "01 mar."
+                                        if (!showDayNames) {
+                                            return <text x={x} y={y+12} textAnchor="middle" fill="var(--text-secondary)" fontSize={10}>{label}</text>
+                                        }
+                                        // Parse to date
+                                        const monthMap = { 'ian':0,'feb':1,'mar':2,'apr':3,'mai':4,'iun':5,'iul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11 }
+                                        const parts = label.replace('.','').trim().split(' ')
+                                        const dayN = parseInt(parts[0])
+                                        const monN = monthMap[parts[1]] ?? 0
+                                        const yr = new Date().getFullYear()
+                                        const d = new Date(yr, monN, dayN)
+                                        const dayNames = ['Du','Lu','Ma','Mi','Jo','Vi','Sâ']
+                                        const dayName = dayNames[d.getDay()]
+                                        const isWeekend = d.getDay() === 0 || d.getDay() === 6
+                                        const ddMM = `${String(dayN).padStart(2,'0')}-${String(monN+1).padStart(2,'0')}`
+                                        const holidays = getRomanianHolidays(yr)
+                                        const holiday = holidays[ddMM]
+                                        const isLegal = holiday?.legal
+                                        const textColor = isLegal ? '#f59e0b' : isWeekend ? '#6366f1' : 'var(--text-secondary)'
+                                        return (
+                                            <g>
+                                                <text x={x} y={y+10} textAnchor="middle" fill={textColor} fontSize={10} fontWeight={isLegal || isWeekend ? '700' : '400'}>{label}</text>
+                                                <text x={x} y={y+22} textAnchor="middle" fill={textColor} fontSize={9} fontWeight={isLegal ? '800' : '400'}>{dayName}</text>
+                                                {holiday && <text x={x} y={y+34} textAnchor="middle" fontSize={9}>{holiday.label.split(' ')[0]}</text>}
+                                            </g>
+                                        )
+                                    }}
+                                />
                                 <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => v.toLocaleString('ro-RO')} />
                                 <Tooltip 
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', background: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)' }}
