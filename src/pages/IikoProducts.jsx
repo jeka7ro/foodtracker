@@ -43,60 +43,19 @@ export default function IikoProducts() {
         supabase.from('brands').select('id, name, logo_url').order('name').then(({ data }) => setBrands(data || []))
     }, [])
 
-    // Fetch Global Menu ONCE directly from iiko Server
+    // Fetch Global Menu ONCE directly from Supabase
     const { data: products = [], isLoading: isSyncing, refetch } = useQuery({
         queryKey: ['iiko-global-menu'],
         queryFn: async () => {
-            // 1. Auth
-            const resAuth = await fetch(`${IIKO_BASE}/access_token`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiLogin: IIKO_API_KEY })
-            });
-            const { token } = await resAuth.json();
-
-            // 2. Get first organization ID (since nomenclature is shared company-wide)
-            const resOrgs = await fetch(`${IIKO_BASE}/organizations`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({})
-            });
-            const { organizations } = await resOrgs.json();
-            if(!organizations || !organizations.length) return [];
-            
-            // 3. Download Nomenclature
-            const resMenu = await fetch(`${IIKO_BASE}/nomenclature`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ organizationId: organizations[0].id })
-            });
-            const menuData = await resMenu.json();
-            
-            // 4. Map into standard frontend format + DYNAMIC BRAND DETECTION
-            const groupsMap = new Map((menuData.groups || []).map(g => [g.id, g.name]));
-            const items = (menuData.products || []).filter(p => p.type && (p.type.toLowerCase() === 'dish' || p.type.toLowerCase() === 'good')).map(p => {
-                const category = groupsMap.get(p.parentGroup) || 'Meniu General';
-                let computedBrandName = 'Sushi Master'; // default central brand
-                
-                const upCat = category.toUpperCase();
-                const upName = p.name.toUpperCase();
-
-                if (upCat.includes('IKURA') || upName.includes('IKURA')) computedBrandName = 'Ikura Sushi';
-                else if (upCat.includes('SMASH') || upName.includes('SMASH')) computedBrandName = 'Smash Me';
-                else if (upCat.includes('W LS') || upCat.includes('WE LOVE') || upName.includes('W LS') || upName.includes('WE LOVE') || upName.includes('W LOVE')) computedBrandName = 'We Love Sushi';
-                else if (upCat.includes('BOWL')) computedBrandName = 'Super Bowl';
-
-                return {
-                    iiko_id: p.id,
-                    name: p.name,
-                    sku: p.code,
-                    category,
-                    price: p.defaultUnit || p.prices?.[0] ? null : 0, // usually default pricing is hard to extract cleanly, leave it out or compute if needed
-                    brand_name: computedBrandName,
-                    weight: p.weight,
-                    measure_unit: 'kg',
-                    image: p.imageLinks?.[0] || null
-                };
-            });
-            return items;
+            const { data, error } = await supabase
+                .from('iiko_catalog')
+                .select('*')
+                .order('name');
+            if (error) throw error;
+            return data;
         },
-        refetchOnWindowFocus: false
+        refetchOnWindowFocus: false,
+        staleTime: 1000 * 60 * 5 // 5 minutes fresh
     })
 
     useEffect(() => {
@@ -195,8 +154,8 @@ export default function IikoProducts() {
                         {paginatedProducts.map((p, idx) => (
                             <div key={p.iiko_id} style={{ background: isDark ? 'rgba(255,255,255,0.02)' : '#fff', borderRadius: '20px', border: glassBorder, overflow: 'hidden' }}>
                                 <div style={{ height: '200px', width: '100%', position: 'relative', background: '#f8fafc' }}>
-                                    {p.image ? (
-                                        <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    {p.image_url ? (
+                                        <img src={p.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
                                         <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ccc' }}>{t('noImage')}</div>
                                     )}
