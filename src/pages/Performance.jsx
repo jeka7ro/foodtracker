@@ -458,7 +458,7 @@ export default function Performance() {
             if (sale.items && Array.isArray(sale.items)) {
                 sale.items.forEach(it => {
                     locMap[rName].products += (it.quantity || 1)
-                    const pName = it.name || 'Produs Necunoscut'
+                    const pName = it.product_name || it.name || 'Produs Necunoscut'
                     if (!locMap[rName].productCounts[pName]) {
                         locMap[rName].productCounts[pName] = { count: 0, image_url: it.image_url || '' }
                     }
@@ -530,12 +530,13 @@ export default function Performance() {
                 sale.items.forEach(it => {
                     const price = approxPrice
                     const qty = parseInt(it.quantity) || 1
-                    if (!itemsMap[it.name]) itemsMap[it.name] = { name: it.name, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {}, plats: {} }
-                    itemsMap[it.name].count += qty
-                    itemsMap[it.name].revenue += (price * qty)
-                    itemsMap[it.name].locs[locStr] = (itemsMap[it.name].locs[locStr] || 0) + qty
-                    itemsMap[it.name].days[dayStr] = (itemsMap[it.name].days[dayStr] || 0) + qty
-                    itemsMap[it.name].plats[platStr] = (itemsMap[it.name].plats[platStr] || 0) + qty
+                    const pFullName = it.product_name || it.name || 'Produs Necunoscut'
+                    if (!itemsMap[pFullName]) itemsMap[pFullName] = { name: pFullName, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {}, plats: {} }
+                    itemsMap[pFullName].count += qty
+                    itemsMap[pFullName].revenue += (price * qty)
+                    itemsMap[pFullName].locs[locStr] = (itemsMap[pFullName].locs[locStr] || 0) + qty
+                    itemsMap[pFullName].days[dayStr] = (itemsMap[pFullName].days[dayStr] || 0) + qty
+                    itemsMap[pFullName].plats[platStr] = (itemsMap[pFullName].plats[platStr] || 0) + qty
                 })
             }
         })
