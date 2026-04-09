@@ -7,7 +7,7 @@ headers = []
 [functions."*"]
 
 [build]
-publish = "/Users/eugeniucazmal/dev/aggregator-monitor-fba2535a/dist"
+publish = "/Users/eugeniucazmal/Downloads/dev_office/aggregator-monitor-fba2535a/dist"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"

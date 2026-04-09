@@ -116,6 +116,7 @@ export class SalesSync {
                         
                         let res;
                         let retries = 3;
+                        let fatalError = false;
                         while(retries > 0) {
                             res = await fetch(`https://api-eu.syrve.live/api/1/deliveries/by_delivery_date_and_status`, {
                                 method: 'POST',
@@ -124,14 +125,23 @@ export class SalesSync {
                             });
                             if (res.ok) break;
                             const errTxt = await res.text().catch(() => 'no text');
+                            if (res.status === 403 || res.status === 400 || errTxt.includes('ORGANIZATION_DENIED')) {
+                                console.log(`[Sync] FATAL Iiko API Error (HTTP ${res.status}): ${errTxt} | Skipping restaurant entirely.`);
+                                fatalError = true;
+                                break;
+                            }
                             console.log(`[Sync] Rate limited or error from iiko (HTTP ${res.status}): ${errTxt} | Retrying in 5s...`);
                             await new Promise(r => setTimeout(r, 6000));
                             retries--;
                         }
                         
+                        if (fatalError) {
+                            break; // break the 'while (currentDaysBack > 0)' loop for this restaurant
+                        }
+
                         if (!res || !res.ok) {
                             console.error('[Sync] Abandoning chunk after 3 failed retries.');
-                            continue;
+                            continue; // skip this day, but try next day
                         }
                         
                         // Safety delay between successful requests to prevent future rate limits
