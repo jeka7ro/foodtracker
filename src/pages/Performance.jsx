@@ -498,9 +498,12 @@ export default function Performance() {
             const dName = allDaysTrans[dt.getDay()]
             const hr = dt.getHours()
             const key = `${dName}-${hr}`
-            if (!map[key]) map[key] = { sales: 0, orders: 0 }
+            if (!map[key]) map[key] = { sales: 0, orders: 0, products: 0 }
             map[key].sales += parseFloat(sale.total_amount) || 0
             map[key].orders += 1
+            if (sale.items && Array.isArray(sale.items)) {
+                map[key].products += sale.items.reduce((sum, it) => sum + (parseInt(it.quantity) || 1), 0)
+            }
             if (map[key].sales > maxS) maxS = map[key].sales
         })
         return { days: daysToRender, hours: possibleHours, cellData: map, maxSales: maxS }
@@ -908,7 +911,7 @@ export default function Performance() {
                                             border: val === 0 ? 'var(--glass-border)' : 'none'
                                         }}>
                                             <span style={{ fontSize: '13px', fontWeight: '800' }}>{val ? `${val.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
-                                            {cell.orders > 0 && <span style={{ fontSize: '10px', opacity: 0.9 }}>{cell.orders} {t('orders').toLowerCase()}</span>}
+                                            {cell.orders > 0 && <span style={{ fontSize: '10px', opacity: 0.9 }}>{cell.orders} {t('orders').toLowerCase()} | {cell.products} {t('products').toLowerCase()}</span>}
                                         </div>
                                     </div>
                                 )
@@ -930,13 +933,13 @@ export default function Performance() {
                                         const cell = cellData[`${d}-${h}`] || { sales: 0, orders: 0 }
                                         const val = cell.sales
                                         return (
-                                            <div key={`${d}-${h}`} className="heatmap-cell" title={`${val} RON, ${cell.orders} orders`} style={{ 
+                                            <div key={`${d}-${h}`} className="heatmap-cell" title={`${val} RON, ${cell.orders} orders, ${cell.products} products`} style={{ 
                                                 background: getHeatmapColor(val), 
                                                 color: getHeatmapTextColor(val),
                                                 border: val === 0 ? 'var(--glass-border)' : 'none'
                                             }}>
                                                 <span style={{ fontSize: '12px', fontWeight: '800' }}>{val ? `${val.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
-                                                {cell.orders > 0 && <span style={{ fontSize: '10px', fontWeight: '600', opacity: 0.85 }}>{cell.orders} cmd.</span>}
+                                                {cell.orders > 0 && <span style={{ fontSize: '10px', fontWeight: '600', opacity: 0.85 }}>{cell.orders} cmd. | {cell.products} prod.</span>}
                                             </div>
                                         )
                                     })}
@@ -949,6 +952,7 @@ export default function Performance() {
                             {days.map(d => {
                                 const totalDay = hours.reduce((sum, h) => sum + (cellData[`${d}-${h}`]?.sales || 0), 0)
                                 const totalOrders = hours.reduce((sum, h) => sum + (cellData[`${d}-${h}`]?.orders || 0), 0)
+                                const totalProducts = hours.reduce((sum, h) => sum + (cellData[`${d}-${h}`]?.products || 0), 0)
                                 return (
                                     <div key={`total-${d}`} style={{ 
                                         height: '44px', background: 'var(--glass-bg-hover)', borderRadius: '6px',
@@ -956,7 +960,7 @@ export default function Performance() {
                                         color: 'var(--text-color)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.05)'
                                     }}>
                                         <span style={{ fontSize: '12px', fontWeight: '900' }}>{totalDay > 0 ? `${totalDay.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
-                                        {totalOrders > 0 && <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{totalOrders} cmd.</span>}
+                                        {totalOrders > 0 && <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{totalOrders} cmd. | {totalProducts} prod.</span>}
                                     </div>
                                 )
                             })}
