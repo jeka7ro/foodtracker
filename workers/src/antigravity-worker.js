@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import path from 'path'
 import { processAndNotify, notifyStopResolved } from './notifications/telegram.js'
+import cron from 'node-cron'
+import { salesSync } from './services/sales-sync.js'
 
 import { GlovoChecker } from './checkers/glovo-checker.js'
 import { WoltChecker } from './checkers/wolt-checker.js'
@@ -547,6 +549,20 @@ async function startWorker() {
       console.error('[Worker] Eroare în tick:', err)
     }
   }, WORKER_TICK_MS)
+
+  // Autopilot nocturn - se trage ziua de ieri, în fiecare dimineață la 05:00
+  cron.schedule('0 5 * * *', async () => {
+    console.log('[CRON] Pornire automată sincronizare Iiko (1 zi, după tura anterioară)');
+    try {
+        await salesSync.syncSales(1);
+        console.log('[CRON] Sincronizare nocturnă finalizată.');
+    } catch(e) {
+        console.error('[CRON] Eroare la sincronizare nocturnă:', e);
+    }
+  }, {
+    scheduled: true,
+    timezone: "Europe/Bucharest"
+  });
 }
 
 startWorker().catch((err) => {
