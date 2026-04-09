@@ -31,85 +31,46 @@ const dict = {
     unmapped: { ro: 'Produs Lipsă sau Necunoscut', en: 'Missing or Unknown Product', ru: 'Неизвестный Продукт' }
 }
 
-const ENV_CONFIGS = [
-    { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko' },
-    { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve' }
-];
-
 const fetchIikoStopsWithMenu = async () => {
     const rawStops = [];
     let totalOrganizations = 0;
     const stoppedOrgIds = new Set();
     
-    for (const env of ENV_CONFIGS) {
-        try {
-            const resAuth = await fetch(`${env.baseUrl}/access_token`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiLogin: env.key })
-            });
-            if (!resAuth.ok) continue;
-            const { token } = await resAuth.json();
+    // Fetch restaurants from Supabase
+    const { data: restaurants, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .not('iiko_restaurant_id', 'is', null);
 
-            const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({})
-            });
-            const { organizations } = await resOrgs.json();
-            if (!organizations) continue;
+    if (error) {
+        console.error('Error fetching restaurants:', error);
+        return { stops: [], totalOrgs: 0, stoppedOrgs: [] };
+    }
+
+    if (restaurants) {
+        totalOrganizations = restaurants.length;
+        
+        for (const rest of restaurants) {
+            const config = rest.iiko_config || {};
+            const liveStops = config.iiko_live_stops || [];
             
-            totalOrganizations += organizations.length;
-            const orgIds = organizations.map(o => o.id);
-
-            if (orgIds.length > 0) {
-                const resStops = await fetch(`${env.baseUrl}/stop_lists`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ organizationIds: orgIds })
-                });
-                const { terminalGroupStopLists } = await resStops.json();
-
-                if (terminalGroupStopLists) {
-                    for (const orgGroup of terminalGroupStopLists) {
-                        const orgInfo = organizations.find(o => o.id === orgGroup.organizationId);
-                        const terminalGroups = orgGroup.items || [];
-                        
-                        if (terminalGroups.length > 0) {
-                            for (const tGroup of terminalGroups) {
-                                const products = tGroup.items || [];
-                                if (products.length > 0) {
-                                    stoppedOrgIds.add(orgGroup.organizationId);
-                                    for (const p of products) {
-                                        rawStops.push({ 
-                                            orgId: orgGroup.organizationId, 
-                                            orgName: orgInfo?.name || '?',
-                                            productId: p.productId, 
-                                            balance: p.balance,
-                                            dateAdd: p.dateAdd
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if (liveStops.length > 0) {
+                stoppedOrgIds.add(rest.id);
+                for (const p of liveStops) {
+                    rawStops.push({
+                        orgId: rest.iiko_restaurant_id || rest.id,
+                        orgName: rest.name || '?',
+                        productId: p.productId,
+                        productName: p.productName || 'Produs necunoscut',
+                        balance: p.balance,
+                        dateAdd: p.dateAdd
+                    });
                 }
             }
-        } catch (e) {
-            console.error('Failed to fetch from env:', env.baseUrl, e);
         }
     }
 
-    // Download menu to map exact product names from our newly created database table!
-    let menuMap = new Map();
-    const { data: catalog } = await supabase.from('iiko_catalog').select('iiko_id, name');
-    if (catalog) {
-         catalog.forEach(c => menuMap.set(c.iiko_id, c.name));
-    }
-
-    // Enhance raw stops with actual names
-    const finalStops = rawStops.map(s => ({
-        ...s,
-        productName: menuMap.get(s.productId) || null
-    }));
-
-    return { stops: finalStops, totalOrgs: totalOrganizations, stoppedOrgs: Array.from(stoppedOrgIds) };
+    return { stops: rawStops, totalOrgs: totalOrganizations, stoppedOrgs: Array.from(stoppedOrgIds) };
 };
 
 export default function StopControl() {

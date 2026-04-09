@@ -47,6 +47,14 @@ function IconPlay({ size = 14, color = 'currentColor' }) {
     )
 }
 
+function IconServer({ size = 14, color = 'currentColor' }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>
+        </svg>
+    )
+}
+
 function IconHistory({ size = 16, color = 'currentColor' }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -148,10 +156,31 @@ export default function Monitoring() {
     const [autoRefresh, setAutoRefresh] = useState(true)
     const [checkingId, setCheckingId] = useState(null)
     const [checkModal, setCheckModal] = useState({ open: false, restaurantName: '', results: [], progress: 0, total: 0, done: false, error: null })
+    const [syncTestModal, setSyncTestModal] = useState({ open: false, testing: false, results: [], error: null })
+    const [syncReports, setSyncReports] = useState([])
+    const [syncReportsLoading, setSyncReportsLoading] = useState(false)
+    const [expandedReport, setExpandedReport] = useState(null)
     const [showHistory, setShowHistory] = useState(false)
     const [checkingAll, setCheckingAll] = useState(false)
+    const [discoveringId, setDiscoveringId] = useState(null)
+    // ─── Sync Table Filters & Pagination ───
+    const [syncTableFilter, setSyncTableFilter] = useState({ restaurant: '', platform: '', type: '', search: '' })
+    const [syncTablePage, setSyncTablePage] = useState(1)
+    const [syncTablePageSize, setSyncTablePageSize] = useState(25)
 
-    useEffect(() => { fetchData() }, [])
+    useEffect(() => { fetchData(); fetchSyncReports() }, [])
+
+    async function fetchSyncReports() {
+        setSyncReportsLoading(true)
+        try {
+            const res = await fetch('http://localhost:3001/api/sync-reports')
+            if (res.ok) {
+                const data = await res.json()
+                setSyncReports(data.reports || [])
+            }
+        } catch (_) {}
+        setSyncReportsLoading(false)
+    }
 
     useEffect(() => {
         if (!autoRefresh) return
@@ -162,13 +191,67 @@ export default function Monitoring() {
     async function fetchData(silent = false) {
         try {
             if (!silent) setLoading(true)
+            
+            const ENV_CONFIGS = [
+                { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko', defaultBrand: 'Sushi Master' },
+                { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve', defaultBrand: 'Smash Me' }
+            ];
+
+            let apiOrgs = [];
+            for (const env of ENV_CONFIGS) {
+                try {
+                    const resAuth = await fetch(`${env.baseUrl}/access_token`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ apiLogin: env.key })
+                    });
+                    if (resAuth.ok) {
+                        const { token } = await resAuth.json();
+                        const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({})
+                        });
+                        const data = await resOrgs.json();
+                        if (data.organizations) {
+                            apiOrgs.push(...data.organizations.map(o => ({ ...o, _env: env })));
+                        }
+                    }
+                } catch(e) { console.error("Monitor proxy fetch error:", e); }
+            }
+
             const [restaurantsRes, checksRes] = await Promise.all([
-                supabase.from('restaurants').select('*, brands(id, name, logo_url)').eq('is_active', true).order('city').order('name'),
+                supabase.from('restaurants').select('*, brands(*)'),
                 supabase.from('monitoring_checks').select('*').order('checked_at', { ascending: false }).limit(500)
             ])
             if (restaurantsRes.error) throw restaurantsRes.error
             if (checksRes.error) throw checksRes.error
-            setRestaurants(restaurantsRes.data || [])
+            
+            const rawDb = restaurantsRes.data || [];
+            
+            const dbMap = new Map();
+            rawDb.forEach(r => {
+                if (r.iiko_restaurant_id) dbMap.set(r.iiko_restaurant_id, r);
+            });
+
+            const finalRests = apiOrgs.map(org => {
+                 const dbMatch = dbMap.get(org.id) || {};
+                 return {
+                     id: dbMatch.id || org.id, 
+                     iiko_restaurant_id: org.id,
+                     name: org.name,
+                     city: org.name.split(' ').pop() || 'Unknown',
+                     is_active: dbMatch.is_active !== false,
+                     glovo_url: dbMatch.glovo_url || '',
+                     wolt_url: dbMatch.wolt_url || '',
+                     bolt_url: dbMatch.bolt_url || '',
+                     brands: dbMatch.brands || null,
+                     iiko_config: dbMatch.iiko_config || {}
+                 }
+            });
+
+            const knownIds = new Set(finalRests.map(r => r.iiko_restaurant_id));
+            const orphanDbRests = rawDb.filter(r => r.is_active && (!r.iiko_restaurant_id || !knownIds.has(r.iiko_restaurant_id)));
+
+            setRestaurants([...finalRests, ...orphanDbRests])
             setChecks(checksRes.data || [])
             setLastRefresh(new Date())
         } catch (error) {
@@ -185,18 +268,34 @@ export default function Monitoring() {
         const restaurant = restaurants.find(r => r.id === restaurantId)
         if (!restaurant) return
         const plats = ['glovo', 'wolt', 'bolt'].filter(p => restaurant[`${p}_url`])
+        if (plats.length === 0) return;
+
         setCheckingId(restaurantId)
         setCheckModal({ open: true, restaurantName: restaurant.name, results: [], progress: 0, total: plats.length, done: false, error: null })
         try {
-            const response = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/check-restaurant`, {
+            const response = await fetch(`http://localhost:3001/api/check-restaurant`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ restaurantId })
             })
             if (response.ok) {
                 const data = await response.json()
                 setCheckModal(prev => ({ ...prev, results: data.results || [], progress: plats.length, done: true }))
+                
+                // Locally patch the checks state so it immediately reflects Live Results since RLS blocks saving to Supabase locally
+                if (data.results && data.results.length > 0) {
+                    setChecks(prevChecks => {
+                        const newChecks = [...prevChecks]
+                        data.results.forEach(res => {
+                            const existingIndex = newChecks.findIndex(c => c.restaurant_id === restaurantId && c.platform === res.platform)
+                            const fakeCheck = { restaurant_id: restaurantId, platform: res.platform, checked_at: new Date().toISOString(), final_status: res.final_status }
+                            if (existingIndex >= 0) newChecks[existingIndex] = { ...newChecks[existingIndex], ...fakeCheck }
+                            else newChecks.push(fakeCheck)
+                        })
+                        return newChecks
+                    })
+                }
                 setTimeout(() => fetchData(true), 1000)
-                setTimeout(() => setCheckModal(prev => ({ ...prev, open: false })), 2000)
+                // Removed auto-close setTimeout to let user read the modal
             } else {
                 setCheckModal(prev => ({ ...prev, done: true, error: ((lang === 'ru' ? 'Ошибка проверки. Статус: ' : (lang === 'en' ? 'Check failed. Status: ' : 'Verificarea a eșuat. Status: '))) + response.status }))
             }
@@ -205,11 +304,34 @@ export default function Monitoring() {
         } finally { setCheckingId(null) }
     }
 
+    async function triggerAutoDiscover(restaurant) {
+        setDiscoveringId(restaurant.id)
+        toast.loading(`Căutare automată linkuri pe platforme pentru ${restaurant.name}...`, { id: "discover" })
+        try {
+            const res = await fetch(`${import.meta.env.VITE_WORKER_URL || "http://localhost:3001"}/api/auto-discover`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ restaurant })
+            })
+            if (res.ok) {
+                const data = await res.json()
+                if (data.success) {
+                     toast.success(`Succes! Au fost găsite și salvate linkuri noi pentru ${restaurant.name}.`, { id: "discover" })
+                     setTimeout(() => fetchData(true), 500)
+                } else {
+                     toast.error(`Nu s-au găsit linkuri publice pentru ${restaurant.name}`, { id: "discover" })
+                }
+            } else throw new Error("API")
+        } catch (e) {
+            toast.error("Eroare conexiune la serverul Scraper!", { id: "discover" })
+        }
+        setDiscoveringId(null)
+    }
+
     async function triggerCheckAll() {
         setCheckingAll(true)
         setCheckModal({ open: true, restaurantName: 'Toate restaurantele', results: [], progress: 0, total: restaurants.length * 3, done: false, error: null })
         try {
-            const response = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/check-all`, {
+            const response = await fetch(`http://localhost:3001/api/check-all`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }
             })
             if (response.ok) {
@@ -223,6 +345,29 @@ export default function Monitoring() {
         } catch {
             setCheckModal(prev => ({ ...prev, done: true, error: 'API server nu rulează' }))
         } finally { setCheckingAll(false) }
+    }
+
+    async function triggerSyncTestAll(restaurantId = null) {
+        setSyncTestModal({ open: true, testing: true, results: [], error: null })
+        try {
+            const bodyPayload = restaurantId ? JSON.stringify({ restaurantId }) : JSON.stringify({})
+            const response = await fetch(`http://localhost:3001/api/sync-test-all`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: bodyPayload
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setSyncTestModal(prev => ({ ...prev, testing: false, results: data.results || [] }))
+                // Refresh the reports table
+                await fetchSyncReports()
+                setExpandedReport(data.reportId || null)
+            } else {
+                const err = await response.json().catch(() => ({}))
+                setSyncTestModal(prev => ({ ...prev, testing: false, error: err.error || 'Testul a eșuat.' }))
+            }
+        } catch {
+            setSyncTestModal(prev => ({ ...prev, testing: false, error: 'API server nu rulează' }))
+        }
     }
 
     // ─── Status Helpers ────────────────────────────────
@@ -459,26 +604,50 @@ export default function Monitoring() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
                                 {checkModal.results.map((r, i) => {
                                     const info = getStatusInfo(r.final_status || r.status)
+                                    let extraMsg = '';
+                                    if (r.final_status === 'error' && r.error) {
+                                        extraMsg = r.error;
+                                    } else if (r.missing_products && r.missing_products.length > 0) {
+                                        const count = r.missing_products.reduce((acc, p) => acc + (p.count || 1), 0);
+                                        extraMsg = `Atenție: ${count} produs(e) indisponibil(e)`;
+                                    } else if (r.raw_data && r.raw_data.product_stops && r.raw_data.product_stops.stopped > 0) {
+                                        extraMsg = `Atenție: ${r.raw_data.product_stops.stopped} pe STOP din ${r.raw_data.product_stops.total}`;
+                                    }
+
                                     return (
                                         <div key={i} style={{
                                             ...glassInner, padding: '10px 14px',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            display: 'flex', flexDirection: 'column', gap: '8px',
                                             animation: `fadeIn 0.3s ease ${i * 0.05}s both`,
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <PlatformLogo platform={r.platform} size={18} />
-                                                <span style={{ fontSize: '13px', fontWeight: '500', color: colors.text, textTransform: 'capitalize' }}>
-                                                    {r.platform}
-                                                </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <PlatformLogo platform={r.platform} size={18} />
+                                                    <span style={{ fontSize: '13px', fontWeight: '500', color: colors.text, textTransform: 'capitalize' }}>
+                                                        {r.platform}
+                                                    </span>
+                                                </div>
+                                                <div style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                    padding: '4px 10px', borderRadius: '8px',
+                                                    background: `${info.color}15`, fontSize: '12px', fontWeight: '600', color: info.color,
+                                                }}>
+                                                    <span className={`status-dot ${info.dotClass}`} style={{ width: 6, height: 6 }} />
+                                                    {info.label}
+                                                </div>
                                             </div>
-                                            <div style={{
-                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                padding: '4px 10px', borderRadius: '8px',
-                                                background: `${info.color}15`, fontSize: '12px', fontWeight: '600', color: info.color,
-                                            }}>
-                                                <span className={`status-dot ${info.dotClass}`} style={{ width: 6, height: 6 }} />
-                                                {info.label}
-                                            </div>
+                                            {extraMsg && (
+                                                <div style={{
+                                                    fontSize: '12px',
+                                                    color: r.final_status === 'error' ? '#FF3B30' : '#F59E0B',
+                                                    marginTop: '2px',
+                                                    padding: '6px 8px',
+                                                    background: r.final_status === 'error' ? 'rgba(255,59,48,0.1)' : 'rgba(245,158,11,0.1)',
+                                                    borderRadius: '6px',
+                                                }}>
+                                                    {extraMsg}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}
@@ -513,6 +682,35 @@ export default function Monitoring() {
                 </div>
             )}
 
+            {/* ═══════ SYNC TEST PROGRESS MODAL ═══════ */}
+            {syncTestModal.open && syncTestModal.testing && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{ ...glass, padding: '40px 48px', textAlign: 'center', minWidth: '360px' }}>
+                        <IconLoader size={40} color="#6366F1" />
+                        <h3 style={{ color: colors.text, margin: '16px 0 8px', fontWeight: 700 }}>Test Sync 1:1 în curs...</h3>
+                        <p style={{ color: colors.textSecondary, margin: 0, fontSize: '13px' }}>Se extrag produsele de pe platforme și se compară cu iiko.<br />Poate dura 1–3 minute.</p>
+                    </div>
+                </div>
+            )}
+            {syncTestModal.open && !syncTestModal.testing && syncTestModal.error && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{ ...glass, padding: '32px', minWidth: '360px', textAlign: 'center' }}>
+                        <IconWarning size={36} color="#FF3B30" />
+                        <h3 style={{ color: '#FF3B30', margin: '12px 0 8px' }}>Eroare</h3>
+                        <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '20px' }}>{syncTestModal.error}</p>
+                        <button className="btn-hover" onClick={() => setSyncTestModal(p => ({ ...p, open: false }))} style={{ ...btnPrimary, margin: '0 auto' }}>Închide</button>
+                    </div>
+                </div>
+            )}
+
             {/* ═══════ HEADER ═══════ */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
                 <div>
@@ -542,10 +740,24 @@ export default function Monitoring() {
                         Auto
                     </label>
 
-                    <button className="btn-hover" onClick={() => triggerCheckAll()} disabled={checkingAll}
+                    <button className="btn-hover" onClick={() => triggerCheckAll()} disabled={checkingAll || syncTestModal.testing}
                         style={{ ...btnPrimary, opacity: checkingAll ? 0.6 : 1, cursor: checkingAll ? 'not-allowed' : 'pointer' }}>
                         {checkingAll ? <IconLoader size={14} color="#fff" /> : <IconPlay size={12} color="#fff" />}
                         {checkingAll ? (lang==='en'?'Checking...':'Se verifică...') : (lang==='en'?'Check all':'Verifică toate')}
+                    </button>
+
+                    <button className="btn-hover" onClick={() => triggerSyncTestAll()} disabled={checkingAll || syncTestModal.testing}
+                        style={{ ...btnGhost, border: `1px solid ${colors.border}`, color: '#FF9500', fontWeight: 'bold' }}>
+                        <IconServer size={14} />
+                        Sync 1:1
+                    </button>
+
+                    <button className="btn-hover" onClick={() => navigate('/sync-reports')}
+                        style={{ ...btnGhost, border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)'}`, color: '#6366F1' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                        Istoric Sync
                     </button>
 
                     <button className="btn-hover" onClick={() => fetchData()}
@@ -587,6 +799,301 @@ export default function Monitoring() {
                          <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, lineHeight: '1.4' }}>Calcul matematic al banilor pierduți prin rularea cifrei reale de afaceri.</div>
                      </div>
                 </div>
+            </div>
+
+            {/* ═══════ SYNC REPORTS TABLE ═══════ */}
+            <div style={{ ...glass, padding: '24px 28px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <IconServer size={20} color="#FF9500" />
+                        <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: colors.text }}>
+                            Rapoarte Sync 1:1 (Iiko vs Agregatoare)
+                        </h2>
+                        {syncReports.length > 0 && (
+                            <span style={{ fontSize: '11px', background: 'rgba(255,149,0,0.15)', color: '#FF9500', padding: '3px 8px', borderRadius: '8px', fontWeight: '600' }}>
+                                {syncReports.length} rapoarte
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn-hover" onClick={fetchSyncReports} style={{ ...btnGhost, padding: '7px 12px' }}>
+                            <IconRefresh size={13} />
+                        </button>
+                        <button className="btn-hover"
+                            onClick={() => triggerSyncTestAll()}
+                            disabled={syncTestModal.testing}
+                            style={{ ...btnBase, background: 'linear-gradient(135deg, #FF9500, #FF6B00)', color: '#fff', fontSize: '13px', opacity: syncTestModal.testing ? 0.6 : 1 }}>
+                            <IconPlay size={11} color="#fff" />
+                            {syncTestModal.testing ? 'Se testează...' : 'Rulează Test Nou'}
+                        </button>
+                    </div>
+                </div>
+
+                {syncReportsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '32px', color: colors.textSecondary, fontSize: '13px' }}>
+                        <IconLoader size={20} color="#6366F1" /> &nbsp;Se încarcă rapoartele...
+                    </div>
+                ) : syncReports.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textSecondary }}>
+                        <IconServer size={32} color={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} />
+                        <p style={{ marginTop: '12px', fontSize: '14px' }}>Niciun raport salvat încă.</p>
+                        <p style={{ fontSize: '12px', margin: 0 }}>Apasă <strong>Rulează Test Nou</strong> pentru a analiza produsele.</p>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                        {/* Header row */}
+                        <div style={{
+                            display: 'grid', gridTemplateColumns: '180px 1fr 100px 100px 80px',
+                            padding: '8px 14px', fontSize: '11px', fontWeight: '700',
+                            color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px',
+                            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                        }}>
+                            <span>Data & Ora</span>
+                            <span>Restaurante</span>
+                            <span style={{ textAlign: 'center' }}>Discrepanțe</span>
+                            <span style={{ textAlign: 'center' }}>Status</span>
+                            <span></span>
+                        </div>
+
+                        {syncReports.map((report) => {
+                            const isExpanded = expandedReport === report.id
+                            const date = new Date(report.tested_at)
+                            const dateStr = date.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                            const timeStr = date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+                            const hasIssues = report.total_discrepancies > 0
+
+                            // Flatten all discrepancies
+                            const allDiscrepancies = (report.results || []).flatMap(r =>
+                                (r.discrepancies || []).map(d => ({ ...d, restaurant: r.restaurant, city: r.city }))
+                            )
+
+                            return (
+                                <div key={report.id}>
+                                    <div
+                                        className="glass-row"
+                                        style={{
+                                            display: 'grid', gridTemplateColumns: '180px 1fr 100px 100px 80px',
+                                            padding: '12px 14px', alignItems: 'center', cursor: 'pointer',
+                                            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+                                            background: isExpanded ? (isDark ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.04)') : 'transparent',
+                                        }}
+                                        onClick={() => setExpandedReport(isExpanded ? null : report.id)}
+                                    >
+                                        <div>
+                                            <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{dateStr}</div>
+                                            <div style={{ fontSize: '11px', color: colors.textSecondary }}>{timeStr}</div>
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: colors.textSecondary }}>
+                                            {report.total_restaurants} restaurant{report.total_restaurants !== 1 ? 'e' : ''} analizat{report.total_restaurants !== 1 ? 'e' : ''}
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <span style={{
+                                                fontSize: '15px', fontWeight: '700',
+                                                color: hasIssues ? '#FF3B30' : '#34C759'
+                                            }}>
+                                                {report.total_discrepancies}
+                                            </span>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <span style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                                padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '600',
+                                                background: hasIssues ? 'rgba(255,59,48,0.12)' : 'rgba(52,199,89,0.12)',
+                                                color: hasIssues ? '#FF3B30' : '#34C759',
+                                            }}>
+                                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasIssues ? '#FF3B30' : '#34C759', display: 'inline-block' }} />
+                                                {hasIssues ? 'Probleme' : 'OK'}
+                                            </span>
+                                        </div>
+                                        <div style={{ textAlign: 'right', fontSize: '11px', color: colors.textSecondary }}>
+                                            {isExpanded ? '▲' : '▼'}
+                                        </div>
+                                    </div>
+
+                                    {isExpanded && allDiscrepancies.length > 0 && (() => {
+                                        // Reset page when a new report is expanded
+                                        const uniqueRestaurants = [...new Set(allDiscrepancies.map(d => d.restaurant))]
+                                        const uniquePlatforms = [...new Set(allDiscrepancies.map(d => d.platform))]
+                                        const uniqueTypes = [...new Set(allDiscrepancies.map(d => d.type))]
+
+                                        const filtered = allDiscrepancies.filter(d => {
+                                            const matchRest = !syncTableFilter.restaurant || d.restaurant === syncTableFilter.restaurant
+                                            const matchPlat = !syncTableFilter.platform || d.platform === syncTableFilter.platform
+                                            const matchType = !syncTableFilter.type || d.type === syncTableFilter.type
+                                            const matchSearch = !syncTableFilter.search || (d.product || d.message || '').toLowerCase().includes(syncTableFilter.search.toLowerCase())
+                                            return matchRest && matchPlat && matchType && matchSearch
+                                        })
+
+                                        const totalPages = Math.ceil(filtered.length / syncTablePageSize)
+                                        const page = Math.min(syncTablePage, totalPages || 1)
+                                        const paginated = filtered.slice((page - 1) * syncTablePageSize, page * syncTablePageSize)
+
+                                        const inputStyle = {
+                                            padding: '6px 10px', borderRadius: '8px', fontSize: '12px',
+                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                                            background: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
+                                            color: colors.text, outline: 'none', fontFamily: 'inherit',
+                                        }
+
+                                        return (
+                                        <div style={{
+                                            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                                            background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
+                                        }}>
+                                            {/* ─── Filter Bar ─── */}
+                                            <div style={{
+                                                display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center',
+                                                padding: '12px 28px',
+                                                borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                                            }}>
+                                                <input
+                                                    style={{ ...inputStyle, width: '180px' }}
+                                                    placeholder="🔍 Caută produs..."
+                                                    value={syncTableFilter.search}
+                                                    onChange={e => { setSyncTableFilter(f => ({ ...f, search: e.target.value })); setSyncTablePage(1) }}
+                                                />
+                                                <select style={{ ...inputStyle, cursor: 'pointer' }}
+                                                    value={syncTableFilter.restaurant}
+                                                    onChange={e => { setSyncTableFilter(f => ({ ...f, restaurant: e.target.value })); setSyncTablePage(1) }}>
+                                                    <option value="">Toate restaurantele</option>
+                                                    {uniqueRestaurants.map(r => <option key={r} value={r}>{r}</option>)}
+                                                </select>
+                                                <select style={{ ...inputStyle, cursor: 'pointer' }}
+                                                    value={syncTableFilter.platform}
+                                                    onChange={e => { setSyncTableFilter(f => ({ ...f, platform: e.target.value })); setSyncTablePage(1) }}>
+                                                    <option value="">Toate platformele</option>
+                                                    {uniquePlatforms.map(p => <option key={p} value={p}>{p}</option>)}
+                                                </select>
+                                                <select style={{ ...inputStyle, cursor: 'pointer' }}
+                                                    value={syncTableFilter.type}
+                                                    onChange={e => { setSyncTableFilter(f => ({ ...f, type: e.target.value })); setSyncTablePage(1) }}>
+                                                    <option value="">Toate tipurile</option>
+                                                    {uniqueTypes.map(t => <option key={t} value={t}>{t === 'missing_on_platform' ? 'LIPSĂ' : 'STOP FALS'}</option>)}
+                                                </select>
+                                                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '11px', color: colors.textSecondary }}>Rânduri:</span>
+                                                    {[10, 25, 50, 100].map(n => (
+                                                        <button key={n} onClick={() => { setSyncTablePageSize(n); setSyncTablePage(1) }}
+                                                            style={{
+                                                                padding: '4px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+                                                                border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                                                                background: syncTablePageSize === n ? '#6366F1' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
+                                                                color: syncTablePageSize === n ? '#fff' : colors.textSecondary,
+                                                            }}>{n}</button>
+                                                    ))}
+                                                </div>
+                                                {(syncTableFilter.restaurant || syncTableFilter.platform || syncTableFilter.type || syncTableFilter.search) && (
+                                                    <button onClick={() => { setSyncTableFilter({ restaurant: '', platform: '', type: '', search: '' }); setSyncTablePage(1) }}
+                                                        style={{ ...inputStyle, cursor: 'pointer', color: '#FF3B30', borderColor: 'rgba(255,59,48,0.3)', background: 'rgba(255,59,48,0.07)' }}>
+                                                        ✕ Resetează filtre
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* ─── Results Count ─── */}
+                                            <div style={{ padding: '6px 28px', fontSize: '11px', color: colors.textSecondary, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                <strong style={{ color: colors.text }}>{filtered.length}</strong> discrepanțe
+                                                {filtered.length !== allDiscrepancies.length && <span> (filtrate din {allDiscrepancies.length} total)</span>}
+                                                {' · '}Pagina <strong style={{ color: colors.text }}>{page}</strong> din <strong style={{ color: colors.text }}>{totalPages || 1}</strong>
+                                            </div>
+
+                                            {/* ─── Table Header ─── */}
+                                            <div style={{
+                                                display: 'grid', gridTemplateColumns: '40px 200px 130px 100px 1fr',
+                                                padding: '8px 28px', fontSize: '10px', fontWeight: '700',
+                                                color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px',
+                                                borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                                                background: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)',
+                                            }}>
+                                                <span style={{ textAlign: 'center' }}>#</span>
+                                                <span>Restaurant</span>
+                                                <span>Platformă</span>
+                                                <span>Tip</span>
+                                                <span>Produs</span>
+                                            </div>
+
+                                            {/* ─── Table Rows ─── */}
+                                            {paginated.length === 0 ? (
+                                                <div style={{ padding: '24px 28px', fontSize: '13px', color: colors.textSecondary, textAlign: 'center' }}>
+                                                    Nicio discrepanță nu corespunde filtrelor selectate.
+                                                </div>
+                                            ) : paginated.map((d, idx) => {
+                                                const globalIdx = (page - 1) * syncTablePageSize + idx + 1
+                                                return (
+                                                <div key={idx} style={{
+                                                    display: 'grid', gridTemplateColumns: '40px 200px 130px 100px 1fr',
+                                                    padding: '9px 28px', alignItems: 'center',
+                                                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}`,
+                                                    fontSize: '12px',
+                                                    background: idx % 2 === 0 ? 'transparent' : (isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'),
+                                                }}>
+                                                    <div style={{ textAlign: 'center', color: colors.textSecondary, fontSize: '11px', fontWeight: '500' }}>{globalIdx}</div>
+                                                    <div style={{ color: colors.text, fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {d.restaurant}
+                                                        {d.city && <span style={{ color: colors.textSecondary, fontWeight: '400' }}> · {d.city}</span>}
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <PlatformLogo platform={d.platform} size={14} />
+                                                        <span style={{ textTransform: 'capitalize', color: colors.text, fontWeight: '500' }}>{d.platform}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span style={{
+                                                            fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '6px',
+                                                            background: d.type === 'missing_on_platform' ? 'rgba(255,59,48,0.12)' : 'rgba(255,149,0,0.12)',
+                                                            color: d.type === 'missing_on_platform' ? '#FF3B30' : '#FF9500',
+                                                        }}>
+                                                            {d.type === 'missing_on_platform' ? 'LIPSĂ' : 'STOP FALS'}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {d.product || d.message}
+                                                    </div>
+                                                </div>
+                                            )})}
+
+                                            {/* ─── Pagination ─── */}
+                                            {totalPages > 1 && (
+                                                <div style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                                    padding: '12px 28px',
+                                                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                                                }}>
+                                                    <button onClick={() => setSyncTablePage(1)} disabled={page === 1}
+                                                        style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: page === 1 ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', color: page === 1 ? colors.textSecondary : colors.text, opacity: page === 1 ? 0.5 : 1 }}>«</button>
+                                                    <button onClick={() => setSyncTablePage(p => Math.max(1, p - 1))} disabled={page === 1}
+                                                        style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: page === 1 ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', color: page === 1 ? colors.textSecondary : colors.text, opacity: page === 1 ? 0.5 : 1 }}>‹</button>
+                                                    {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                                                        let p2;
+                                                        if (totalPages <= 7) p2 = i + 1;
+                                                        else if (page <= 4) p2 = i + 1;
+                                                        else if (page >= totalPages - 3) p2 = totalPages - 6 + i;
+                                                        else p2 = page - 3 + i;
+                                                        return (
+                                                            <button key={p2} onClick={() => setSyncTablePage(p2)}
+                                                                style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', minWidth: '32px', background: page === p2 ? '#6366F1' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), color: page === p2 ? '#fff' : colors.textSecondary }}>
+                                                                {p2}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                    <button onClick={() => setSyncTablePage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                                                        style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', color: page === totalPages ? colors.textSecondary : colors.text, opacity: page === totalPages ? 0.5 : 1 }}>›</button>
+                                                    <button onClick={() => setSyncTablePage(totalPages)} disabled={page === totalPages}
+                                                        style={{ padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', color: page === totalPages ? colors.textSecondary : colors.text, opacity: page === totalPages ? 0.5 : 1 }}>»</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        )
+                                    })()}
+                                    {isExpanded && allDiscrepancies.length === 0 && (
+                                        <div style={{ padding: '16px 28px', fontSize: '13px', color: '#34C759', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
+                                            ✓ Toate produsele sunt sincronizate perfect cu iiko.
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* ═══════ STAT CARDS ═══════ */}
@@ -889,22 +1396,47 @@ export default function Monitoring() {
                                             </td>
 
                                             <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                                                <button
-                                                    className="btn-hover"
-                                                    onClick={() => triggerCheck(restaurant.id)}
-                                                    disabled={checkingId === restaurant.id}
-                                                    style={{
-                                                        ...btnSmall,
-                                                        opacity: checkingId === restaurant.id ? 0.5 : 1,
-                                                        cursor: checkingId === restaurant.id ? 'not-allowed' : 'pointer',
-                                                    }}
-                                                >
-                                                    {checkingId === restaurant.id
-                                                        ? <IconLoader size={12} color="#fff" />
-                                                        : <IconPlay size={10} color="#fff" />
-                                                    }
-                                                    {checkingId === restaurant.id ? 'Verificare...' : 'Verifică'}
-                                                </button>
+                                                {(()=>{ const hasLinks = restaurant.glovo_url || restaurant.wolt_url || restaurant.bolt_url; return (
+                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        className="btn-hover"
+                                                        onClick={() => {
+                                                            if (hasLinks) triggerCheck(restaurant.id)
+                                                            else triggerAutoDiscover(restaurant)
+                                                        }}
+                                                        disabled={checkingId === restaurant.id || discoveringId === restaurant.id || syncTestModal.testing}
+                                                        style={{
+                                                            ...btnSmall,
+                                                            background: !hasLinks ? '#F59E0B' : btnSmall.background,
+                                                            opacity: (checkingId === restaurant.id || discoveringId === restaurant.id) ? 0.5 : 1,
+                                                            cursor: (checkingId === restaurant.id || discoveringId === restaurant.id) ? 'not-allowed' : 'pointer',
+                                                        }}
+                                                    >
+                                                        {checkingId === restaurant.id || discoveringId === restaurant.id
+                                                            ? <IconLoader size={12} color="#fff" />
+                                                            : (!hasLinks ? <span style={{fontSize:'10px'}}>🔍</span> : <IconPlay size={10} color="#fff" />)
+                                                        }
+                                                        {checkingId === restaurant.id ? 'Verificare...' : (discoveringId === restaurant.id ? 'Cautare...' : (!hasLinks ? 'Auto Link' : 'Verifică'))}
+                                                    </button>
+                                                    {restaurant.iiko_config?.api_login && (
+                                                        <button
+                                                            className="btn-hover"
+                                                            onClick={() => triggerSyncTestAll(restaurant.id)}
+                                                            disabled={syncTestModal.testing}
+                                                            title="Sincronizare 1:1 Iiko"
+                                                            style={{
+                                                                ...btnSmall,
+                                                                background: 'transparent',
+                                                                border: `1px solid ${colors.border}`,
+                                                                color: '#FF9500',
+                                                                padding: '6px 8px',
+                                                            }}
+                                                        >
+                                                            <IconServer size={12} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                );})()}
                                             </td>
                                         </tr>
                                     )

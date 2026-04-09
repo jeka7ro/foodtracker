@@ -13,7 +13,7 @@ echo ""
 # Ucide orice proces pe portul 3001 (API server) sau 5173 (Vite)
 echo "🔄 Oprire procese vechi dacă există..."
 lsof -ti :3001 | xargs kill -9 2>/dev/null
-lsof -ti :5173 | xargs kill -9 2>/dev/null
+lsof -ti :5573 | xargs kill -9 2>/dev/null
 sleep 1
 
 # Pornire API Server (workers) în background
@@ -27,15 +27,15 @@ echo "   API Server PID: $API_PID"
 sleep 1
 
 # Pornire Vite dev server în background
-echo "⚡ Pornire Frontend (port 5173)..."
+echo "⚡ Pornire Frontend (port 5573)..."
 cd "$ROOT_DIR"
-npm run dev &
+npm run dev -- --port 5573 &
 VITE_PID=$!
 echo "   Vite PID: $VITE_PID"
 
 echo ""
 echo "✅ Ambele servere pornite!"
-echo "   → Frontend: http://localhost:5173"
+echo "   → Frontend: http://localhost:5573"
 echo "   → API:      http://localhost:3001"
 echo ""
 echo "   Apasă Ctrl+C pentru a opri tot."

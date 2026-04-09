@@ -1,13 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
-import fs from 'fs'
-
-const env = fs.readFileSync('workers/.env', 'utf8')
-const supabaseUrl = env.match(/SUPABASE_URL=(.*)/)[1].trim()
-const supabaseKey = env.match(/SUPABASE_SERVICE_KEY=(.*)/)[1].trim()
-const supabase = createClient(supabaseUrl, supabaseKey)
-
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
 async function test() {
-    const { data } = await supabase.from('own_product_snapshots').select('*').limit(10)
-    console.log("OWN PRODUCTS", data.map(d => d.product_name))
+  const { data, error } = await supabase.from('aggregator_jobs').select('*').limit(1);
+  console.log('Result:', data, error ? error.message : 'OK');
+  process.exit(0);
 }
-test()
+test();

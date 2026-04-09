@@ -78,8 +78,54 @@ export default function Dashboard() {
     const { data: restaurants = [] } = useQuery({
         queryKey: ['restaurants-dash-live'],
         queryFn: async () => {
+             const ENV_CONFIGS = [
+                { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko', defaultBrand: 'Sushi Master' },
+                { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve', defaultBrand: 'Smash Me' }
+            ];
+
+            let apiOrgs = [];
+            for (const env of ENV_CONFIGS) {
+                try {
+                    const resAuth = await fetch(`${env.baseUrl}/access_token`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ apiLogin: env.key })
+                    });
+                    if (resAuth.ok) {
+                        const { token } = await resAuth.json();
+                        const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({})
+                        });
+                        const data = await resOrgs.json();
+                        if (data.organizations) {
+                            apiOrgs.push(...data.organizations.map(o => ({ ...o, _env: env })));
+                        }
+                    }
+                } catch(e) { console.error("Dash proxy fetch error:", e); }
+            }
+
             const { data } = await supabase.from('restaurants').select('*');
-            return data || [];
+            const rawDb = data || [];
+            
+            const dbMap = new Map();
+            rawDb.forEach(r => { if (r.iiko_restaurant_id) dbMap.set(r.iiko_restaurant_id, r); });
+
+            const finalRests = apiOrgs.map(org => {
+                 const dbMatch = dbMap.get(org.id) || {};
+                 return {
+                     id: dbMatch.id || org.id, 
+                     iiko_restaurant_id: org.id,
+                     name: org.name,
+                     city: org.name.split(' ').pop() || 'Unknown',
+                     is_active: dbMatch.is_active !== false,
+                     iiko_config: dbMatch.iiko_config || {}
+                 }
+            });
+
+            const knownIds = new Set(finalRests.map(r => r.iiko_restaurant_id));
+            const orphanDbRests = rawDb.filter(r => r.is_active && (!r.iiko_restaurant_id || !knownIds.has(r.iiko_restaurant_id)));
+
+            return [...finalRests, ...orphanDbRests];
         },
         refetchInterval: 30000 // Poll every 30s
     })

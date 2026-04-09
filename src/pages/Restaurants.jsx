@@ -13,7 +13,6 @@ export default function Restaurants() {
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
     const [editingRestaurant, setEditingRestaurant] = useState(null)
-    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, restaurant: null })
     const [searchQuery, setSearchQuery] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [sortBy, setSortBy] = useState('name')
@@ -21,51 +20,97 @@ export default function Restaurants() {
     const [lastUpdated, setLastUpdated] = useState(null)
     const ITEMS_PER_PAGE = 20
     const [formData, setFormData] = useState({
-        name: '',
-        city: '',
-        address: '',
         glovo_url: '',
         wolt_url: '',
         bolt_url: '',
         telegram_group_id: '',
         is_active: true,
-        is_competitor: false,
-        working_hours: {
-            monday: { open: '10:00', close: '23:00' },
-            tuesday: { open: '10:00', close: '23:00' },
-            wednesday: { open: '10:00', close: '23:00' },
-            thursday: { open: '10:00', close: '23:00' },
-            friday: { open: '10:00', close: '23:00' },
-            saturday: { open: '10:00', close: '23:00' },
-            sunday: { open: '10:00', close: '23:00' }
-        }
+        is_competitor: false
     })
 
+    const ENV_CONFIGS = [
+        { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko', defaultBrand: 'Sushi Master' },
+        { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve', defaultBrand: 'Smash Me' }
+    ];
+
     useEffect(() => {
-        fetchRestaurants()
-        fetchBrands()
+        fetchBrands().then(() => fetchRestaurants())
     }, [])
 
     async function fetchBrands() {
         try {
-            const { data } = await supabase.from('brands').select('id, name').order('name')
+            const { data } = await supabase.from('brands').select('id, name, logo_url').order('name')
             setBrands(data || [])
+            return data || []
         } catch (err) {
             console.error('Error fetching brands:', err)
+            return []
         }
     }
 
     async function fetchRestaurants() {
+        setLoading(true)
         try {
-            const { data, error } = await supabase
-                .from('restaurants')
-                .select('*, brands(id, name, logo_url)')
-                .order('city', { ascending: true })
-                .order('name', { ascending: true })
+            // 1. Fetch from APIs
+            let apiOrgs = [];
+            for (const env of ENV_CONFIGS) {
+                try {
+                    const resAuth = await fetch(`${env.baseUrl}/access_token`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ apiLogin: env.key })
+                    });
+                    if (!resAuth.ok) continue;
+                    const { token } = await resAuth.json();
 
-            if (error) throw error
-            setRestaurants(data || [])
-            setLastUpdated(new Date())
+                    const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({})
+                    });
+                    const { organizations } = await resOrgs.json();
+                    
+                    if (organizations) {
+                        apiOrgs.push(...organizations.map(o => ({ ...o, _env: env })));
+                    }
+                } catch(e) {
+                    console.error("Failed to fetch API orgs", env.baseUrl, e);
+                }
+            }
+
+            // 2. Fetch URL Mappings from Supabase
+            const { data: mappings } = await supabase.from('restaurants').select('*');
+            const mapDict = new Map((mappings || []).map(m => [m.iiko_restaurant_id, m]));
+
+            // 3. Merge
+            const finalRestaurants = apiOrgs.map(org => {
+                const dbRec = mapDict.get(org.id) || {};
+                
+                // Determine Brand dynamically if missing in DB
+                let computedBrandName = org._env.defaultBrand;
+                const upName = org.name.toUpperCase();
+                if (org._env.defaultBrand === 'Sushi Master') {
+                    if (upName.includes('IKURA')) computedBrandName = 'Ikura Sushi';
+                    else if (upName.includes('W LS') || upName.includes('LOVE M')) computedBrandName = 'We Love Sushi';
+                }
+                
+                const b = brands.find(br => br.name === computedBrandName) || brands.find(br => br.id === dbRec.brand_id);
+
+                return {
+                    id: org.id, // we use API id as the prime identifier
+                    db_id: dbRec.id || null, // Supabase ID if exists
+                    name: org.name,
+                    brand_id: b ? b.id : null,
+                    brands: b || null,
+                    city: dbRec.city || org.name.split(' ').pop(),
+                    glovo_url: dbRec.glovo_url || '',
+                    wolt_url: dbRec.wolt_url || '',
+                    bolt_url: dbRec.bolt_url || '',
+                    is_active: dbRec.is_active !== undefined ? dbRec.is_active : true,
+                    is_competitor: dbRec.is_competitor || false,
+                    telegram_group_id: dbRec.telegram_group_id || ''
+                }
+            });
+
+            setRestaurants(finalRestaurants);
+            setLastUpdated(new Date());
         } catch (error) {
             console.error('Error fetching restaurants:', error)
         } finally {
@@ -77,74 +122,45 @@ export default function Restaurants() {
         e.preventDefault()
 
         try {
-            if (editingRestaurant) {
-                const { error } = await supabase
-                    .from('restaurants')
-                    .update(formData)
-                    .eq('id', editingRestaurant.id)
+            const payload = {
+                iiko_restaurant_id: editingRestaurant.id,
+                name: editingRestaurant.name,
+                city: editingRestaurant.city,
+                brand_id: editingRestaurant.brand_id,
+                glovo_url: formData.glovo_url,
+                wolt_url: formData.wolt_url,
+                bolt_url: formData.bolt_url,
+                telegram_group_id: formData.telegram_group_id,
+                is_active: formData.is_active,
+                is_competitor: formData.is_competitor
+            };
+
+            if (editingRestaurant.db_id) {
+                const { error } = await supabase.from('restaurants').update(payload).eq('id', editingRestaurant.db_id)
                 if (error) throw error
             } else {
-                const { error } = await supabase
-                    .from('restaurants')
-                    .insert([formData])
+                const { error } = await supabase.from('restaurants').insert([payload])
                 if (error) throw error
             }
 
             setShowModal(false)
             setEditingRestaurant(null)
-            resetForm()
             fetchRestaurants()
-
-            toast.success(
-                editingRestaurant ? 'Restaurant updated successfully!' : 'Restaurant added successfully!',
-                { duration: 3000, position: 'top-right' }
-            )
+            toast.success('Restaurant platforms updated successfully!', { duration: 3000, position: 'top-right' })
         } catch (error) {
-            console.error('Error saving restaurant:', error)
+            console.error('Error saving mapping:', error)
             toast.error('Error: ' + error.message, { duration: 4000, position: 'top-right' })
         }
-    }
-
-    async function handleDelete(restaurant) {
-        setDeleteConfirm({ isOpen: true, restaurant })
-    }
-
-    async function confirmDelete() {
-        try {
-            const { error } = await supabase
-                .from('restaurants')
-                .delete()
-                .eq('id', deleteConfirm.restaurant.id)
-            if (error) throw error
-
-            fetchRestaurants()
-            toast.success('Restaurant deleted successfully!', { duration: 3000, position: 'top-right' })
-        } catch (error) {
-            console.error('Error deleting restaurant:', error)
-            toast.error('Error: ' + error.message, { duration: 4000, position: 'top-right' })
-        } finally {
-            setDeleteConfirm({ isOpen: false, restaurant: null })
-        }
-    }
-
-    function openAddModal() {
-        resetForm()
-        setEditingRestaurant(null)
-        setShowModal(true)
     }
 
     function openEditModal(restaurant) {
         setFormData({
-            name: restaurant.name,
-            city: restaurant.city,
-            address: restaurant.address || '',
             glovo_url: restaurant.glovo_url || '',
             wolt_url: restaurant.wolt_url || '',
             bolt_url: restaurant.bolt_url || '',
             telegram_group_id: restaurant.telegram_group_id || '',
             is_active: restaurant.is_active,
-            is_competitor: restaurant.is_competitor || false,
-            working_hours: restaurant.working_hours || formData.working_hours
+            is_competitor: restaurant.is_competitor || false
         })
         setEditingRestaurant(restaurant)
         setShowModal(true)
@@ -152,24 +168,12 @@ export default function Restaurants() {
 
     function resetForm() {
         setFormData({
-            name: '',
-            city: '',
-            address: '',
             glovo_url: '',
             wolt_url: '',
             bolt_url: '',
             telegram_group_id: '',
             is_active: true,
-            is_competitor: false,
-            working_hours: {
-                monday: { open: '10:00', close: '23:00' },
-                tuesday: { open: '10:00', close: '23:00' },
-                wednesday: { open: '10:00', close: '23:00' },
-                thursday: { open: '10:00', close: '23:00' },
-                friday: { open: '10:00', close: '23:00' },
-                saturday: { open: '10:00', close: '23:00' },
-                sunday: { open: '10:00', close: '23:00' }
-            }
+            is_competitor: false
         })
     }
 
@@ -264,24 +268,6 @@ export default function Restaurants() {
                             outline: 'none'
                         }}
                     />
-                    <button
-                        onClick={openAddModal}
-                        style={{
-                            padding: '10px 20px',
-                            background: colors.blue,
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'opacity 0.2s'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-                        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-                    >
-                        + Add Restaurant
-                    </button>
                 </div>
             </div>
 
@@ -483,22 +469,7 @@ export default function Restaurants() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(restaurant)}
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    background: colors.red,
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    fontSize: '12px',
-                                                    fontWeight: '500',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                Delete
+                                                Edit Platform URLs
                                             </button>
                                         </div>
                                     </td>
@@ -570,71 +541,11 @@ export default function Restaurants() {
 
                         <form onSubmit={handleSubmit}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.text, marginBottom: '6px' }}>
-                                        Restaurant Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            background: colors.bg,
-                                            border: `0.5px solid ${colors.border}`,
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            color: colors.text,
-                                            outline: 'none'
-                                        }}
-                                    />
+                                <div style={{ marginBottom: '16px', padding: '16px', background: `${colors.blue}10`, borderRadius: '8px', border: `1px solid ${colors.blue}30` }}>
+                                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: colors.blue }}>{editingRestaurant?.name}</div>
+                                    <div style={{ fontSize: '11px', color: colors.textSecondary, fontFamily: 'monospace', marginTop: '4px' }}>ORG ID: {editingRestaurant?.id}</div>
                                 </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.text, marginBottom: '6px' }}>
-                                        City *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.city}
-                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            background: colors.bg,
-                                            border: `0.5px solid ${colors.border}`,
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            color: colors.text,
-                                            outline: 'none'
-                                        }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.text, marginBottom: '6px' }}>
-                                        Address
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            background: colors.bg,
-                                            border: `0.5px solid ${colors.border}`,
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            color: colors.text,
-                                            outline: 'none'
-                                        }}
-                                    />
-                                </div>
-
+                                
                                 <div>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: colors.text, marginBottom: '6px' }}>
                                         Glovo URL
@@ -718,168 +629,28 @@ export default function Restaurants() {
                                         }}
                                     />
                                 </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.is_active}
-                                            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                            style={{ width: '16px', height: '16px' }}
-                                        />
-                                        <label style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>
-                                            Active monitoring
-                                        </label>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.is_competitor}
-                                            onChange={(e) => setFormData({ ...formData, is_competitor: e.target.checked })}
-                                            style={{ width: '16px', height: '16px' }}
-                                        />
-                                        <label style={{ fontSize: '13px', fontWeight: '700', color: colors.red }}>
-                                            Acesta este un Concurent
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* ── Working Hours Schedule ── */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.text, marginBottom: '10px' }}>
-                                        Program de lucru
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.is_active}
+                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                        style={{ width: '16px', height: '16px' }}
+                                    />
+                                    <label style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>
+                                        Active monitoring
                                     </label>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        {[
-                                            { key: 'monday', label: 'Luni' },
-                                            { key: 'tuesday', label: 'Marți' },
-                                            { key: 'wednesday', label: 'Miercuri' },
-                                            { key: 'thursday', label: 'Joi' },
-                                            { key: 'friday', label: 'Vineri' },
-                                            { key: 'saturday', label: 'Sâmbătă' },
-                                            { key: 'sunday', label: 'Duminică' },
-                                        ].map(day => {
-                                            const dayData = formData.working_hours?.[day.key] || {}
-                                            const isClosed = dayData.closed === true
-                                            return (
-                                                <div key={day.key} style={{
-                                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                                    padding: '6px 10px', borderRadius: '8px',
-                                                    background: isClosed ? (colors.bg) : 'transparent',
-                                                    opacity: isClosed ? 0.5 : 1,
-                                                }}>
-                                                    <span style={{ width: '72px', fontSize: '12px', fontWeight: '600', color: colors.text }}>{day.label}</span>
-                                                    <input
-                                                        type="time"
-                                                        value={dayData.open || '10:00'}
-                                                        disabled={isClosed}
-                                                        onChange={(e) => {
-                                                            const wh = { ...formData.working_hours }
-                                                            wh[day.key] = { ...wh[day.key], open: e.target.value }
-                                                            setFormData({ ...formData, working_hours: wh })
-                                                        }}
-                                                        style={{
-                                                            padding: '5px 8px', borderRadius: '6px', fontSize: '12px',
-                                                            border: `1px solid ${colors.border}`, background: colors.bg,
-                                                            color: colors.text, outline: 'none', width: '95px',
-                                                        }}
-                                                    />
-                                                    <span style={{ fontSize: '11px', color: colors.textSecondary }}>—</span>
-                                                    <input
-                                                        type="time"
-                                                        value={dayData.close || '23:00'}
-                                                        disabled={isClosed}
-                                                        onChange={(e) => {
-                                                            const wh = { ...formData.working_hours }
-                                                            wh[day.key] = { ...wh[day.key], close: e.target.value }
-                                                            setFormData({ ...formData, working_hours: wh })
-                                                        }}
-                                                        style={{
-                                                            padding: '5px 8px', borderRadius: '6px', fontSize: '12px',
-                                                            border: `1px solid ${colors.border}`, background: colors.bg,
-                                                            color: colors.text, outline: 'none', width: '95px',
-                                                        }}
-                                                    />
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', cursor: 'pointer', fontSize: '11px', color: colors.textSecondary, whiteSpace: 'nowrap' }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isClosed}
-                                                            onChange={(e) => {
-                                                                const wh = { ...formData.working_hours }
-                                                                if (e.target.checked) {
-                                                                    wh[day.key] = { closed: true }
-                                                                } else {
-                                                                    wh[day.key] = { open: '10:00', close: '23:00' }
-                                                                }
-                                                                setFormData({ ...formData, working_hours: wh })
-                                                            }}
-                                                            style={{ width: '13px', height: '13px', accentColor: '#6366F1' }}
-                                                        />
-                                                        Închis
-                                                    </label>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowModal(false)
-                                        setEditingRestaurant(null)
-                                        resetForm()
-                                    }}
-                                    style={{
-                                        padding: '10px 20px',
-                                        background: colors.bg,
-                                        color: colors.text,
-                                        border: `0.5px solid ${colors.border}`,
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    style={{
-                                        padding: '10px 20px',
-                                        background: colors.blue,
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    {editingRestaurant ? 'Update' : 'Create'}
-                                </button>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 20px', background: 'transparent', color: colors.text, border: `1px solid ${colors.border}`, borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" style={{ padding: '10px 24px', background: colors.blue, color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Save Settings</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-
-            {/* Toast Container */}
             <Toaster />
-
-            {/* Delete Confirmation Dialog */}
-            <ConfirmDialog
-                isOpen={deleteConfirm.isOpen}
-                onClose={() => setDeleteConfirm({ isOpen: false, restaurant: null })}
-                onConfirm={confirmDelete}
-                title="Delete Restaurant"
-                message={`Are you sure you want to delete "${deleteConfirm.restaurant?.name}"? This action cannot be undone.`}
-                confirmText="Delete"
-                cancelText="Cancel"
-                variant="danger"
-            />
         </div>
     )
 }

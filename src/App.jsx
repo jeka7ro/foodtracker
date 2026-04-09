@@ -32,6 +32,7 @@ import RoleSettings from './pages/RoleSettings'
 import IikoProducts from './pages/IikoProducts'
 import Reputation from './pages/Reputation'
 import ProductAnalytics from './pages/ProductAnalytics'
+import SyncReports from './pages/SyncReports'
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -710,6 +711,7 @@ export default function App() {
                                     <Route path="/own-products" element={<ProtectedRoute><Layout><OwnProducts /></Layout></ProtectedRoute>} />
                                     <Route path="/iiko-products" element={<ProtectedRoute><Layout><IikoProducts /></Layout></ProtectedRoute>} />
                                     <Route path="/product-analytics/:productName" element={<ProtectedRoute><Layout><ProductAnalytics /></Layout></ProtectedRoute>} />
+                                    <Route path="/sync-reports" element={<ProtectedRoute><Layout><SyncReports /></Layout></ProtectedRoute>} />
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Routes>
                             </UserProfileProvider>

@@ -6,7 +6,7 @@ export default defineConfig({
   logLevel: 'error', // Suppress warnings, only show errors
   plugins: [react()],
   server: {
-    port: 5173
+    port: 5573
   },
   resolve: {
     alias: {

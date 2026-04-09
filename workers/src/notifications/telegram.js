@@ -1,14 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../services/supabase.js';
 import dotenv from 'dotenv';
 import path from 'path';
 
 // Folosim .env.local unde probabil tii cheile.
 dotenv.config({ path: path.resolve(process.cwd(), "..", ".env.local") });
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-);
+// const supabase = createClient(...) is now imported
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
