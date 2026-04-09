@@ -114,13 +114,28 @@ export class SalesSync {
                             statuses: ["Closed"]
                         }
                         
-                        const res = await fetch(`https://api-eu.syrve.live/api/1/deliveries/by_delivery_date_and_status`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify(reqBody)
-                        })
-
-                        if (!res.ok) continue
+                        let res;
+                        let retries = 3;
+                        while(retries > 0) {
+                            res = await fetch(`https://api-eu.syrve.live/api/1/deliveries/by_delivery_date_and_status`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify(reqBody)
+                            });
+                            if (res.ok) break;
+                            const errTxt = await res.text().catch(() => 'no text');
+                            console.log(`[Sync] Rate limited or error from iiko (HTTP ${res.status}): ${errTxt} | Retrying in 5s...`);
+                            await new Promise(r => setTimeout(r, 6000));
+                            retries--;
+                        }
+                        
+                        if (!res || !res.ok) {
+                            console.error('[Sync] Abandoning chunk after 3 failed retries.');
+                            continue;
+                        }
+                        
+                        // Safety delay between successful requests to prevent future rate limits
+                        await new Promise(r => setTimeout(r, 800));
 
                         const resData = await res.json()
                         const orgOrdersArray = resData.ordersByOrganizations || []
