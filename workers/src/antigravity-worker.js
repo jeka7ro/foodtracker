@@ -13,10 +13,9 @@ import { BoltChecker } from './checkers/bolt-checker.js'
 
 dotenv.config({ path: path.resolve(process.cwd(), "..", ".env.local") })
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-)
+import { supabase } from './services/supabase.js'
+
+// const supabase = createClient(...) removed
 
 const WORKER_TICK_MS = 15000 // 15 secunde
 
