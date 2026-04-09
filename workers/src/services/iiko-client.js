@@ -188,42 +188,86 @@ export class IikoClient {
      * @returns {Array} mapped products with match confidence
      */
     mapProducts(iikoProducts, aggregatorProducts) {
+        // ── Normalization helpers ────────────────────────────────────────────
+        const EQUIVALENCES = [
+            // Romanian ↔ English fish/ingredient names
+            ['somon', 'salmon'], ['somn', 'salmon'],
+            ['creveti', 'shrimp'], ['creveți', 'shrimp'],
+            ['ton', 'tuna'], ['avocado', 'avocado'],
+            ['brinza', 'cheese'], ['brânză', 'cheese'], ['branza', 'cheese'],
+            ['fume', 'smoked'], ['afumat', 'smoked'],
+            ['mare', 'large'], ['mic', 'small'],
+            // common typos / abbreviations
+            ['phila', 'philadelphia'], ['fil', 'philadelphia'],
+            ['mango', 'mango'], ['anghi', 'eel'], ['anghila', 'eel'],
+        ]
+
+        function normalize(str) {
+            if (!str) return ''
+            let s = str.toLowerCase().trim()
+            // Remove diacritics
+            s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            // Remove special chars except letters/digits/spaces
+            s = s.replace(/[^a-z0-9 ]/g, ' ')
+            // Apply equivalences (normalize both directions to canonical form)
+            for (const [ro, en] of EQUIVALENCES) {
+                s = s.replace(new RegExp(`\\b${ro}\\b`, 'g'), en)
+            }
+            // Collapse multiple spaces
+            s = s.replace(/\s+/g, ' ').trim()
+            return s
+        }
+
+        function similarity(a, b) {
+            if (!a || !b) return 0
+            const na = normalize(a)
+            const nb = normalize(b)
+            if (na === nb) return 100
+
+            // Token overlap score (handles word order differences)
+            const tokensA = new Set(na.split(' ').filter(t => t.length > 2))
+            const tokensB = new Set(nb.split(' ').filter(t => t.length > 2))
+            if (tokensA.size === 0 || tokensB.size === 0) return 0
+
+            let overlap = 0
+            for (const t of tokensA) {
+                if (tokensB.has(t)) overlap++
+                // partial: one token includes the other (handles abbreviations)
+                else if ([...tokensB].some(tb => tb.includes(t) || t.includes(tb))) overlap += 0.7
+            }
+            const tokenScore = (overlap / Math.max(tokensA.size, tokensB.size)) * 100
+
+            // Substring containment bonus
+            let substringBonus = 0
+            if (na.includes(nb) || nb.includes(na)) {
+                substringBonus = (Math.min(na.length, nb.length) / Math.max(na.length, nb.length)) * 60
+            }
+
+            return Math.min(100, Math.max(tokenScore, substringBonus))
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         const mapped = []
+        // Match threshold: 55 points (was 50, slightly tighter to reduce false positives)
+        const THRESHOLD = 55
 
         for (const iikoProduct of iikoProducts) {
-            const iikoName = iikoProduct.name.toLowerCase().trim()
-
-            // Try exact match first, then fuzzy
             let bestMatch = null
             let bestScore = 0
 
             for (const aggProduct of aggregatorProducts) {
-                const aggName = aggProduct.name?.toLowerCase().trim() || ''
-
-                // Exact match
-                if (iikoName === aggName) {
+                const score = similarity(iikoProduct.name, aggProduct.name)
+                if (score > bestScore) {
+                    bestScore = score
                     bestMatch = aggProduct
-                    bestScore = 100
-                    break
-                }
-
-                // Partial match (both directions)
-                if (iikoName.includes(aggName) || aggName.includes(iikoName)) {
-                    const score = Math.max(iikoName.length, aggName.length) > 0
-                        ? (Math.min(iikoName.length, aggName.length) / Math.max(iikoName.length, aggName.length)) * 80
-                        : 0
-                    if (score > bestScore) {
-                        bestMatch = aggProduct
-                        bestScore = score
-                    }
                 }
             }
 
             mapped.push({
                 iiko_product: iikoProduct,
-                aggregator_product: bestMatch,
+                aggregator_product: bestScore >= THRESHOLD ? bestMatch : null,
                 match_confidence: bestScore,
-                is_matched: bestScore > 50
+                is_matched: bestScore >= THRESHOLD
             })
         }
 

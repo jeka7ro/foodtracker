@@ -91,9 +91,7 @@ export class BoltChecker {
             const totalTime = Date.now() - startTime
 
             // ─── SAVE MONITORING CHECK ───
-            const { data, error } = await supabase
-                .from('monitoring_checks')
-                .insert({
+            const checkData = {
                     restaurant_id: restaurant.id,
                     platform: this.platform,
                     checked_at: new Date().toISOString(),
@@ -121,14 +119,19 @@ export class BoltChecker {
                             stopped: unavailableCount
                         }
                     }
-                })
+                }
+            
+            let { error } = await supabase
+                .from('monitoring_checks')
+                .insert(checkData)
                 .select()
                 .single()
 
             if (error) {
-                console.error('   [Bolt] Error saving check:', error)
-                return null
+                console.error('   [Bolt] Error saving check (ignored for local UI):', error.message)
             }
+            
+            const data = checkData;
 
             // ─── SAVE RATING HISTORY ───
             if (rating) {

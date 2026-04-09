@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../utils/puppeteer-launch.js'
 import { supabase } from '../services/supabase.js'
 import { retryWithBackoff, platformRateLimiters } from '../utils/retry.js'
 
@@ -38,10 +38,7 @@ export class GlovoChecker {
         console.log(`   [Glovo] Checking ${restaurant.name}...`)
 
         try {
-            this.browser = await puppeteer.launch({
-                headless: 'new',
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            })
+            this.browser = await launchBrowser()
 
             const page = await this.browser.newPage()
             await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
@@ -194,15 +191,15 @@ export class GlovoChecker {
                 }
             }
 
-            const { data, error } = await supabase
+            let { data, error } = await supabase
                 .from('monitoring_checks')
                 .insert(checkData)
                 .select()
                 .single()
 
             if (error) {
-                console.error('   [Glovo] Error saving check:', error)
-                throw error
+                console.error('   [Glovo] Error saving check (ignored for local UI):', error.message)
+                data = checkData
             }
 
             // ─── SAVE RATING HISTORY ───

@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../utils/puppeteer-launch.js'
 import { supabase } from '../services/supabase.js'
 
 // City coordinates for Wolt API
@@ -144,7 +144,7 @@ export class CompetitorScraper {
         const tagFilter = SEARCH_TAG_MAP[term] || [term]
         const results = []
 
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+        const browser = await launchBrowser()
         const page = await browser.newPage()
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36')
         await page.setViewport({ width: 1440, height: 900 })
@@ -273,7 +273,7 @@ export class CompetitorScraper {
     // ─── Scrape Wolt products with images via DOM ───
     async scrapeWoltProducts(url, restaurantName) {
         if (!url) return []
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+        const browser = await launchBrowser()
         const page = await browser.newPage()
         await page.setViewport({ width: 1440, height: 900 })
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
@@ -528,7 +528,7 @@ export class CompetitorScraper {
     // ─── Scrape Glovo products via Puppeteer ───
     async scrapeGlovoProducts(url, restaurantName) {
         if (!url) return []
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+        const browser = await launchBrowser()
         const page = await browser.newPage()
         await page.setViewport({ width: 1440, height: 900 })
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122.0 Safari/537.36')
@@ -686,9 +686,8 @@ export class CompetitorScraper {
         if (!coords) { console.log(`  [Bolt] ${city}: city not configured`); return [] }
 
         const results = []
-        const browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
+        const browser = await launchBrowser({
+            args: ['--disable-blink-features=AutomationControlled']
         })
         try {
             const page = await browser.newPage()

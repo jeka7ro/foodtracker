@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../utils/puppeteer-launch.js'
 import { supabase } from '../services/supabase.js'
 import { retryWithBackoff, platformRateLimiters } from '../utils/retry.js'
 
@@ -41,10 +41,7 @@ export class WoltChecker {
 
             const startTime = Date.now()
 
-            this.browser = await puppeteer.launch({
-                headless: 'new',
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            })
+            this.browser = await launchBrowser()
 
             const page = await this.browser.newPage()
             await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
@@ -145,9 +142,7 @@ export class WoltChecker {
             }
 
             // ─── SAVE MONITORING CHECK ───
-            const { data, error } = await supabase
-                .from('monitoring_checks')
-                .insert({
+            const checkData = {
                     restaurant_id: restaurant.id,
                     platform: this.platform,
                     checked_at: new Date().toISOString(),
@@ -168,14 +163,20 @@ export class WoltChecker {
                         total_time_ms: totalTime,
                         url: restaurant.wolt_url
                     }
-                })
+                }
+            
+            let { error } = await supabase
+                .from('monitoring_checks')
+                .insert(checkData)
                 .select()
                 .single()
 
             if (error) {
-                console.error('   [Wolt] Error saving check:', error)
-                return null
+                console.error('   [Wolt] Error saving check (ignored for local UI):', error.message)
             }
+            
+            // Re-assign data to our full checkData object to guarantee raw_data is always present
+            const data = checkData;
 
             // ─── SAVE RATING HISTORY ───
             if (pageData.rating) {

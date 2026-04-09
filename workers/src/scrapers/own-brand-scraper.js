@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../utils/puppeteer-launch.js'
 import { supabase } from '../services/supabase.js'
 import { CompetitorScraper } from './competitor-scraper.js'
 
@@ -101,7 +101,7 @@ export class OwnBrandScraper {
     // ─── Scrape Glovo restaurant products ───
     async scrapeGlovoProducts(url, restaurantName) {
         if (!url) return []
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+        const browser = await launchBrowser()
         const page = await browser.newPage()
         await page.setViewport({ width: 1440, height: 900 })
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')

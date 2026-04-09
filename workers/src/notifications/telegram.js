@@ -1,458 +1,286 @@
-import TelegramBot from 'node-telegram-bot-api'
-import { config } from '../config.js'
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import path from 'path';
 
-/**
- * Enhanced Telegram Notifier
- * 
- * Alert types:
- * - Stop alerts (restaurant closed)
- * - Recovery alerts (restaurant back online)
- * - Product stop alerts (too many products unavailable)
- * - Radius reduction alerts (delivery area reduced)
- * - Rating drop alerts (rating decreased)
- * - Daily reports
- */
-export class TelegramNotifier {
-    constructor() {
-        if (!config.telegram.botToken) {
-            console.warn('   [Telegram] Bot token not configured')
-            this.bot = null
-            return
-        }
+// Folosim .env.local unde probabil tii cheile.
+dotenv.config({ path: path.resolve(process.cwd(), "..", ".env.local") });
 
-        this.bot = new TelegramBot(config.telegram.botToken, { polling: false })
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+);
+
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
+const PLATFORM_LABEL = {
+  glovo: 'Glovo',
+  wolt: 'Wolt',
+  bolt: 'Bolt Food',
+  bolt_food: 'Bolt Food',
+};
+
+const SEVERITY_EMOJI = {
+  CRITICAL: '🔴',
+  WARNING: '🟡',
+  INFO: '🔵',
+};
+
+function formatDuration(detectedAt) {
+  if (!detectedAt) return '—';
+  const minutes = Math.floor((Date.now() - new Date(detectedAt).getTime()) / 60000);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+}
+
+function formatLoss(amount, currency) {
+  if (!amount) return '—';
+  return `${Math.round(amount).toLocaleString('ro-RO')} ${currency || 'RON'}`;
+}
+
+function formatMissingProducts(contextJson) {
+  if (!contextJson?.missing_products?.length) return '';
+  const products = contextJson.missing_products.slice(0, 5);
+  const total = contextJson.missing_count || products.length;
+  const more = total > 5 ? `\n  +${total - 5} alte produse` : '';
+  return `\n📦 Lipsă:\n  · ${products.join('\n  · ')}${more}`;
+}
+
+function buildMessage(incident, restaurant) {
+  const emoji = SEVERITY_EMOJI[incident.severity] || '🔴';
+  const platform = PLATFORM_LABEL[incident.platform] || incident.platform;
+  const duration = formatDuration(incident.detected_at);
+  const loss = formatLoss(incident.estimated_loss_amount, incident.estimated_loss_currency);
+
+  switch (incident.incident_type) {
+    case 'STOP_TOTAL':
+    case 'CLOSED_DURING_WORKING_HOURS':
+      return [
+        `${emoji} <b>STOP TOTAL — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `⏱ Oprit de ${duration} (în program de lucru)`,
+        `💸 Pierdere estimată: ${loss}`,
+        `📋 iiko: deschis | ${platform}: închis`,
+      ].join('\n');
+
+    case 'STOP_PARTIAL_PRODUCTS':
+    case 'MENU_MISMATCH': {
+      const count = incident.context_json?.missing_count || '?';
+      const missingList = formatMissingProducts(incident.context_json);
+      return [
+        `${emoji} <b>Produse lipsă — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `📦 ${count} produse față de iiko${missingList}`,
+        `💸 Pierdere estimată: ${loss}`,
+      ].join('\n');
     }
 
-    /**
-     * Send alert for restaurant stopped
-     */
-    async sendStopAlert(restaurant, platform, details) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        const message = this.formatStopMessage(restaurant, platform, details)
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Marcare Rezolvat', callback_data: `resolve_${restaurant.id}_${platform}` },
-                    { text: 'Mute 1h', callback_data: `mute_${restaurant.id}_60` }
-                ],
-                [
-                    { text: 'Dashboard', url: 'http://localhost:5533/monitoring' },
-                    { text: `Deschide ${platform}`, url: restaurant[`${platform}_url`] || 'http://localhost:5533' }
-                ]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Stop alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending stop alert:', error.message)
-            return false
-        }
+    case 'STOP_CATEGORY': {
+      const category = incident.context_json?.category || 'categorie necunoscută';
+      return [
+        `${emoji} <b>Categorie oprită — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `🗂 Categorie: ${category}`,
+        `⏱ De ${duration}`,
+        `💸 Pierdere estimată: ${loss}`,
+      ].join('\n');
     }
 
-    /**
-     * Send alert for COMPETITOR stopped
-     */
-    async sendCompetitorStopAlert(restaurant, platform, details) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        const message = `
-<b>🔥 OPORTUNITATE! CONCURENȚĂ ÎNCHISĂ</b>
-
-<b>Concurent:</b> ${restaurant.name} (${restaurant.city || 'N/A'})
-<b>Platformă:</b> ${platform.toUpperCase()}
-
-Apare <b>închis/pauzat</b> pe platformă în timpul programului normal!
-Cel mai probabil nivelul de comenzi e critic sau nu mai au stocuri. E momentul ideal să trageți clientela.
-
-<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
-        `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [{ text: `Deschide ${platform}`, url: restaurant[`${platform}_url`] || 'http://localhost:5173' }]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Competitor stop alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending competitor stop alert:', error.message)
-            return false
-        }
+    case 'RADIUS_REDUCED': {
+      const from = incident.context_json?.radius_from_km || '?';
+      const to = incident.context_json?.radius_to_km || '?';
+      const pct = incident.context_json?.reduced_percent
+        ? `−${Math.round(incident.context_json.reduced_percent * 100)}%`
+        : '';
+      return [
+        `${emoji} <b>Rază redusă — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `📏 ${from} km → ${to} km ${pct} · De ${duration}`,
+        `💸 Pierdere estimată: ${loss}`,
+      ].join('\n');
     }
 
-    /**
-     * Send alert for restaurant back online
-     */
-    async sendRecoveryAlert(restaurant, platform, durationMinutes) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        const message = `
-<b>Restaurant Revenit Online</b>
-
-<b>Restaurant:</b> ${restaurant.name}
-<b>Platforma:</b> ${platform.toUpperCase()}
-<b>Oras:</b> ${restaurant.city || 'N/A'}
-
-Problema rezolvata dupa <b>${this.formatDuration(durationMinutes)}</b>
-
-<i>${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [{ text: 'Dashboard', url: 'http://localhost:5533/monitoring' }]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending recovery alert:', error.message)
-            return false
-        }
+    case 'RANKING_DROP': {
+      const from = incident.context_json?.rank_from || '?';
+      const to = incident.context_json?.rank_to || '?';
+      return [
+        `${emoji} <b>Cădere poziție — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `📊 Poziție: ${from} → ${to}`,
+        `💸 Pierdere estimată: ${loss}`,
+      ].join('\n');
     }
 
-    /**
-     * Send alert for COMPETITOR back online
-     */
-    async sendCompetitorRecoveryAlert(restaurant, platform, durationMinutes) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        const message = `
-<b>ℹ️ Concurent Revenit</b>
-
-<b>Concurent:</b> ${restaurant.name}
-<b>Platformă:</b> ${platform.toUpperCase()}
-
-Concurentul a pornit din nou livrările (a fost blocat aprox <b>${this.formatDuration(durationMinutes)}</b>).
-
-<i>${new Date().toLocaleString('ro-RO')}</i>
-        `.trim()
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML'
-            })
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending competitor recovery alert:', error.message)
-            return false
-        }
+    case 'RATING_DROP': {
+      const from = incident.context_json?.rating_from || '?';
+      const to = incident.context_json?.rating_to || '?';
+      return [
+        `${emoji} <b>Scădere rating — ${platform}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        `⭐ Rating: ${from} → ${to}`,
+      ].join('\n');
     }
 
-    /**
-     * Send alert for product stops exceeding threshold
-     */
-    async sendProductStopAlert(restaurant, platform, stoppedCount, totalCount, stopPercent) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
+    default:
+      return [
+        `${emoji} <b>${incident.title}</b>`,
+        `📍 ${restaurant.name} · ${restaurant.city}`,
+        incident.description || '',
+      ].filter(Boolean).join('\n');
+  }
+}
 
-        const severity = stopPercent > 50 ? 'CRITIC' : 'AVERTIZARE'
+function buildDedupeKey(incident) {
+  return `${incident.incident_type}:${incident.platform}:${incident.restaurant_id}`;
+}
 
-        const message = `
-<b>${severity} - Produse pe STOP</b>
+async function wasRecentlySent(restaurantId, dedupeKey, windowMinutes = 30) {
+  // Deduplicare simpla locala sau in baza de rating/history in lipsa tabelei aggregator_notifications
+  // Vom crea structura minimala on the fly in Supabase daca lipseste, sau presupunem falsa
+  try {
+      const since = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('aggregator_notifications')
+        .select('id')
+        .eq('restaurant_id', restaurantId)
+        .eq('dedupe_key', dedupeKey)
+        .gte('sent_at', since)
+        .limit(1);
+        
+      if (error && error.code === '42P01') {
+          // Table doesn't exist, ignore deduplication gracefully to not block application
+          return false;
+      }
+      return (data?.length ?? 0) > 0;
+  } catch (e) {
+      return false;
+  }
+}
 
-<b>Restaurant:</b> ${restaurant.name}
-<b>Platforma:</b> ${platform.toUpperCase()}
+async function logNotification(restaurantId, platform, incidentId, dedupeKey, payload) {
+  try {
+      const { error } = await supabase.from('aggregator_notifications').insert({
+        restaurant_id: restaurantId,
+        platform,
+        channel: 'telegram',
+        incident_id: incidentId,
+        dedupe_key: dedupeKey,
+        payload,
+        sent_at: new Date().toISOString(),
+      });
+      if (error && error.code === '42P01') {
+          // Table doesn't exist, ignore
+      }
+  } catch (e) {
+      // Ignora erorile de DB
+  }
+}
 
-<b>${stoppedCount}</b> din <b>${totalCount}</b> produse sunt indisponibile (<b>${stopPercent.toFixed(0)}%</b> din meniu)
+async function sendTelegramMessage(chatId, text, threadId) {
+  if (!TELEGRAM_BOT_TOKEN) {
+      console.warn('🔴 Nu ai setat TELEGRAM_BOT_TOKEN in ENV.');
+      return false;
+  }
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  };
+  if (threadId) {
+    body.message_thread_id = threadId;
+  }
+  
+  try {
+      const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error(`[Telegram] Eroare trimitere chat_id=${chatId}:`, err);
+        return false;
+      }
+      return true;
+  } catch (e) {
+      console.error(`[Telegram] Network error la trimitere:`, e);
+      return false;
+  }
+}
 
-${stopPercent > 50 ? 'Mai mult de jumatate din meniu este pe STOP!' : `Procentul depaseste limita configurata.`}
+export async function processAndNotify() {
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  // Folosim tabelul real 'stop_events' în loc de aggregator_incidents conceptual
+  const { data: activeStops, error } = await supabase
+    .from('stop_events')
+    .select('id, restaurant_id, platform, stop_type, stopped_at, affected_product_count, reason, estimated_loss_amount')
+    .is('resumed_at', null)
+    .gte('stopped_at', since)
+    .order('stopped_at', { ascending: false });
 
-<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
+  if (error || !activeStops?.length) {
+    if (error) console.error('[Notifier] Eroare citire stop_events:', error);
+    return;
+  }
 
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Verifica', url: restaurant[`${platform}_url`] || 'http://localhost:5533' },
-                    { text: 'Dashboard', url: 'http://localhost:5533/monitoring' }
-                ]
-            ]
-        }
+  const restaurantIds = [...new Set(activeStops.map((i) => i.restaurant_id))];
+  const { data: restaurants } = await supabase.from('restaurants').select('id, name, city, telegram_group_id').in('id', restaurantIds);
+  const restaurantMap = new Map((restaurants || []).map((r) => [r.id, r]));
 
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Product stop alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending product stop alert:', error.message)
-            return false
-        }
+  for (const stopEvent of activeStops) {
+    const restaurant = restaurantMap.get(stopEvent.restaurant_id);
+    if (!restaurant || !restaurant.telegram_group_id) continue;
+
+    // Adapt incident structure
+    const incident = {
+        id: stopEvent.id,
+        restaurant_id: stopEvent.restaurant_id,
+        platform: stopEvent.platform,
+        incident_type: stopEvent.stop_type === 'full' ? 'STOP_TOTAL' : 'STOP_PARTIAL_PRODUCTS',
+        severity: stopEvent.stop_type === 'full' ? 'CRITICAL' : 'WARNING',
+        detected_at: stopEvent.stopped_at,
+        estimated_loss_amount: stopEvent.estimated_loss_amount,
+        estimated_loss_currency: 'RON',
+        context_json: { missing_count: stopEvent.affected_product_count },
+        title: stopEvent.reason || 'Incident',
+        description: null
+    };
+
+    const dedupeKey = buildDedupeKey(incident);
+    const alreadySent = await wasRecentlySent(incident.restaurant_id, dedupeKey, 30);
+    if (alreadySent) continue;
+
+    const message = buildMessage(incident, restaurant);
+    const sent = await sendTelegramMessage(restaurant.telegram_group_id, message);
+
+    if (sent) {
+      await logNotification(incident.restaurant_id, incident.platform, incident.id, dedupeKey, { message, incident_type: incident.incident_type });
+      console.log(`[Notifier] Trimis: ${incident.incident_type} → ${restaurant.name} (${restaurant.telegram_group_id})`);
     }
+  }
+}
 
-    /**
-     * Send alert for delivery radius reduction
-     */
-    async sendRadiusAlert(restaurant, platform, normalRadius, currentRadius, estimatedLoss) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
+export async function notifyStopResolved(restaurantId, platform, durationSec, lossAmount, currency = 'RON') {
+  const restaurant = await supabase
+    .from('restaurants')
+    .select('name, city, telegram_group_id')
+    .eq('id', restaurantId)
+    .single();
 
-        const reductionPercent = ((1 - currentRadius / normalRadius) * 100).toFixed(0)
+  if (!restaurant.data || !restaurant.data.telegram_group_id) return;
 
-        const message = `
-<b>AVERTIZARE - Raza de Livrare Redusa</b>
+  const minutes = Math.floor(durationSec / 60);
+  const loss = lossAmount ? `${Math.round(lossAmount).toLocaleString('ro-RO')} ${currency}` : '—';
+  const platData = PLATFORM_LABEL[platform] || platform;
 
-<b>Restaurant:</b> ${restaurant.name}
-<b>Platforma:</b> ${platform.toUpperCase()}
+  const message = [
+    `✅ <b>STOP rezolvat — ${platData}</b>`,
+    `📍 ${restaurant.data.name} · ${restaurant.data.city}`,
+    `⏱ Durată totală: ${minutes} min`,
+    `💸 Pierdere totală: ${loss}`,
+  ].join('\n');
 
-Raza de livrare a fost redusa:
-<b>${normalRadius} km</b> (normal) → <b>${currentRadius} km</b> (actual)
-Reducere: <b>${reductionPercent}%</b>
-
-${estimatedLoss ? `<b>Pierdere estimata/ora:</b> ${estimatedLoss.toFixed(2)} RON` : ''}
-
-<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Verifica', url: restaurant[`${platform}_url`] || 'http://localhost:5533' },
-                    { text: 'Dashboard', url: 'http://localhost:5533/marketing' }
-                ]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Radius alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending radius alert:', error.message)
-            return false
-        }
-    }
-
-    /**
-     * Send alert for rating drop
-     */
-    async sendRatingDropAlert(restaurant, platform, previousRating, currentRating) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        const drop = (previousRating - currentRating).toFixed(1)
-
-        const message = `
-<b>AVERTIZARE - Scadere Rating</b>
-
-<b>Restaurant:</b> ${restaurant.name}
-<b>Platforma:</b> ${platform.toUpperCase()}
-
-Ratingul a scazut:
-<b>${previousRating}</b> → <b>${currentRating}</b> (−${drop})
-
-Recomandam verificarea recenziilor recente.
-
-<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Recenzii', url: restaurant[`${platform}_url`] || 'http://localhost:5533' },
-                    { text: 'Marketing', url: 'http://localhost:5533/marketing' }
-                ]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Rating drop alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending rating drop alert:', error.message)
-            return false
-        }
-    }
-
-    /**
-     * Send alert for negative review (Reputation MVP)
-     */
-    async sendNegativeReviewAlert(restaurant, review) {
-        if (!this.bot || !restaurant.telegram_group_id) return false
-
-        // Do not alert if it's just a rating without text (per client request)
-        if (!review.text || review.text.trim().length === 0) return false;
-
-        const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-
-        const message = `
-<b>🚨 RECENZIE NEGATIVĂ NOUĂ</b>
-
-<b>Locație:</b> ${restaurant.name} (${restaurant.city || 'N/A'})
-<b>Platformă:</b> ${review.platform.toUpperCase()}
-<b>Client:</b> ${review.author_name || 'Anonim'}
-<b>Scor:</b> ${stars}
-
-<b>Comentariu:</b>
-<i>"${review.text}"</i>
-
-Vă rugăm să investigați și să răspundeți cât mai curând posibil.
-
-<i>Alertă generată automat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Vezi pe Platformă', url: review.url || restaurant[`${review.platform}_url`] || 'http://localhost:5533' },
-                    { text: 'Dashboard Reputație', url: 'http://localhost:5173/reputation' }
-                ]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(restaurant.telegram_group_id, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            console.log(`   [Telegram] Negative review alert sent for ${restaurant.name}`)
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending negative review alert:', error.message)
-            return false
-        }
-    }
-
-    /**
-     * Send daily report
-     */
-    async sendDailyReport(chatId, stats) {
-        if (!this.bot) return false
-
-        const uptimeStatus = stats.uptimePercent > 95 ? 'Excelent' : stats.uptimePercent > 80 ? 'Acceptabil' : 'Critic'
-
-        const message = `
-<b>Raport Zilnic - Aggregator Monitor</b>
-
-<b>Uptime General:</b> ${stats.uptimePercent}% (${uptimeStatus})
-
-<b>Restaurante monitorizate:</b> ${stats.totalRestaurants}
-<b>Total verificari:</b> ${stats.totalChecks}
-<b>Probleme detectate:</b> ${stats.issues}
-<b>Pierdere estimata:</b> ${stats.estimatedLoss.toFixed(2)} RON
-
-<b>Per platforma:</b>
-Glovo: ${stats.glovo?.uptime || '-'}% uptime
-Wolt: ${stats.wolt?.uptime || '-'}% uptime
-Bolt: ${stats.bolt?.uptime || '-'}% uptime
-
-<i>Raport generat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Dashboard', url: 'http://localhost:5533/' },
-                    { text: 'Reports', url: 'http://localhost:5533/reports' }
-                ]
-            ]
-        }
-
-        try {
-            await this.bot.sendMessage(chatId, message, {
-                parse_mode: 'HTML',
-                reply_markup: keyboard
-            })
-            return true
-        } catch (error) {
-            console.error('   [Telegram] Error sending daily report:', error.message)
-            return false
-        }
-    }
-
-    /**
-     * Format stop alert message
-     */
-    formatStopMessage(restaurant, platform, details) {
-        const severityLabel = details.severity === 'critical' ? 'ALERTA CRITICA' : 'AVERTIZARE'
-        const platformLabel = platform.toUpperCase()
-
-        return `
-<b>${severityLabel} - STOP NEAUTORIZAT</b>
-
-<b>${platformLabel}</b> - Restaurant inchis!
-
-Restaurantul apare <b>inchis</b> in agregator dar ar trebui sa fie <b>deschis</b>.
-
-<b>Probleme detectate:</b>
-${details.issues.map(issue => `• ${issue}`).join('\n')}
-
-<b>Restaurant:</b> ${restaurant.name}
-<b>Oras:</b> ${restaurant.city || 'N/A'}
-<b>Status:</b> ${details.status || 'unknown'}
-
-<i>Detectat automat la ${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-    }
-
-    /**
-     * Format duration display
-     */
-    formatDuration(minutes) {
-        if (minutes < 60) {
-            return `${minutes} minute`
-        }
-        const hours = Math.floor(minutes / 60)
-        const mins = minutes % 60
-        return `${hours}h ${mins}m`
-    }
-
-    /**
-     * Send test message
-     */
-    async sendTestMessage(chatId) {
-        if (!this.bot) {
-            throw new Error('Telegram bot not configured')
-        }
-
-        const message = `
-<b>Test Message</b>
-
-Telegram bot functioneaza corect!
-Butoanele interactive sunt active.
-
-<i>${new Date().toLocaleString('ro-RO')}</i>
-    `.trim()
-
-        const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: 'Dashboard', url: 'http://localhost:5533/' },
-                    { text: 'OK', callback_data: 'test_ok' }
-                ]
-            ]
-        }
-
-        await this.bot.sendMessage(chatId, message, {
-            parse_mode: 'HTML',
-            reply_markup: keyboard
-        })
-        return true
-    }
+  await sendTelegramMessage(restaurant.data.telegram_group_id, message);
 }
