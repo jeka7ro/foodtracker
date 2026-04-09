@@ -4,7 +4,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
 import { LineChart, Line, BarChart, Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Download, UploadCloud, Activity, ShoppingBag, CreditCard, Package } from 'lucide-react'
+import { Download, UploadCloud, Activity, ShoppingBag, CreditCard, Package, RefreshCw } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import './Performance.css'
 
@@ -157,6 +157,35 @@ export default function Performance() {
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [locationsPageNumber, setLocationsPageNumber] = useState(1)
     const [locationsItemsPerPage, setLocationsItemsPerPage] = useState(10)
+
+    const [syncStatus, setSyncStatus] = useState({ isSyncing: false, percent: 0, message: '' })
+
+    useEffect(() => {
+        const checkSync = async () => {
+            try {
+                const res = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/sync-sales/status`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSyncStatus(data);
+                }
+            } catch (e) {}
+        };
+        checkSync();
+        const interval = setInterval(checkSync, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const triggerSync = async () => {
+        if (syncStatus.isSyncing) return;
+        setSyncStatus({ isSyncing: true, percent: 0, message: 'Se contactează serverul...' });
+        try {
+            await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/sync-sales`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days: 180 })
+            });
+        } catch (e) {}
+    };
 
     useEffect(() => {
         Promise.all([
@@ -600,6 +629,9 @@ export default function Performance() {
                     </select>
 
                     <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+                        <button onClick={triggerSync} disabled={syncStatus.isSyncing} className="btn-secondary" style={{ color: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sync iiko'}
+                        </button>
                         <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
                         <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary" style={{ background: '#116d74', boxShadow: '0 4px 12px rgba(17,109,116,0.3)' }}>
                             <UploadCloud size={16} />
@@ -629,6 +661,23 @@ export default function Performance() {
                     </div>
                 </div>
             </div>
+
+            {syncStatus.isSyncing && (
+                <div className="glass-card" style={{ marginBottom: '16px', padding: '16px 24px', border: '1px solid rgba(16, 185, 129, 0.3)', background: isDark ? 'rgba(16, 185, 129, 0.05)' : '#ecfdf5' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <RefreshCw size={18} className="spinner" color="#10b981" />
+                            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-color)' }}>
+                                {syncStatus.message || 'Se sincronizează datele istorice...'}
+                            </span>
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#10b981' }}>{syncStatus.percent}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: 'var(--glass-border)', borderRadius: '10px', overflow: 'hidden' }}>
+                        <div style={{ width: `${syncStatus.percent}%`, height: '100%', background: '#10b981', transition: 'width 0.5s ease-out' }}></div>
+                    </div>
+                </div>
+            )}
 
             <div className="kpi-grid">
                 <div className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}>

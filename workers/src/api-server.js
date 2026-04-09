@@ -1,5 +1,9 @@
+import "./antigravity-worker.js"
 import express from 'express'
 import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { discoverUrls } from './utils/url-discovery.js'
 import { supabase } from './services/supabase.js'
 import { GlovoChecker } from './checkers/glovo-checker.js'
@@ -11,12 +15,43 @@ import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import { OwnBrandScraper } from './scrapers/own-brand-scraper.js'
 import { getSmartSearchWords } from './utils/searchUtils.js'
 import { IikoClient } from './services/iiko-client.js'
+import { discoverSingleRestaurant } from './utils/auto-discover.js'
+import { salesSync } from './services/sales-sync.js'
+
+// --- Prevent Puppeteer / Node crashes on unhandled errors ---
+process.on('uncaughtException', (err) => {
+    console.error('[API SERVER] Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[API SERVER] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+// -----------------------------------------------------------
 
 const ownBrandScraper = new OwnBrandScraper()
 
 const app = express()
 const PORT = process.env.PORT || 3001
 const lossCalculator = new LossCalculator()
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const SYNC_REPORTS_FILE = path.resolve(__dirname, '..', '..', 'data', 'sync-reports.json')
+
+function loadSyncReports() {
+    try {
+        if (fs.existsSync(SYNC_REPORTS_FILE)) {
+            return JSON.parse(fs.readFileSync(SYNC_REPORTS_FILE, 'utf8'))
+        }
+    } catch (_) {}
+    return []
+}
+
+function saveSyncReport(report) {
+    const reports = loadSyncReports()
+    reports.unshift(report) // newest first
+    const trimmed = reports.slice(0, 100) // keep last 100 reports
+    fs.mkdirSync(path.dirname(SYNC_REPORTS_FILE), { recursive: true })
+    fs.writeFileSync(SYNC_REPORTS_FILE, JSON.stringify(trimmed, null, 2))
+}
 
 app.use(cors())
 app.use(express.json())
@@ -91,6 +126,18 @@ app.post('/api/discover-urls', async (req, res) => {
     }
 })
 
+app.post('/api/auto-discover', async (req, res) => {
+    try {
+        const { restaurant } = req.body
+        if (!restaurant) return res.status(400).json({ success: false, error: 'Restaurant body required' })
+        const result = await discoverSingleRestaurant(restaurant)
+        res.json(result)
+    } catch (error) {
+        console.error('[API] Auto-discover err:', error)
+        res.status(500).json({ success: false, error: error.message })
+    }
+})
+
 // ─── Check single restaurant ───
 app.post('/api/check-restaurant', async (req, res) => {
     try {
@@ -126,11 +173,15 @@ app.post('/api/check-restaurant', async (req, res) => {
             try {
                 const result = await checker.check(restaurant)
                 if (result) {
+                    
                     results.push(result)
                     console.log(`  ${result.final_status === 'available' ? '[OK]' : '[ERR]'} ${platform}: ${result.final_status}`)
+                } else {
+                    results.push({ platform, final_status: 'error', error: 'Check responded with null' })
                 }
             } catch (err) {
                 console.error(`  [ERR] ${platform}: ${err.message}`)
+                results.push({ platform, final_status: 'error', error: err.message })
             }
         }
 
@@ -205,6 +256,254 @@ app.post('/api/check-all', async (req, res) => {
     } catch (error) {
         console.error('[API] Error checking all restaurants:', error)
         res.status(500).json({ success: false, error: error.message })
+    }
+})
+
+// ─── DIAGNOSTIC: List all iiko groups/categories for a restaurant ───
+// Use this to find which parentGroup IDs belong to a specific brand
+// Then set iiko_config.allowed_category_ids = ["uuid1", "uuid2"] on that restaurant
+app.get('/api/iiko-groups/:restaurantId', async (req, res) => {
+    try {
+        const { data: restaurant, error } = await supabase
+            .from('restaurants')
+            .select('*')
+            .eq('id', req.params.restaurantId)
+            .single()
+        if (error || !restaurant) return res.status(404).json({ error: 'Restaurant negăsit' })
+
+        const iikoClient = new IikoClient(restaurant)
+        const isAuth = await iikoClient.authenticate()
+        if (!isAuth) return res.status(401).json({ error: 'iiko auth eșuat' })
+
+        // Fetch raw nomenclature to get groups
+        const apiUrl = iikoClient.apiUrl
+        const response = await fetch(`${apiUrl}/api/1/nomenclature`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${iikoClient.token}` },
+            body: JSON.stringify({ organizationId: iikoClient.config.organization_id })
+        })
+        const data = await response.json()
+
+        const groups = (data.groups || []).map(g => ({
+            id: g.id,
+            name: g.name,
+            parentId: g.parentGroup || null,
+            isDeleted: g.isDeleted || false,
+            productCount: (data.products || []).filter(p => p.parentGroup === g.id && !p.isDeleted).length
+        })).filter(g => !g.isDeleted && g.productCount > 0)
+        .sort((a, b) => b.productCount - a.productCount)
+
+        res.json({
+            restaurant: restaurant.name,
+            total_groups: groups.length,
+            total_products: (data.products || []).filter(p => !p.isDeleted).length,
+            current_allowed_category_ids: restaurant.iiko_config?.allowed_category_ids || null,
+            groups
+        })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
+
+// ─── Sync Sales from iiko Deliveries API ───
+app.post('/api/sync-sales', (req, res) => {
+    if (salesSync.progress && salesSync.progress.isSyncing) {
+        return res.status(400).json({ success: false, error: "Sync deja in progress" })
+    }
+    const daysBack = parseInt(req.body?.days) || 1
+    console.log(`[API] Manual sales sync requested for ${daysBack} days`)
+    
+    // Fire and forget
+    salesSync.syncSales(daysBack).catch(e => console.error("Sync background err:", e))
+    
+    return res.json({ success: true, message: `Sync started for ${daysBack} days in background` })
+})
+
+app.get('/api/sync-sales/status', (req, res) => {
+    return res.json(salesSync.progress || { isSyncing: false, percent: 0 })
+})
+
+// ─── 1:1 SYNC Test (Iiko vs Aggregators) ───
+app.post('/api/sync-test-all', async (req, res) => {
+    try {
+        const { restaurantId } = req.body || {}
+        console.log(`[API] Starting 1:1 Sync Test${restaurantId ? ` for restaurant ${restaurantId}` : ' for all restaurants'}...`)
+
+        // We need restaurants with iiko_config configured
+        let query = supabase
+            .from('restaurants')
+            .select('*')
+            .eq('is_active', true)
+            
+        if (restaurantId) {
+            query = query.eq('id', restaurantId)
+        }
+
+        const { data: restaurants, error } = await query
+        if (error) throw error
+
+        const results = []
+
+        for (const restaurant of restaurants) {
+            if (!restaurant.iiko_config || !restaurant.iiko_config.api_login) continue
+            
+            console.log(`[SyncTest] Processing ${restaurant.name} (${restaurant.city})...`)
+            const iikoClient = new IikoClient(restaurant)
+            const isAuth = await iikoClient.authenticate()
+            if (!isAuth) {
+                 results.push({ restaurant: restaurant.name, status: 'error', error: 'Iiko Auth Blocked' })
+                 continue
+            }
+
+            // Get Iiko Products + StopList
+            let iikoProducts = await iikoClient.getProducts()
+            const stopList = await iikoClient.getStopList()
+            const stoppedIikoIds = new Set(stopList.map(s => s.iiko_id))
+
+            // ─── BRAND FILTER ───────────────────────────────────────────────
+            // If iiko_config.allowed_category_ids is set, only use products
+            // from those categories. This prevents cross-brand contamination
+            // (e.g. SushiMaster products appearing in WeLoveSushi comparison).
+            const allowedCatIds = restaurant.iiko_config?.allowed_category_ids
+            if (allowedCatIds && Array.isArray(allowedCatIds) && allowedCatIds.length > 0) {
+                const allowedSet = new Set(allowedCatIds)
+                const beforeCount = iikoProducts.length
+                iikoProducts = iikoProducts.filter(p => allowedSet.has(p.category_id))
+                console.log(`[SyncTest] Brand filter (categories): ${beforeCount} → ${iikoProducts.length} produse`)
+            }
+
+            // Name-based exclusion: iiko_config.excluded_product_name_patterns = ["sushimaster", "ikura"]
+            // Any product whose name contains one of these strings (case-insensitive) is excluded.
+            const excludePatterns = restaurant.iiko_config?.excluded_product_name_patterns
+            if (excludePatterns && Array.isArray(excludePatterns) && excludePatterns.length > 0) {
+                const patterns = excludePatterns.map(p => p.toLowerCase().trim())
+                const beforeCount = iikoProducts.length
+                iikoProducts = iikoProducts.filter(p => {
+                    const nameLower = (p.name || '').toLowerCase()
+                    return !patterns.some(pat => nameLower.includes(pat))
+                })
+                console.log(`[SyncTest] Brand filter (name patterns "${excludePatterns.join(',')}"): ${beforeCount} → ${iikoProducts.length} produse`)
+            }
+
+            if (!allowedCatIds?.length && !excludePatterns?.length) {
+                console.log(`[SyncTest] ⚠️  Niciun filtru de brand pentru ${restaurant.name}. Toate produsele din org sunt folosite.`)
+            }
+            // ────────────────────────────────────────────────────────────────
+
+
+            // Actually mark is_available
+            iikoProducts.forEach(p => {
+                if (stoppedIikoIds.has(p.iiko_id)) {
+                    p.is_available = false;
+                    p.is_stopped_in_pos = true;
+                }
+            })
+
+            // Scrape Platforms via ownBrandScraper
+            const today = new Date().toISOString().split('T')[0]
+            const scrapeRes = await ownBrandScraper.scrapeRestaurant(restaurant, today)
+
+            const platforms = ['wolt', 'glovo', 'bolt']
+            const discrepancies = []
+
+            for (const platform of platforms) {
+                if (!restaurant[`${platform}_url`]) continue;
+
+                const dbProds = await ownBrandScraper.getLatestProducts(restaurant.id, platform)
+                const aggProducts = dbProds.map(p => ({
+                     name: p.product_name,
+                     price: p.price,
+                     category: p.category,
+                     is_available: p.is_available // we default them to true if they are physically on page
+                }))
+
+                if (aggProducts.length === 0) {
+                     discrepancies.push({
+                         platform, 
+                         type: 'store_closed',
+                         message: `Magazinul pare închis (0 produse extrase).`
+                     })
+                     continue;
+                }
+
+                const mapping = iikoClient.mapProducts(iikoProducts, aggProducts)
+                
+                // 1. In Iiko its AVAILABLE, but Aggregator its UNAVAILABLE or MISSING completely
+                const importantIiko = mapping.filter(m => m.iiko_product.is_available && m.iiko_product.price > 0 && !m.is_matched)
+                
+                if (importantIiko.length > 0) {
+                     importantIiko.forEach(m => {
+                          discrepancies.push({
+                               platform,
+                               type: 'missing_on_platform',
+                               product: m.iiko_product.name,
+                               message: `Activ în iiko, LIPSĂ pe ${platform}`
+                          })
+                     })
+                }
+
+                // 2. In Iiko its STOPPED, but Aggregator it WAS FOUND on page (potentially active)
+                const falselyActive = mapping.filter(m => m.iiko_product.is_stopped_in_pos && m.is_matched)
+                if (falselyActive.length > 0) {
+                     falselyActive.forEach(m => {
+                          discrepancies.push({
+                               platform,
+                               type: 'active_but_stopped_in_pos',
+                               product: m.iiko_product.name,
+                               message: `În STOP în iiko, dar activ pe ${platform}`
+                          })
+                     })
+                }
+            }
+
+            results.push({
+                 restaurant: restaurant.name,
+                 city: restaurant.city,
+                 status: 'ok',
+                 discrepanciesCount: discrepancies.length,
+                 discrepancies
+            })
+        }
+
+        // ─── Salvare raport cu timestamp ───
+        const report = {
+            id: Date.now(),
+            tested_at: new Date().toISOString(),
+            total_restaurants: results.length,
+            total_discrepancies: results.reduce((s, r) => s + (r.discrepanciesCount || 0), 0),
+            results
+        }
+        saveSyncReport(report)
+        console.log(`[SyncTest] Raport salvat: ${report.total_discrepancies} discrepanțe găsite`)
+
+        res.json({ success: true, count: results.length, reportId: report.id, results })
+
+    } catch (err) {
+        console.error('[API] Error in 1:1 sync test:', err)
+        res.status(500).json({ success: false, error: err.message })
+    }
+})
+
+
+// ─── GET Sync Reports History ───
+app.get('/api/sync-reports', (req, res) => {
+    try {
+        const reports = loadSyncReports()
+        res.json({ success: true, reports, count: reports.length })
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message })
+    }
+})
+
+// ─── DELETE a single sync report ───
+app.delete('/api/sync-reports/:id', (req, res) => {
+    try {
+        const id = parseInt(req.params.id)
+        const reports = loadSyncReports().filter(r => r.id !== id)
+        fs.writeFileSync(SYNC_REPORTS_FILE, JSON.stringify(reports, null, 2))
+        res.json({ success: true })
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message })
     }
 })
 
