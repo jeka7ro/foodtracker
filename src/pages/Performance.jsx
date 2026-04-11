@@ -324,29 +324,36 @@ export default function Performance() {
                 
                 let allData = []
                 if (count && count > 0) {
-                    const step = 1000
-                    const promises = []
+                    const step = 2000
+                    const queryBuilders = []
                     
                     for (let i = 0; i < count; i += step) {
-                        let query = supabase.from('platform_sales').select('*')
-                            .gte('placed_at', fromDate.toISOString())
-                            .lte('placed_at', toDate.toISOString())
-                            .order('placed_at', { ascending: true })
-                            .range(i, i + step - 1)
-                        
-                        if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
-                        if (restaurantFilter !== 'all') {
-                            query = query.eq('restaurant_id', restaurantFilter)
-                        } else if (brandFilter !== 'all' || cityFilter !== 'all') {
-                            const allowedIds = activeRestaurants.map(r => r.id)
-                            query = allowedIds.length > 0 ? query.in('restaurant_id', allowedIds) : query.in('restaurant_id', [-1])
-                        }
-                        
-                        promises.push(query.then(res => res.data || []))
+                        queryBuilders.push(() => {
+                            let query = supabase.from('platform_sales').select('id, placed_at, total_amount, platform, items')
+                                .gte('placed_at', fromDate.toISOString())
+                                .lte('placed_at', toDate.toISOString())
+                                .order('placed_at', { ascending: true })
+                                .range(i, i + step - 1)
+                            
+                            if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
+                            if (restaurantFilter !== 'all') {
+                                query = query.eq('restaurant_id', restaurantFilter)
+                            } else if (brandFilter !== 'all' || cityFilter !== 'all') {
+                                const allowedIds = activeRestaurants.map(r => r.id)
+                                query = allowedIds.length > 0 ? query.in('restaurant_id', allowedIds) : query.in('restaurant_id', [-1])
+                            }
+                            
+                            return query.then(res => res.data || [])
+                        })
                     }
                     
-                    const chunks = await Promise.all(promises)
-                    allData = chunks.flat()
+                    // Batch execution to prevent browser/Supabase timeout
+                    const concurrency = 4
+                    for (let i = 0; i < queryBuilders.length; i += concurrency) {
+                        const batch = queryBuilders.slice(i, i + concurrency)
+                        const results = await Promise.all(batch.map(fn => fn()))
+                        allData.push(...results.flat())
+                    }
                 }
                 
                 setRealSalesArray(allData)
