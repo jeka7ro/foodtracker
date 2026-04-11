@@ -652,15 +652,7 @@ export default function Performance() {
 
                     <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
                         <button onClick={triggerSync} disabled={syncStatus.isSyncing} className="btn-secondary" style={{ color: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sync iiko'}
-                        </button>
-                        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
-                        <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary" style={{ background: '#116d74', boxShadow: '0 4px 12px rgba(17,109,116,0.3)' }}>
-                            <UploadCloud size={16} />
-                            {isUploading ? t('importing') : t('importExcel')}
-                        </button>
-                        <button onClick={handleExport} className="btn-secondary" style={{ color: '#116d74', borderColor: '#116d74' }}>
-                            <Download size={16} /> {t('export')}
+                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sincronizează Live'}
                         </button>
                     </div>
                 </div>
