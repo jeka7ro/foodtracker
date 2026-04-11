@@ -631,23 +631,9 @@ export default function Performance() {
                         <option value="all">{t('allLocations')}</option>
                         {activeRestaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
-
-                    <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-                        <button onClick={triggerSync} disabled={syncStatus.isSyncing} className="btn-secondary" style={{ color: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sync iiko'}
-                        </button>
-                        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
-                        <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary" style={{ background: '#116d74', boxShadow: '0 4px 12px rgba(17,109,116,0.3)' }}>
-                            <UploadCloud size={16} />
-                            {isUploading ? t('importing') : t('importExcel')}
-                        </button>
-                        <button onClick={handleExport} className="btn-secondary" style={{ color: '#116d74', borderColor: '#116d74' }}>
-                            <Download size={16} /> {t('export')}
-                        </button>
-                    </div>
                 </div>
 
-                <div className="filter-bar" style={{ width: '100%', padding: '12px 16px' }}>
+                <div className="filter-bar" style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div className="period-tabs" style={{ marginLeft: 0 }}>
                         <div className="custom-date-wrap">
                             <input type="date" value={customStartDate} onChange={e => { setCustomStartDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
@@ -662,6 +648,20 @@ export default function Performance() {
                                 {lbl}
                             </button>
                         ))}
+                    </div>
+
+                    <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+                        <button onClick={triggerSync} disabled={syncStatus.isSyncing} className="btn-secondary" style={{ color: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sync iiko'}
+                        </button>
+                        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
+                        <button onClick={() => document.getElementById('excel-upload').click()} disabled={isUploading} className="btn-primary" style={{ background: '#116d74', boxShadow: '0 4px 12px rgba(17,109,116,0.3)' }}>
+                            <UploadCloud size={16} />
+                            {isUploading ? t('importing') : t('importExcel')}
+                        </button>
+                        <button onClick={handleExport} className="btn-secondary" style={{ color: '#116d74', borderColor: '#116d74' }}>
+                            <Download size={16} /> {t('export')}
+                        </button>
                     </div>
                 </div>
             </div>
