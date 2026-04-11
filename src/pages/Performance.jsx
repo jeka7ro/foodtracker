@@ -324,7 +324,7 @@ export default function Performance() {
                 
                 let allData = []
                 if (count && count > 0) {
-                    const step = 2000
+                    const step = 1000
                     const queryBuilders = []
                     
                     for (let i = 0; i < count; i += step) {
