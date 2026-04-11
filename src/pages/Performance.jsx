@@ -3,9 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { supabase } from '../lib/supabaseClient'
-import { LineChart, Line, BarChart, Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Download, UploadCloud, Activity, ShoppingBag, CreditCard, Package, RefreshCw } from 'lucide-react'
-import * as XLSX from 'xlsx'
+import { Line, Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { Activity, ShoppingBag, CreditCard, Package, RefreshCw } from 'lucide-react'
 import './Performance.css'
 
 // ── Romanian holiday utilities ──────────────────────────────────────────────
