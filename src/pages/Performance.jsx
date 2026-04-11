@@ -206,7 +206,8 @@ export default function Performance() {
                 const orgId = rests.find(r => r.iiko_config?.organizationId)?.iiko_config?.organizationId
                 if (!orgId) return
 
-                const resp = await fetch(`http://localhost:3005/api/nomenclature?orgId=${orgId}`, {
+                const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
+                const resp = await fetch(`${workerUrl}/api/nomenclature?orgId=${orgId}`, {
                     headers: { 'x-iiko-token': 'a1fe30cdeb934aa0af01b6a35244b7f0' }
                 })
                 if (resp.ok) {
@@ -221,9 +222,20 @@ export default function Performance() {
         fetchNomenclature()
     }, [])
 
+    const parseItemName = (name) => {
+        if (!name) return 'Produs Necunoscut';
+        let clean = name.trim();
+        if (clean.toUpperCase().startsWith('P_')) clean = clean.substring(2);
+        clean = clean.replace(/SushiMaster/ig, '').trim();
+        clean = clean.replace(/♥LOVE♥/ig, 'la').trim();
+        clean = clean.replace(/\[.*?\]/g, '').trim();
+        clean = clean.replace(/_BASE_/ig, ' ').trim();
+        return clean.trim() || name;
+    }
+
     const getProductImage = (productName) => {
         if (!iikoProducts || iikoProducts.length === 0) return null
-        const cleanNameText = productName.split('[')[0].trim().toLowerCase()
+        const cleanNameText = parseItemName(productName).split('[')[0].trim().toLowerCase()
         const excludeWords = ['sushimaster', 'sushi', 'master', 'bucuresti', 'brasov', 'constanta', 'iasi']
         let cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 2 && !excludeWords.includes(w))
         let found = iikoProducts.find(p => p.name?.toLowerCase().includes(cleanNameText))
@@ -456,8 +468,12 @@ export default function Performance() {
             locMap[rName].orders += 1
             if (sale.items && Array.isArray(sale.items)) {
                 sale.items.forEach(it => {
+                    const rawName = it.product_name || it.name || 'Produs Necunoscut'
+                    const nameLower = rawName.toLowerCase()
+                    if (nameLower.includes('delivery') || nameLower.includes('livrare') || nameLower.includes('pung') || nameLower.includes('ambalaj') || nameLower.includes('cutie') || nameLower.includes('sacos')) return
+                    
                     locMap[rName].products += (it.quantity || 1)
-                    const pName = it.product_name || it.name || 'Produs Necunoscut'
+                    const pName = parseItemName(rawName)
                     if (!locMap[rName].productCounts[pName]) {
                         locMap[rName].productCounts[pName] = { count: 0, image_url: it.image_url || '' }
                     }
@@ -527,9 +543,13 @@ export default function Performance() {
                 const platStr = sale.platform || sale.source || 'iiko'
 
                 sale.items.forEach(it => {
+                    const rawName = it.product_name || it.name || 'Produs Necunoscut'
+                    const nameLower = rawName.toLowerCase()
+                    if (nameLower.includes('delivery') || nameLower.includes('livrare') || nameLower.includes('pung') || nameLower.includes('ambalaj') || nameLower.includes('cutie') || nameLower.includes('sacos')) return
+
                     const price = approxPrice
                     const qty = parseInt(it.quantity) || 1
-                    const pFullName = it.product_name || it.name || 'Produs Necunoscut'
+                    const pFullName = parseItemName(rawName)
                     if (!itemsMap[pFullName]) itemsMap[pFullName] = { name: pFullName, count: 0, revenue: 0, brand: bInfo, locs: {}, days: {}, plats: {} }
                     itemsMap[pFullName].count += qty
                     itemsMap[pFullName].revenue += (price * qty)
