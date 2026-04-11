@@ -10,6 +10,7 @@ import { ReputationScraper } from './scrapers/reputation-scraper.js'
 import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import cron from 'node-cron'
 import { config } from './config.js'
+import { salesSync } from './services/sales-sync.js'
 
 
 console.log('=== Aggregator Monitor Workers Starting ===')
@@ -363,9 +364,21 @@ cron.schedule('*/3 * * * *', async () => {
     }
 })
 
+// ─── AUTOMATIC IIKO SALES SYNC ───
+// Rulam zilnic la ora 04:00 AM pentru a sincroniza zilele din urma pierdute
+cron.schedule('0 4 * * *', async () => {
+    console.log('\n📈 [SCHEDULER] Running daily automatic Iiko Sales Sync...')
+    try {
+        await salesSync.syncSales(2) // tragem mereu ultimele 2 zile pt safety
+    } catch (err) {
+        console.error('❌ [SCHEDULER] Sales Sync error:', err.message)
+    }
+})
+
 console.log('Workers started successfully!')
 console.log('Monitoring schedule: 11:00, 13:00, 17:00, 18:00, 19:00')
 console.log('Antigravity Notifier schedule: Every 3 minutes')
 console.log('Competitive intelligence scan scheduled for 09:00 daily')
 console.log('Brand reputation scan scheduled every hour')
+console.log('Automated Daily Sales Sync scheduled for 04:00 AM')
 console.log('Press Ctrl+C to stop\n')
