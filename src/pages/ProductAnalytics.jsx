@@ -106,6 +106,17 @@ export default function ProductAnalytics() {
         return d[key]?.[lang || 'ro'] || key
     }
 
+    const parseItemName = (name) => {
+        if (!name) return 'Produs Necunoscut';
+        let clean = name.trim();
+        if (clean.toUpperCase().startsWith('P_')) clean = clean.substring(2);
+        clean = clean.replace(/SushiMaster/ig, '').trim();
+        clean = clean.replace(/♥LOVE♥/ig, 'la').trim();
+        clean = clean.replace(/\u00A0/g, ' ').trim();
+        clean = clean.replace(/^\d+\.\s*/, '').trim();
+        return clean.trim() || name;
+    }
+
     useEffect(() => {
         async function fetchImage() {
             try {
@@ -114,7 +125,8 @@ export default function ProductAnalytics() {
                 const orgId = rests.find(r => r.iiko_config?.organizationId)?.iiko_config?.organizationId
                 if (!orgId) return
 
-                const resp = await fetch(`http://localhost:3005/api/nomenclature?orgId=${orgId}`, {
+                const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
+                const resp = await fetch(`${workerUrl}/api/nomenclature?orgId=${orgId}`, {
                     headers: { 'x-iiko-token': IIKO_API_KEY }
                 })
                 if (resp.ok) {
@@ -202,7 +214,10 @@ export default function ProductAnalytics() {
             // Exactly match the product name
             const matchItems = allData.filter(d => {
                 if (!d.items) return false
-                return d.items.some(it => it.name === decodedName)
+                return d.items.some(it => {
+                    const parsed = parseItemName(it.product_name || it.name)
+                    return parsed === decodedName
+                })
             })
             
             setSalesData(matchItems)
@@ -222,7 +237,8 @@ export default function ProductAnalytics() {
         salesData.forEach(sale => {
             let pQty = 0
             sale.items.forEach(it => {
-                if (it.name === decodedName) {
+                const parsed = parseItemName(it.product_name || it.name)
+                if (parsed === decodedName) {
                     pQty += parseInt(it.quantity) || 1
                 }
             })
@@ -269,7 +285,10 @@ export default function ProductAnalytics() {
         // Price stats per location — filter outliers via IQR before averaging
         const priceByLoc = {}
         salesData.forEach(sale => {
-            const matchedItems = (sale.items || []).filter(it => it.name === decodedName)
+            const matchedItems = (sale.items || []).filter(it => {
+                const parsed = parseItemName(it.product_name || it.name)
+                return parsed === decodedName
+            })
             if (!matchedItems.length) return
             const rInfo = restaurants.find(r => r.id === sale.restaurant_id)
             const rName = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
