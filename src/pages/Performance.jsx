@@ -307,52 +307,43 @@ export default function Performance() {
                     } else toDate = new Date()
                 }
 
-                let countQuery = supabase.from('platform_sales').select('*', { count: 'exact', head: true })
-                    .gte('placed_at', fromDate.toISOString())
-                    .lte('placed_at', toDate.toISOString())
-                
-                if (platformFilter !== 'all') countQuery = countQuery.eq('platform', platformFilter)
-                if (restaurantFilter !== 'all') {
-                    countQuery = countQuery.eq('restaurant_id', restaurantFilter)
-                } else if (brandFilter !== 'all' || cityFilter !== 'all') {
-                    const allowedIds = activeRestaurants.map(r => r.id)
-                    countQuery = allowedIds.length > 0 ? countQuery.in('restaurant_id', allowedIds) : countQuery.in('restaurant_id', [-1])
-                }
-                
-                const { count } = await countQuery
-                
                 let allData = []
-                if (count && count > 0) {
-                    const step = 1000
-                    const queryBuilders = []
-                    
-                    for (let i = 0; i < count; i += step) {
-                        queryBuilders.push(() => {
-                            let query = supabase.from('platform_sales').select('id, placed_at, total_amount, platform, items')
-                                .gte('placed_at', fromDate.toISOString())
-                                .lte('placed_at', toDate.toISOString())
-                                .order('placed_at', { ascending: true })
-                                .range(i, i + step - 1)
-                            
-                            if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
-                            if (restaurantFilter !== 'all') {
-                                query = query.eq('restaurant_id', restaurantFilter)
-                            } else if (brandFilter !== 'all' || cityFilter !== 'all') {
-                                const allowedIds = activeRestaurants.map(r => r.id)
-                                query = allowedIds.length > 0 ? query.in('restaurant_id', allowedIds) : query.in('restaurant_id', [-1])
-                            }
-                            
-                            return query.then(res => res.data || [])
-                        })
+                let hasMore = true
+                let i = 0
+                const step = 1000
+                const concurrency = 4
+                
+                while (hasMore) {
+                    const batchPromises = []
+                    for (let c = 0; c < concurrency; c++) {
+                        const start = i + c * step
+                        let query = supabase.from('platform_sales').select('id, placed_at, total_amount, platform, items')
+                            .gte('placed_at', fromDate.toISOString())
+                            .lte('placed_at', toDate.toISOString())
+                            .order('placed_at', { ascending: true })
+                            .range(start, start + step - 1)
+                        
+                        if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
+                        if (restaurantFilter !== 'all') {
+                            query = query.eq('restaurant_id', restaurantFilter)
+                        } else if (brandFilter !== 'all' || cityFilter !== 'all') {
+                            const allowedIds = activeRestaurants.map(r => r.id)
+                            query = allowedIds.length > 0 ? query.in('restaurant_id', allowedIds) : query.in('restaurant_id', [-1])
+                        }
+                        
+                        batchPromises.push(query.then(res => res.data || []))
                     }
                     
-                    // Batch execution to prevent browser/Supabase timeout
-                    const concurrency = 4
-                    for (let i = 0; i < queryBuilders.length; i += concurrency) {
-                        const batch = queryBuilders.slice(i, i + concurrency)
-                        const results = await Promise.all(batch.map(fn => fn()))
-                        allData.push(...results.flat())
+                    const chunks = await Promise.all(batchPromises)
+                    for (const chunk of chunks) {
+                        allData.push(...chunk)
+                        if (chunk.length < step) {
+                            hasMore = false
+                            break
+                        }
                     }
+                    if (!hasMore) break
+                    i += concurrency * step
                 }
                 
                 setRealSalesArray(allData)
