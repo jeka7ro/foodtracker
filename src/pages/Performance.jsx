@@ -307,20 +307,22 @@ export default function Performance() {
                     } else toDate = new Date()
                 }
 
+                const isYearlyView = activePeriod === 'year' || periodDays > 90
+                const selectFields = isYearlyView ? 'id, placed_at, total_amount, platform, restaurant_id' : 'id, placed_at, total_amount, platform, restaurant_id, items'
+
                 let allData = []
                 let hasMore = true
                 let i = 0
                 const step = 1000
-                const concurrency = 4
+                const concurrency = 12
                 
                 while (hasMore) {
                     const batchPromises = []
                     for (let c = 0; c < concurrency; c++) {
                         const start = i + c * step
-                        let query = supabase.from('platform_sales').select('id, placed_at, total_amount, platform, items')
+                        let query = supabase.from('platform_sales').select(selectFields)
                             .gte('placed_at', fromDate.toISOString())
                             .lte('placed_at', toDate.toISOString())
-                            .order('placed_at', { ascending: true })
                             .range(start, start + step - 1)
                         
                         if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
