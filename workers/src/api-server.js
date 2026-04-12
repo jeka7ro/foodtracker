@@ -17,6 +17,8 @@ import { getSmartSearchWords } from './utils/searchUtils.js'
 import { IikoClient } from './services/iiko-client.js'
 import { discoverSingleRestaurant } from './utils/auto-discover.js'
 import { salesSync } from './services/sales-sync.js'
+import { scraperHub } from './services/scraper-hub.js'
+import './index.js' // Start all cron jobs in the background
 
 // --- Prevent Puppeteer / Node crashes on unhandled errors ---
 process.on('uncaughtException', (err) => {
