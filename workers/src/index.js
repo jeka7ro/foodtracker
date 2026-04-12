@@ -365,11 +365,11 @@ cron.schedule('*/3 * * * *', async () => {
 })
 
 // ─── AUTOMATIC IIKO SALES SYNC ───
-// Rulam zilnic la ora 04:00 AM pentru a sincroniza zilele din urma pierdute
-cron.schedule('0 4 * * *', async () => {
-    console.log('\n📈 [SCHEDULER] Running daily automatic Iiko Sales Sync...')
+// Rulăm de 3 ori pe zi (ex: 04:00, 14:00, 22:00) pentru a ține datele fresh pe parcursul zilei
+cron.schedule('0 4,14,22 * * *', async () => {
+    console.log('\n📈 [SCHEDULER] Running scheduled automatic Iiko Sales Sync...')
     try {
-        await salesSync.syncSales(2) // tragem mereu ultimele 2 zile pt safety
+        await salesSync.syncSales(2) // tragem ultimele 2 zile la fiecare run
     } catch (err) {
         console.error('❌ [SCHEDULER] Sales Sync error:', err.message)
     }
