@@ -1,13 +1,10 @@
 import { supabase } from '../services/supabase.js'
-import { TelegramNotifier } from '../notifications/telegram.js'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 
 puppeteer.use(StealthPlugin())
 import { GlovoPartnerScraper } from './glovo-partner-scraper.js'
 import { WoltPartnerScraper } from './wolt-partner-scraper.js'
-
-const telegram = new TelegramNotifier()
 
 export class ReputationScraper {
 
@@ -102,14 +99,7 @@ export class ReputationScraper {
 
                 // PHASE 1 ALERTING: Rating <= 3 and has text
                 if (insertedReview && insertedReview.rating <= 3 && insertedReview.comment && insertedReview.comment.trim().length > 0) {
-                    console.log(`      🚨 [Reputation] Triggering Telegram Alert for negative review...`)
-                    // We need a dummy restaurant object that matches format expected by TelegramNotifier
-                    const dummyRestaurant = {
-                        name: loc.name,
-                        city: 'Auto',
-                        telegram_group_id: await this.getBrandTelegramGroup(loc.brand_id)
-                    }
-                    await telegram.sendNegativeReviewAlert(dummyRestaurant, reviewData)
+                    console.log(`      🚨 [Reputation] Found negative review. Alert logic temporarily disabled.`)
                 }
             }
 
