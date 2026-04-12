@@ -152,6 +152,7 @@ export default function Performance() {
     const activePeriod = activePeriodState
     const [customStartDate, setCustomStartDate] = useState('')
     const [customEndDate, setCustomEndDate] = useState('')
+    const [prevPeriodState, setPrevPeriodState] = useState(null)
     const [pageNumber, setPageNumber] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [locationsPageNumber, setLocationsPageNumber] = useState(1)
@@ -419,7 +420,12 @@ export default function Performance() {
 
     const handleChartClick = (state) => {
         if (!state || !state.activePayload) {
-            if (activePeriod === 'custom' && customStartDate === customEndDate && periodDays <= 1) {
+            if (prevPeriodState) {
+                setActivePeriod(prevPeriodState.activePeriod)
+                setCustomStartDate(prevPeriodState.customStartDate)
+                setCustomEndDate(prevPeriodState.customEndDate)
+                setPrevPeriodState(null)
+            } else if (activePeriod === 'custom' && customStartDate === customEndDate && periodDays <= 1) {
                 setCustomStartDate('')
                 setCustomEndDate('')
                 setActivePeriod('week')
@@ -432,6 +438,7 @@ export default function Performance() {
         if (d.year === undefined) return;
         
         if (activePeriod === 'year' || periodDays > 90) {
+            setPrevPeriodState({ activePeriod, customStartDate, customEndDate })
             const startStr = `${d.year}-${String(d.month+1).padStart(2,'0')}-01`;
             const lastDay = new Date(d.year, d.month + 1, 0).getDate();
             const endStr = `${d.year}-${String(d.month+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
@@ -441,6 +448,7 @@ export default function Performance() {
         } else if (activePeriod === 'today' || activePeriod === 'yesterday' || periodDays <= 1) {
             // Already filtered to a day.
         } else {
+            setPrevPeriodState({ activePeriod, customStartDate, customEndDate })
             const dateStr = `${d.year}-${String(d.month+1).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
             setCustomStartDate(dateStr);
             setCustomEndDate(dateStr);
