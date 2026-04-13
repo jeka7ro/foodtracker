@@ -324,6 +324,22 @@ app.get('/api/sync-sales/status', (req, res) => {
     return res.json(salesSync.progress || { isSyncing: false, percent: 0 })
 })
 
+// ─── Health + Auto-Sync keepalive ───
+// Designed to be pinged by an external cron (cron-job.org / UptimeRobot) every 20 min
+// This keeps Render from sleeping AND triggers sync every 4h automatically
+let lastAutoSyncAt = 0
+app.get('/api/health-sync', (req, res) => {
+    const now = Date.now()
+    const hoursSinceSync = (now - lastAutoSyncAt) / (1000 * 60 * 60)
+    if (!salesSync.progress?.isSyncing && hoursSinceSync >= 4) {
+        lastAutoSyncAt = now
+        console.log('[HEALTH-SYNC] Triggering auto sales sync (4h interval)...')
+        salesSync.syncSales(2).catch(e => console.error('[HEALTH-SYNC] Sync err:', e))
+        return res.json({ status: 'ok', action: 'sync_triggered', nextSyncIn: '4h' })
+    }
+    return res.json({ status: 'ok', action: 'none', hoursSinceLastSync: hoursSinceSync.toFixed(1) })
+})
+
 // ─── 1:1 SYNC Test (Iiko vs Aggregators) ───
 app.post('/api/sync-test-all', async (req, res) => {
     try {
