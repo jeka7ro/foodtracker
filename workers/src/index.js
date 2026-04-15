@@ -365,7 +365,8 @@ cron.schedule('*/3 * * * *', async () => {
 })
 
 // ─── AUTOMATIC IIKO SALES SYNC ───
-// Rulăm de 3 ori pe zi (ex: 04:00, 14:00, 22:00) pentru a ține datele fresh pe parcursul zilei
+// Rulăm de 4 ori pe zi (04:00, 14:00, 22:00, 23:30) pentru a ține datele fresh
+// 23:30 garantează că datele de seară (peak hours) sunt sincronizate înainte de miezul nopții
 cron.schedule('0 4,14,22 * * *', async () => {
     console.log('\n📈 [SCHEDULER] Running scheduled automatic Iiko Sales Sync...')
     try {
@@ -375,10 +376,20 @@ cron.schedule('0 4,14,22 * * *', async () => {
     }
 })
 
+// 23:30 — final sync pentru ziua curentă, prinde comenzile de seară (21:00-23:30)
+cron.schedule('30 23 * * *', async () => {
+    console.log('\n📈 [SCHEDULER] Running 23:30 end-of-day Iiko Sales Sync...')
+    try {
+        await salesSync.syncSales(1) // doar ziua curentă
+    } catch (err) {
+        console.error('❌ [SCHEDULER] Sales Sync 23:30 error:', err.message)
+    }
+})
+
 console.log('Workers started successfully!')
 console.log('Monitoring schedule: 11:00, 13:00, 17:00, 18:00, 19:00')
 console.log('Antigravity Notifier schedule: Every 3 minutes')
 console.log('Competitive intelligence scan scheduled for 09:00 daily')
 console.log('Brand reputation scan scheduled every hour')
-console.log('Automated Daily Sales Sync scheduled for 04:00 AM')
+console.log('Automated Sales Sync scheduled for 04:00, 14:00, 22:00, 23:30')
 console.log('Press Ctrl+C to stop\n')
