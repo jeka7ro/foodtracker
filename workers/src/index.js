@@ -1,3 +1,4 @@
+process.env.TZ = 'Europe/Bucharest'
 import { supabase } from './services/supabase.js'
 import { GlovoChecker } from './checkers/glovo-checker.js'
 import { WoltChecker } from './checkers/wolt-checker.js'
@@ -370,7 +371,7 @@ cron.schedule('*/3 * * * *', async () => {
 cron.schedule('0 4,14,22 * * *', async () => {
     console.log('\n📈 [SCHEDULER] Running scheduled automatic Iiko Sales Sync...')
     try {
-        await salesSync.syncSales(2) // tragem ultimele 2 zile la fiecare run
+        await salesSync.syncSales(7) // 7 zile back — safe net dacă Render pică câteva zile
     } catch (err) {
         console.error('❌ [SCHEDULER] Sales Sync error:', err.message)
     }

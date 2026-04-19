@@ -1,3 +1,4 @@
+process.env.TZ = 'Europe/Bucharest'
 import "./antigravity-worker.js"
 import express from 'express'
 import cors from 'cors'
@@ -334,7 +335,7 @@ app.get('/api/health-sync', (req, res) => {
     if (!salesSync.progress?.isSyncing && hoursSinceSync >= 4) {
         lastAutoSyncAt = now
         console.log('[HEALTH-SYNC] Triggering auto sales sync (4h interval)...')
-        salesSync.syncSales(2).catch(e => console.error('[HEALTH-SYNC] Sync err:', e))
+        salesSync.syncSales(7).catch(e => console.error('[HEALTH-SYNC] Sync err:', e))
         return res.json({ status: 'ok', action: 'sync_triggered', nextSyncIn: '4h' })
     }
     return res.json({ status: 'ok', action: 'none', hoursSinceLastSync: hoursSinceSync.toFixed(1) })

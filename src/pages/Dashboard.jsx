@@ -4,409 +4,511 @@ import { supabase } from '../lib/supabaseClient'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
-import { Activity, AlertTriangle, Store, Bell, XCircle, Coffee, CheckCircle, TrendingUp, ShoppingBag, CreditCard, Clock } from 'lucide-react'
-import { ComposedChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  TrendingUp, TrendingDown, ShoppingBag, Store, AlertTriangle,
+  XCircle, CheckCircle, Zap, Package, MapPin, Clock, BarChart2
+} from 'lucide-react'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell
+} from 'recharts'
 import './Dashboard.css'
 
-// ─── TRANSLATIONS DICTIONARY ───
-const dict = {
-    title: { ro: 'Dashboard General', en: 'General Dashboard', ru: 'Главный Дэшборд' },
-    subtitleText: { ro: 'Activitate live, vânzări și stare tehnică • 0ms Wait', en: 'Live activity, sales and technical status • 0ms Wait', ru: 'Активность в эфире, продажи и тех. статус • 0ms' },
-    viewStops: { ro: 'Vezi Opririle', en: 'View Stops', ru: 'Все Остановки' },
-    salesTodayTitle: { ro: 'Vânzări Astăzi (Platforme)', en: 'Sales Today (Platforms)', ru: 'Продажи Сегодня (агр.)' },
-    ordersToday: { ro: 'Comenzi realizate', en: 'Orders Placed', ru: 'Заказов оформлено' },
-    vsYesterday: { ro: 'vs 100% ieri la aceeași oră', en: 'vs 100% yesterday same time', ru: 'вчера в то же время' },
-    hourlyChart: { ro: 'Vânzări pe Ore Azi', en: 'Hourly Sales Today', ru: 'Продажи по часам сегодня' },
-    topLocSales: { ro: 'Top Locații Azi', en: 'Top Locations Today', ru: 'Топ локаций сегодня' },
-    noSales: { ro: 'Încă nu sunt comenzi azi.', en: 'No orders today yet.', ru: 'Сегодня пока нет заказов.' },
-    total: { ro: 'Total Vânzări', en: 'Total Sales', ru: 'Всего продаж' },
-    opsCenter: { ro: 'Stare Sistem & Integrare', en: 'System & Integration Health', ru: 'Состояние системы и интеграции' },
-    networkActive: { ro: 'Rețea iiko Active', en: 'Active iiko Network', ru: 'Активная сеть iiko' },
-    networkSub: { ro: 'Conexiune API Perfectă', en: 'Perfect API connection', ru: 'Идеальное соединение API' },
-    dbSync: { ro: 'Sincronizare DB', en: 'DB Sync', ru: 'Синхронизация БД' },
-    active: { ro: 'ACTIVĂ', en: 'ACTIVE', ru: 'АКТИВНА' },
-    dbSub: { ro: 'Autosync-ul de background rulează', en: 'Background autosync running', ru: 'Фоновая синхронизация работает' },
-    stopsAlert: { ro: 'Opriri in iiko', en: 'Stops in iiko', ru: 'Остановки в iiko' },
-    stopsSubBad: { ro: 'Sunt stop-listuri active', en: 'Stop-lists are active', ru: 'Есть активные стоп-листы' },
-    stopsSubGood: { ro: 'Meniul funcționează complet', en: 'Menu perfectly available', ru: 'Меню работает на 100%' },
-    loadTime: { ro: 'Delay Dashboard', en: 'Dashboard Delay', ru: 'Задержка дэшборда' },
-    loadSub: { ro: 'Super-viteza cu caching global', en: 'Ultra-fast with global caching', ru: 'Очень быстро благодаря кэшированию' },
-    alertsTitle: { ro: 'Alerte Inteligente', en: 'Smart Alerts', ru: 'Умные оповещения' },
-    markedMissing: { ro: 'produse în STOP pe casa', en: 'products missing in POS', ru: 'продуктов в СТОП-листе' },
-    syncGlovo: { ro: 'Manevrează pe panou →', en: 'Manage on panel →', ru: 'Управление на панели →' },
-    congratsTitle: { ro: 'Perfect! Restaurantele funcționează normal.', en: 'Perfect! Restaurants working normally.', ru: 'Идеально! Рестораны работают нормально.' },
-    congratsSub: { 
-        ro: 'Sistemul a analizat tocmai acum toate meniurile prin API și absolut nicăieri nu ai produse indisponibile.', 
-        en: 'The system just verified all menus via API and no products are missing.', 
-        ru: 'Система только что проверила все меню через API, недоступных продуктов нет.' 
-    }
+// ─── Animated Number ───
+function AnimNum({ value, decimals = 0, suffix = '' }) {
+  const [disp, setDisp] = useState(0)
+  useEffect(() => {
+    const end = typeof value === 'number' ? value : 0
+    if (end === 0) { setDisp(0); return }
+    let cur = 0
+    const steps = 40
+    const inc = end / steps
+    let tick = 0
+    const t = setInterval(() => {
+      tick++
+      cur = Math.min(cur + inc, end)
+      setDisp(cur)
+      if (tick >= steps) clearInterval(t)
+    }, 16)
+    return () => clearInterval(t)
+  }, [value])
+  return <>{decimals > 0 ? disp.toFixed(decimals) : Math.round(disp).toLocaleString('ro-RO')}{suffix}</>
 }
 
-// ─── Animated Counter ───
-function AnimCounter({ value, duration = 800 }) {
-    const [display, setDisplay] = useState(0)
-    useEffect(() => {
-        let start = 0
-        const end = typeof value === 'number' ? value : 0
-        if (end === 0) { setDisplay(0); return }
-        const step = Math.max(1, Math.floor(end / (duration / 16)))
-        const timer = setInterval(() => {
-            start += step
-            if (start >= end) { setDisplay(end); clearInterval(timer) }
-            else setDisplay(start)
-        }, 16)
-        return () => clearInterval(timer)
-    }, [value, duration])
-    return <>{display.toLocaleString('ro-RO')}</>
+// ─── Sparkline ───
+function Spark({ data, color }) {
+  if (!data || data.length < 2) return null
+  return (
+    <ResponsiveContainer width="100%" height={40}>
+      <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+        <defs>
+          <linearGradient id={`sg-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2}
+          fill={`url(#sg-${color.replace('#','')})`} dot={false} />
+      </AreaChart>
+    </ResponsiveContainer>
+  )
 }
 
-// ─── Dashboard Component ───
+// ─── Mini progress bar ───
+function Bar1({ pct, color }) {
+  return (
+    <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginTop: 6 }}>
+      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: color, borderRadius: 4, transition: 'width 0.8s ease' }} />
+    </div>
+  )
+}
+
+const PLATFORM_COLORS = { glovo: '#FFC244', wolt: '#01A6EA', bolt: '#34D399', iiko: '#8B5CF6', default: '#94a3b8' }
+const PLATFORM_EMOJI = { glovo: '🟡', wolt: '🔵', bolt: '🟢', iiko: '🟣' }
+
 export default function Dashboard() {
-    const { colors, isDark } = useTheme()
-    const { lang } = useLanguage()
-    const l = lang || 'ro'
-    const t = (key) => dict[key]?.[l] || dict[key]?.['ro'] || key
+  const { isDark } = useTheme()
+  const { lang } = useLanguage()
+  const l = lang || 'ro'
 
-    const [now, setNow] = useState(new Date())
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000)
+    return () => clearInterval(t)
+  }, [])
 
-    useEffect(() => {
-        const timerId = setInterval(() => setNow(new Date()), 30000)
-        return () => clearInterval(timerId)
-    }, [])
+  // ─── Fetch restaurants ───
+  const { data: restaurants = [] } = useQuery({
+    queryKey: ['restaurants-dash-live'],
+    queryFn: async () => {
+      const { data } = await supabase.from('restaurants').select('*')
+      return (data || []).filter(r => r.is_active)
+    },
+    refetchInterval: 60000
+  })
 
-    // Fetch live restaurants info for Stops
-    const { data: restaurants = [] } = useQuery({
-        queryKey: ['restaurants-dash-live'],
-        queryFn: async () => {
-             const ENV_CONFIGS = [
-                { key: 'a1fe30cdeb934aa0af01b6a35244b7f0', baseUrl: 'http://localhost:3005/api/iiko', defaultBrand: 'Sushi Master' },
-                { key: '124d0880f4b44717b69ee21d45fc2656', baseUrl: 'http://localhost:3005/api/syrve', defaultBrand: 'Smash Me' }
-            ];
+  // ─── Fetch sales (yesterday + today) ───
+  const { data: salesData = [] } = useQuery({
+    queryKey: ['sales-dash-live'],
+    queryFn: async () => {
+      const yest = new Date()
+      yest.setDate(yest.getDate() - 1)
+      yest.setHours(0, 0, 0, 0)
+      const { data } = await supabase.from('platform_sales')
+        .select('*')
+        .gte('placed_at', yest.toISOString())
+      return data || []
+    },
+    refetchInterval: 60000
+  })
 
-            let apiOrgs = [];
-            for (const env of ENV_CONFIGS) {
-                try {
-                    const resAuth = await fetch(`${env.baseUrl}/access_token`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ apiLogin: env.key })
-                    });
-                    if (resAuth.ok) {
-                        const { token } = await resAuth.json();
-                        const resOrgs = await fetch(`${env.baseUrl}/organizations`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({})
-                        });
-                        const data = await resOrgs.json();
-                        if (data.organizations) {
-                            apiOrgs.push(...data.organizations.map(o => ({ ...o, _env: env })));
-                        }
-                    }
-                } catch(e) { console.error("Dash proxy fetch error:", e); }
-            }
+  // ─── COMPUTE ALL ANALYTICS ───
+  const analytics = useMemo(() => {
+    const todayStr = new Date().toDateString()
+    const yestDate = new Date(); yestDate.setDate(yestDate.getDate() - 1)
+    const yestStr = yestDate.toDateString()
+    const nowHour = new Date().getHours()
 
-            const { data } = await supabase.from('restaurants').select('*');
-            const rawDb = data || [];
-            
-            const dbMap = new Map();
-            rawDb.forEach(r => { if (r.iiko_restaurant_id) dbMap.set(r.iiko_restaurant_id, r); });
+    let todayRev = 0, yestRev = 0, todayOrders = 0, yestOrders = 0
+    const hourlyMap = {}
+    const locationMap = {}    // { restId: { name, rev, orders, platforms: Set } }
+    const productMap = {}     // { productName: { name, qty, rev } }
+    const platformRevMap = {} // { platform: rev }
 
-            const finalRests = apiOrgs.map(org => {
-                 const dbMatch = dbMap.get(org.id) || {};
-                 return {
-                     id: dbMatch.id || org.id, 
-                     iiko_restaurant_id: org.id,
-                     name: org.name,
-                     city: org.name.split(' ').pop() || 'Unknown',
-                     is_active: dbMatch.is_active !== false,
-                     iiko_config: dbMatch.iiko_config || {}
-                 }
-            });
-
-            const knownIds = new Set(finalRests.map(r => r.iiko_restaurant_id));
-            const orphanDbRests = rawDb.filter(r => r.is_active && (!r.iiko_restaurant_id || !knownIds.has(r.iiko_restaurant_id)));
-
-            return [...finalRests, ...orphanDbRests];
-        },
-        refetchInterval: 30000 // Poll every 30s
-    })
-
-    // Fetch real sales data for Today and Yesterday
-    const { data: salesData = [] } = useQuery({
-        queryKey: ['sales-dash-live'],
-        queryFn: async () => {
-             const nowDt = new Date()
-             const yestStart = new Date(nowDt)
-             yestStart.setDate(nowDt.getDate() - 1)
-             yestStart.setHours(0,0,0,0)
-             
-             // Fetch all sales starting from yesterday midnight matching our active timezone
-             const { data } = await supabase.from('platform_sales').select('*')
-                .gte('placed_at', yestStart.toISOString())
-             return data || []
-        },
-        refetchInterval: 60000 // Refetch sales every minute
-    })
-
-    const activeRestaurants = restaurants.filter(r => r.is_active)
-    
-    // Extragem stocurile din JSONB cached (0ms delay)
-    const orgCount = activeRestaurants.filter(r => r.iiko_config?.organizationId).length;
-    let totalStoppedItems = 0;
-    const orgsWithStops = [];
-
-    for (const rest of activeRestaurants) {
-        if (rest.iiko_config && rest.iiko_config.iiko_live_stops && rest.iiko_config.iiko_live_stops.length > 0) {
-             const cnt = rest.iiko_config.iiko_live_stops.length;
-             totalStoppedItems += cnt;
-             orgsWithStops.push({ name: rest.name, count: cnt });
-        }
+    for (let h = 0; h < 24; h++) {
+      hourlyMap[h] = { h, t: 0, y: 0 }
     }
 
-    // Calculăm Analytics pentru Vânzări 
-    const { todaysRevenue, yesterdaysRevenue, todaysOrders, hourlyChart, topLocations } = useMemo(() => {
-         const tSales = []; const ySales = [];
-         let todRev = 0; let yestRev = 0; let todOrd = 0;
-         const mapHourly = {}; const mapLoc = {};
-         
-         const todayDateString = new Date().toDateString()
-         const yestDate = new Date(); yestDate.setDate(yestDate.getDate() - 1)
-         const yestDateString = yestDate.toDateString()
+    const restNameMap = {}
+    restaurants.forEach(r => { restNameMap[r.id] = r.name })
 
-         for (let i = 0; i < 24; i++) {
-            const hr = `${String(i).padStart(2, '0')}:00`
-            mapHourly[hr] = { hour: hr, todaySales: 0, yesterdaySales: 0 }
-         }
+    salesData.forEach(sale => {
+      const dt = new Date(sale.placed_at)
+      const amt = parseFloat(sale.total_amount) || 0
+      const h = dt.getHours()
+      const plat = (sale.platform || 'default').toLowerCase()
+      const rName = restNameMap[sale.restaurant_id] || `Loc. ${sale.restaurant_id}`
 
-         salesData.forEach(sale => {
-             const dt = new Date(sale.placed_at)
-             const amt = parseFloat(sale.total_amount) || 0
-             const hrStr = `${String(dt.getHours()).padStart(2, '0')}:00`
+      if (dt.toDateString() === todayStr) {
+        todayRev += amt
+        todayOrders++
+        hourlyMap[h].t += amt
+        platformRevMap[plat] = (platformRevMap[plat] || 0) + amt
 
-             if (dt.toDateString() === todayDateString) {
-                  todRev += amt
-                  todOrd += 1
-                  if (mapHourly[hrStr]) mapHourly[hrStr].todaySales += amt
-                  
-                  // For top locations
-                  const rest = activeRestaurants.find(r => r.id === sale.restaurant_id)
-                  const rName = rest ? rest.name : `Restaurant ${sale.restaurant_id}`
-                  if (!mapLoc[rName]) mapLoc[rName] = { name: rName, sales: 0 }
-                  mapLoc[rName].sales += amt
-             } else if (dt.toDateString() === yestDateString) {
-                  yestRev += amt
-                  if (mapHourly[hrStr]) mapHourly[hrStr].yesterdaySales += amt
-             }
-         })
+        if (!locationMap[sale.restaurant_id]) {
+          locationMap[sale.restaurant_id] = { name: rName, rev: 0, orders: 0, platforms: new Set() }
+        }
+        locationMap[sale.restaurant_id].rev += amt
+        locationMap[sale.restaurant_id].orders++
+        locationMap[sale.restaurant_id].platforms.add(plat)
 
-         const sortedHourly = Object.values(mapHourly)
-         const sortedLoc = Object.values(mapLoc).sort((a,b) => b.sales - a.sales).slice(0, 5)
+        // Products from items JSONB
+        const items = Array.isArray(sale.items) ? sale.items : []
+        items.forEach(item => {
+          const pName = item.name || 'Produs necunoscut'
+          if (!productMap[pName]) productMap[pName] = { name: pName, qty: 0, rev: 0 }
+          productMap[pName].qty += (item.quantity || 1)
+          productMap[pName].rev += (item.price || 0) * (item.quantity || 1)
+        })
+      } else if (dt.toDateString() === yestStr) {
+        yestRev += amt
+        yestOrders++
+        hourlyMap[h].y += amt
+      }
+    })
 
-         return { todaysRevenue: todRev, yesterdaysRevenue: yestRev, todaysOrders: todOrd, hourlyChart: sortedHourly, topLocations: sortedLoc }
-    }, [salesData, activeRestaurants])
+    // Hourly chart — only up to current hour for today
+    const hourlyChart = Object.values(hourlyMap)
+      .filter(x => x.h <= nowHour)
+      .map(x => ({ hour: `${String(x.h).padStart(2, '0')}:00`, today: x.t, yesterday: x.y }))
 
-    const growthPercent = yesterdaysRevenue > 0 ? ((todaysRevenue - yesterdaysRevenue) / yesterdaysRevenue) * 100 : 0
-    const growthColor = growthPercent >= 0 ? '#10b981' : '#ef4444'
+    // Top locations (sorted by rev)
+    const topLocations = Object.values(locationMap)
+      .sort((a, b) => b.rev - a.rev)
+      .slice(0, 8)
+    const maxLocRev = topLocations[0]?.rev || 1
 
-    return (
-        <div className={`dash-container ${isDark ? 'dark-theme' : 'light-theme'}`}>
-            <style>{`
-                :root {
-                    --text-color: ${isDark ? '#f8fafc' : '#1e293b'};
-                    --text-secondary: ${isDark ? '#94a3b8' : '#64748b'};
-                    --glass-bg: ${isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff'};
-                    --glass-bg-hover: ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.02)'};
-                    --glass-border: ${isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)'};
-                }
-                .glow-card {
-                    background: var(--glass-bg);
-                    border: var(--glass-border);
-                    border-radius: 20px;
-                    padding: 24px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-                    transition: all 0.3s;
-                }
-                .glow-card:hover { transform: translateY(-3px); }
-                .sales-banner {
-                    background: ${isDark ? 'linear-gradient(135deg, #1e293b, #0f172a)' : 'linear-gradient(135deg, #ffffff, #f8fafc)'};
-                    border: var(--glass-border);
-                    border-left: 6px solid #6366f1;
-                    padding: 30px;
-                    border-radius: 24px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 24px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-                }
-                .stat-box {
-                    flex: 1;
-                    padding: 0 20px;
-                    border-right: 1px solid var(--glass-border);
-                }
-                .stat-box:last-child { border-right: none; }
-            `}</style>
+    // Top products (sorted by qty)
+    const topProducts = Object.values(productMap)
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 10)
+    const maxProdQty = topProducts[0]?.qty || 1
 
-            <div className="dash-header" style={{ marginBottom: '24px' }}>
-                <div>
-                    <div className="dash-title-wrap">
-                        <div className="dash-icon-box" style={{background: 'linear-gradient(135deg, #6366f1, #8b5cf6)'}}>
-                            <TrendingUp size={24} color="#fff" />
-                        </div>
-                        <h1 className="dash-title">{t('title')}</h1>
-                    </div>
-                    <p className="dash-subtitle">{t('subtitleText')} • {now.toLocaleTimeString('ro-RO')}</p>
-                </div>
-                <Link to="/stop-control" className="live-btn" style={{background: '#ef4444', color: '#fff', border: 'none'}}>
-                    <div className="pulse-dot" style={{background: '#fff'}} /> {t('viewStops')}
-                </Link>
-            </div>
+    // Platform breakdown
+    const platforms = Object.entries(platformRevMap)
+      .map(([k, v]) => ({ name: k, rev: v }))
+      .sort((a, b) => b.rev - a.rev)
 
-            {/* ─── SALES KPI BANNER ─── */}
-            <div className="sales-banner">
-                <div className="stat-box" style={{ paddingLeft: 0 }}>
-                    <div style={{color:'var(--text-secondary)', fontSize:'14px', fontWeight:'700', marginBottom:'8px', textTransform:'uppercase', display:'flex', alignItems:'center', gap:'8px'}}>
-                        <CreditCard size={16} /> {t('salesTodayTitle')}
-                    </div>
-                    <div style={{fontSize:'36px', fontWeight:'900', color:'var(--text-color)', letterSpacing:'-1px'}}>
-                         <AnimCounter value={todaysRevenue} duration={1200} /> <span style={{fontSize:'20px', fontWeight:'600', opacity:0.6}}>RON</span>
-                    </div>
-                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginTop:'8px', color:'var(--text-secondary)', fontSize:'14px'}}>
-                        <span style={{color: growthColor, fontWeight:'800', background:`${growthColor}22`, padding:'2px 8px', borderRadius:'6px'}}>
-                            {growthPercent > 0 ? '+' : ''}{growthPercent.toFixed(1)}%
-                        </span>
-                        {t('vsYesterday')}
-                    </div>
-                </div>
+    // Growth
+    const growth = yestRev > 0 ? ((todayRev - yestRev) / yestRev) * 100 : 0
+    const orderGrowth = yestOrders > 0 ? ((todayOrders - yestOrders) / yestOrders) * 100 : 0
 
-                <div className="stat-box">
-                    <div style={{color:'var(--text-secondary)', fontSize:'14px', fontWeight:'700', marginBottom:'8px', textTransform:'uppercase', display:'flex', alignItems:'center', gap:'8px'}}>
-                        <ShoppingBag size={16} /> {t('ordersToday')}
-                    </div>
-                    <div style={{fontSize:'36px', fontWeight:'900', color:'var(--text-color)', letterSpacing:'-1px'}}>
-                         <AnimCounter value={todaysOrders} duration={1200} />
-                    </div>
-                    <div style={{marginTop:'8px', color:'var(--text-secondary)', fontSize:'14px'}}>
-                        Număr platforme integrate live constant
-                    </div>
-                </div>
-            </div>
+    // Sparkline per location (just hourly sales)
+    const sparkData = hourlyChart.map(x => ({ v: x.today }))
 
-            {/* ─── CHARTS ROW ─── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px', marginBottom: '24px' }}>
-                <div className="glow-card">
-                    <h3 className="card-heading">{t('hourlyChart')}</h3>
-                    <div style={{ height: '300px', marginLeft: '-20px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={hourlyChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorTod" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                    </linearGradient>
-                                    <linearGradient id="colorYest" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.4}/>
-                                        <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} vertical={false} />
-                                <XAxis dataKey="hour" stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => v > 0 ? `${v}` : ''} />
-                                <Tooltip 
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
-                                    formatter={(value) => [`${Number(value).toFixed(2)} RON`]}
-                                />
-                                <Area type="monotone" dataKey="yesterdaySales" name="Ieri" stroke="#94a3b8" strokeWidth={2} fillOpacity={1} fill="url(#colorYest)" strokeDasharray="5 5" />
-                                <Area type="monotone" dataKey="todaySales" name="Azi" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorTod)" activeDot={{ r: 6, stroke: '#6366f1', strokeWidth: 3, fill: '#fff' }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+    return {
+      todayRev, yestRev, todayOrders, yestOrders, growth, orderGrowth,
+      hourlyChart, topLocations, topProducts, platforms, maxLocRev, maxProdQty, sparkData
+    }
+  }, [salesData, restaurants])
 
-                <div className="glow-card">
-                    <h3 className="card-heading">{t('topLocSales')}</h3>
-                    {topLocations.length > 0 ? (
-                        <div style={{ height: '300px', marginLeft: '-20px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={topLocations} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="transparent" />
-                                    <XAxis type="number" hide />
-                                    <YAxis type="category" dataKey="name" stroke="var(--text-color)" fontSize={12} fontWeight={600} tickLine={false} axisLine={false} width={130} />
-                                    <Tooltip 
-                                        cursor={{ fill: 'var(--glass-bg-hover)' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', background: isDark ? '#1e293b' : '#fff' }}
-                                        formatter={(value) => [`${Number(value).toFixed(2)} RON`, t('total')]}
-                                    />
-                                    <Bar dataKey="sales" fill="#10b981" radius={[0, 6, 6, 0]} barSize={20} label={{ position: 'right', fill: 'var(--text-color)', fontSize: 13, fontWeight: '800', formatter: v => `${v.toLocaleString('ro-RO')}` }} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    ) : (
-                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>{t('noSales')}</div>
-                    )}
-                </div>
-            </div>
+  // ─── Stops from iiko_live_stops ───
+  const stopsInfo = useMemo(() => {
+    let total = 0; const orgs = []
+    restaurants.forEach(r => {
+      const stops = r.iiko_config?.iiko_live_stops || []
+      if (stops.length > 0) { total += stops.length; orgs.push({ name: r.name, count: stops.length }) }
+    })
+    return { total, orgs }
+  }, [restaurants])
 
-            {/* ─── OPS COMMAND CENTER ─── */}
-            <div className="section-head" style={{ marginTop: '24px' }}><span className="section-title">{t('opsCenter')}</span></div>
-            <div className="dash-kpi-grid">
-                <div className="glow-card" style={{borderTop: '4px solid #3b82f6'}}>
-                    <div className="kpi-label" style={{display:'flex', alignItems:'center', gap:'8px'}}><Store size={18} /> {t('networkActive')}</div>
-                    <div className="kpi-val" style={{color: '#3b82f6'}}><AnimCounter value={orgCount} /></div>
-                    <div className="kpi-sub" style={{color: 'var(--text-secondary)'}}>{t('networkSub')}</div>
-                </div>
+  const growthColor = analytics.growth >= 0 ? '#10b981' : '#ef4444'
+  const GrowthIcon = analytics.growth >= 0 ? TrendingUp : TrendingDown
 
-                <div className="glow-card" style={{borderTop: '4px solid #10b981'}}>
-                    <div className="kpi-label" style={{display:'flex', alignItems:'center', gap:'8px'}}><Clock size={18} /> {t('dbSync')}</div>
-                    <div className="kpi-val" style={{color: '#10b981'}}>{t('active')}</div>
-                    <div className="kpi-sub" style={{color: 'var(--text-secondary)'}}>{t('dbSub')}</div>
-                </div>
+  // css vars inline
+  const css = `
+    :root {
+      --tx: ${isDark ? '#f1f5f9' : '#0f172a'};
+      --tx2: ${isDark ? '#64748b' : '#94a3b8'};
+      --bg: ${isDark ? '#0a0f1e' : '#f8fafc'};
+      --card: ${isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.9)'};
+      --border: ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'};
+      --hover: ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'};
+    }
+  `
 
-                <div className="glow-card" style={{borderTop: `4px solid ${totalStoppedItems > 0 ? '#ef4444' : '#10b981'}`}}>
-                    <div className="kpi-label" style={{display:'flex', alignItems:'center', gap:'8px'}}><AlertTriangle size={18} /> {t('stopsAlert')}</div>
-                    <div className="kpi-val" style={{color: totalStoppedItems > 0 ? '#ef4444' : '#10b981'}}><AnimCounter value={totalStoppedItems} /></div>
-                    <div className="kpi-sub" style={{color: totalStoppedItems > 0 ? '#ef4444' : 'var(--text-secondary)'}}>
-                        {totalStoppedItems > 0 ? t('stopsSubBad') : t('stopsSubGood')}
-                    </div>
-                </div>
+  return (
+    <div className={`db-root ${isDark ? 'db-dark' : 'db-light'}`}>
+      <style>{css}</style>
 
-                <div className="glow-card" style={{borderTop: '4px solid #8b5cf6'}}>
-                    <div className="kpi-label" style={{display:'flex', alignItems:'center', gap:'8px'}}><Activity size={18} /> {t('loadTime')}</div>
-                    <div className="kpi-val" style={{color: '#8b5cf6'}}>0<span style={{fontSize:'16px'}}>ms</span></div>
-                    <div className="kpi-sub" style={{color: 'var(--text-secondary)'}}>{t('loadSub')}</div>
-                </div>
-            </div>
-
-            {/* ─── STOP ALERTS ─── */}
-            <div className="section-head" style={{ marginTop: '32px' }}><span className="section-title">{t('alertsTitle')}</span></div>
-            {totalStoppedItems > 0 ? (
-                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
-                    {orgsWithStops.map((ow, idx) => (
-                        <div key={idx} style={{background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '16px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                            <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-                                <div style={{width: 48, height: 48, background: '#ef4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                    <XCircle color="#fff" size={24} />
-                                </div>
-                                <div>
-                                    <h3 style={{margin: '0 0 4px 0', fontSize: '18px', color: 'var(--text-color)'}}>{ow.name}</h3>
-                                    <span style={{fontSize: '14px', color: '#ef4444', fontWeight: 'bold'}}>{ow.count} {t('markedMissing')}</span>
-                                </div>
-                            </div>
-                            <Link to="/stop-control" style={{background: '#ef4444', color: '#fff', padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', display:'flex', alignItems:'center', gap:'8px'}}>
-                                {t('syncGlovo')}
-                            </Link>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div style={{background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
-                    <CheckCircle color="#10b981" size={48} style={{marginBottom: '10px'}} />
-                    <h3 style={{margin: 0, color: '#10b981'}}>{t('congratsTitle')}</h3>
-                    <p style={{color: 'var(--text-secondary)', margin: '10px 0 0 0'}}>
-                        {t('congratsSub')} 
-                        <br/>(Verificat: {orgCount} case / restaurante).
-                    </p>
-                </div>
-            )}
+      {/* ── TOP BAR ── */}
+      <div className="db-topbar">
+        <div className="db-topbar-left">
+          <div className="db-logo-pill">
+            <BarChart2 size={16} color="#6366f1" />
+            <span>Dashboard</span>
+          </div>
+          <span className="db-time">{now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="db-live-badge">
+            <span className="db-pulse" />
+            LIVE
+          </span>
         </div>
-    )
+        <div className="db-topbar-right">
+          <Link to="/stop-control" className="db-stop-btn">
+            <AlertTriangle size={13} />
+            Stop-uri
+            {stopsInfo.total > 0 && <span className="db-stop-badge">{stopsInfo.total}</span>}
+          </Link>
+        </div>
+      </div>
+
+      {/* ── KPI ROW ── */}
+      <div className="db-kpi-row">
+
+        {/* Revenue Today */}
+        <div className="db-kpi">
+          <div className="db-kpi-label">
+            <Zap size={12} color="#6366f1" /> Vânzări azi
+          </div>
+          <div className="db-kpi-val" style={{ color: '#6366f1' }}>
+            <AnimNum value={analytics.todayRev} decimals={0} /> <span className="db-kpi-unit">RON</span>
+          </div>
+          <div className="db-kpi-delta" style={{ color: growthColor }}>
+            <GrowthIcon size={11} />
+            {analytics.growth >= 0 ? '+' : ''}{analytics.growth.toFixed(1)}% vs ieri
+          </div>
+          <Spark data={analytics.sparkData} color="#6366f1" />
+        </div>
+
+        {/* Orders Today */}
+        <div className="db-kpi">
+          <div className="db-kpi-label">
+            <ShoppingBag size={12} color="#f59e0b" /> Comenzi azi
+          </div>
+          <div className="db-kpi-val" style={{ color: '#f59e0b' }}>
+            <AnimNum value={analytics.todayOrders} />
+          </div>
+          <div className="db-kpi-delta" style={{ color: analytics.orderGrowth >= 0 ? '#10b981' : '#ef4444' }}>
+            {analytics.orderGrowth >= 0 ? '+' : ''}{analytics.orderGrowth.toFixed(1)}% vs ieri
+          </div>
+          <Spark data={analytics.sparkData} color="#f59e0b" />
+        </div>
+
+        {/* Avg ticket */}
+        <div className="db-kpi">
+          <div className="db-kpi-label">
+            <Package size={12} color="#10b981" /> Coș mediu
+          </div>
+          <div className="db-kpi-val" style={{ color: '#10b981' }}>
+            <AnimNum value={analytics.todayOrders > 0 ? analytics.todayRev / analytics.todayOrders : 0} decimals={1} />
+            <span className="db-kpi-unit"> RON</span>
+          </div>
+          <div className="db-kpi-delta" style={{ color: 'var(--tx2)' }}>
+            {analytics.todayOrders} comenzi procesate
+          </div>
+          <Spark data={analytics.sparkData} color="#10b981" />
+        </div>
+
+        {/* Puncte lucru */}
+        <div className="db-kpi">
+          <div className="db-kpi-label">
+            <Store size={12} color="#8b5cf6" /> Puncte lucru
+          </div>
+          <div className="db-kpi-val" style={{ color: '#8b5cf6' }}>
+            <AnimNum value={restaurants.length} />
+          </div>
+          <div className="db-kpi-delta" style={{ color: stopsInfo.total > 0 ? '#ef4444' : '#10b981' }}>
+            {stopsInfo.total > 0 ? `⚠ ${stopsInfo.total} stop-uri active` : '✓ Toate online'}
+          </div>
+          <Spark data={analytics.sparkData} color="#8b5cf6" />
+        </div>
+
+        {/* Yesterday rev for comparison */}
+        <div className="db-kpi">
+          <div className="db-kpi-label">
+            <Clock size={12} color="#94a3b8" /> Ieri total
+          </div>
+          <div className="db-kpi-val" style={{ color: 'var(--tx2)' }}>
+            <AnimNum value={analytics.yestRev} decimals={0} /> <span className="db-kpi-unit">RON</span>
+          </div>
+          <div className="db-kpi-delta" style={{ color: 'var(--tx2)' }}>
+            {analytics.yestOrders} comenzi
+          </div>
+          <Spark data={analytics.sparkData} color="#475569" />
+        </div>
+      </div>
+
+      {/* ── MAIN GRID ── */}
+      <div className="db-main-grid">
+
+        {/* LEFT: Hourly chart + Platform pills */}
+        <div className="db-left-col">
+
+          {/* Hourly Area Chart */}
+          <div className="db-card">
+            <div className="db-card-head">
+              <span className="db-card-title">Vânzări pe ore</span>
+              <span className="db-card-sub">azi vs ieri</span>
+            </div>
+            <div style={{ height: 180, marginLeft: -16 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics.hourlyChart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gToday" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gYest" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#475569" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#475569" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 4" stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="hour" stroke="var(--tx2)" fontSize={10} tickLine={false} axisLine={false}
+                    tickFormatter={v => v.split(':')[0]} interval={2} />
+                  <YAxis stroke="var(--tx2)" fontSize={10} tickLine={false} axisLine={false}
+                    tickFormatter={v => v > 0 ? `${(v/1000).toFixed(1)}k` : ''} width={36} />
+                  <Tooltip
+                    contentStyle={{ background: isDark ? '#0f172a' : '#fff', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12 }}
+                    formatter={(v, n) => [`${v.toFixed(0)} RON`, n === 'today' ? 'Azi' : 'Ieri']}
+                    labelFormatter={l => `Ora ${l}`}
+                  />
+                  <Area type="monotone" dataKey="yesterday" stroke="#475569" strokeWidth={1.5}
+                    fill="url(#gYest)" strokeDasharray="4 4" dot={false} name="yesterday" />
+                  <Area type="monotone" dataKey="today" stroke="#6366f1" strokeWidth={2.5}
+                    fill="url(#gToday)" dot={false} activeDot={{ r: 4, fill: '#6366f1' }} name="today" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Platform Breakdown */}
+          {analytics.platforms.length > 0 && (
+            <div className="db-card">
+              <div className="db-card-head">
+                <span className="db-card-title">Pe platformă</span>
+              </div>
+              <div className="db-platform-list">
+                {analytics.platforms.map(p => {
+                  const color = PLATFORM_COLORS[p.name] || PLATFORM_COLORS.default
+                  const pct = analytics.todayRev > 0 ? (p.rev / analytics.todayRev) * 100 : 0
+                  return (
+                    <div key={p.name} className="db-platform-row">
+                      <div className="db-platform-name">
+                        <span style={{ fontSize: 16 }}>{PLATFORM_EMOJI[p.name] || '⚪'}</span>
+                        <span style={{ textTransform: 'capitalize', fontWeight: 700, fontSize: 13 }}>{p.name}</span>
+                      </div>
+                      <div style={{ flex: 1, padding: '0 12px' }}>
+                        <Bar1 pct={pct} color={color} />
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: 90 }}>
+                        <span style={{ fontWeight: 800, fontSize: 13, color }}>{p.rev.toFixed(0)} RON</span>
+                        <span style={{ fontSize: 11, color: 'var(--tx2)', marginLeft: 6 }}>{pct.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Stops alert compact */}
+          {stopsInfo.total > 0 && (
+            <div className="db-card db-stops-card">
+              <div className="db-card-head">
+                <span className="db-card-title" style={{ color: '#ef4444' }}>
+                  <AlertTriangle size={13} style={{ marginRight: 6 }} />
+                  Stop-uri active
+                </span>
+                <Link to="/stop-control" className="db-mini-btn">Gestionează →</Link>
+              </div>
+              {stopsInfo.orgs.map((o, i) => (
+                <div key={i} className="db-stop-row">
+                  <XCircle size={12} color="#ef4444" />
+                  <span style={{ fontWeight: 700, fontSize: 13 }}>{o.name}</span>
+                  <span className="db-stop-count">{o.count} produse</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {stopsInfo.total === 0 && (
+            <div className="db-card db-ok-card">
+              <CheckCircle size={16} color="#10b981" />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: '#10b981' }}>Totul funcționează</div>
+                <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Nicio oprire activă pe nicio platformă</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Top Products + Top Locations */}
+        <div className="db-right-col">
+
+          {/* TOP PRODUCTS */}
+          <div className="db-card db-card-fill">
+            <div className="db-card-head">
+              <span className="db-card-title">Top produse vândute azi</span>
+              <span className="db-card-sub">după cantitate</span>
+            </div>
+            {analytics.topProducts.length === 0 ? (
+              <div className="db-empty">Nicio comandă azi cu detalii produse.</div>
+            ) : (
+              <div className="db-prod-list">
+                {analytics.topProducts.map((p, i) => {
+                  const pct = (p.qty / analytics.maxProdQty) * 100
+                  const colors = ['#6366f1','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#f97316','#a855f7','#06b6d4']
+                  const color = colors[i % colors.length]
+                  return (
+                    <div key={p.name} className="db-prod-row">
+                      <div className="db-prod-rank" style={{ background: `${color}20`, color }}>
+                        {i + 1}
+                      </div>
+                      <div className="db-prod-info">
+                        <span className="db-prod-name">{p.name}</span>
+                        <Bar1 pct={pct} color={color} />
+                      </div>
+                      <div className="db-prod-stats">
+                        <span className="db-prod-qty" style={{ color }}>×{p.qty}</span>
+                        <span className="db-prod-rev">{p.rev.toFixed(0)} RON</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── PUNCTE DE LUCRU GRID ── */}
+      <div className="db-section-title">
+        <MapPin size={14} color="#6366f1" />
+        Puncte de lucru — vânzări azi
+      </div>
+      <div className="db-locations-grid">
+        {analytics.topLocations.length === 0
+          ? restaurants.slice(0, 8).map((r, i) => (
+            <div key={r.id} className="db-loc-card db-loc-empty">
+              <div className="db-loc-name">{r.name}</div>
+              <div className="db-loc-zero">0 RON</div>
+              <div className="db-loc-sub">Nicio comandă azi</div>
+            </div>
+          ))
+          : analytics.topLocations.map((loc, i) => {
+            const pct = (loc.rev / analytics.maxLocRev) * 100
+            const rank_colors = ['#6366f1','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ec4899','#14b8a6','#f97316']
+            const color = rank_colors[i % rank_colors.length]
+            const avgTicket = loc.orders > 0 ? loc.rev / loc.orders : 0
+            return (
+              <div key={loc.name} className="db-loc-card">
+                <div className="db-loc-header">
+                  <div className="db-loc-rank" style={{ background: `${color}20`, color }}>#{i + 1}</div>
+                  <div className="db-loc-name">{loc.name}</div>
+                </div>
+                <div className="db-loc-rev" style={{ color }}>{loc.rev.toFixed(0)} <span>RON</span></div>
+                <Bar1 pct={pct} color={color} />
+                <div className="db-loc-meta">
+                  <span><ShoppingBag size={10} /> {loc.orders} comenzi</span>
+                  <span>≈{avgTicket.toFixed(0)} RON/cmd</span>
+                </div>
+                {loc.platforms && loc.platforms.size > 0 && (
+                  <div className="db-loc-plats">
+                    {[...loc.platforms].map(pl => (
+                      <span key={pl} className="db-plat-chip" style={{ background: `${PLATFORM_COLORS[pl] || '#94a3b8'}20`, color: PLATFORM_COLORS[pl] || '#94a3b8' }}>
+                        {pl}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })
+        }
+      </div>
+
+    </div>
+  )
 }

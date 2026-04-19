@@ -152,6 +152,39 @@ export default function Performance() {
     const activePeriod = activePeriodState
     const [customStartDate, setCustomStartDate] = useState('')
     const [customEndDate, setCustomEndDate] = useState('')
+
+    const { displayStartDate, displayEndDate } = useMemo(() => {
+        if (activePeriod === 'custom') {
+            return { displayStartDate: customStartDate, displayEndDate: customEndDate }
+        }
+        const now = new Date()
+        let fd = new Date(now)
+        let td = new Date(now)
+        
+        if (activePeriod === 'today') {
+            // fd and td are today
+        } else if (activePeriod === 'yesterday') {
+            fd.setDate(fd.getDate() - 1)
+            td.setDate(td.getDate() - 1)
+        } else if (activePeriod === 'week') {
+            fd.setDate(fd.getDate() - 7)
+        } else if (activePeriod === 'month') {
+            fd = new Date(now.getFullYear(), now.getMonth(), 1)
+            td = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        } else if (activePeriod === 'lastmonth') {
+            fd = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+            td = new Date(now.getFullYear(), now.getMonth(), 0)
+        } else if (activePeriod === 'year') {
+            fd = new Date(now.getFullYear(), 0, 1)
+            td = new Date(now.getFullYear(), 11, 31)
+        }
+        const fmt = d => {
+            if (!d || isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        }
+        return { displayStartDate: fmt(fd), displayEndDate: fmt(td) }
+    }, [activePeriod, customStartDate, customEndDate])
+
     const [prevPeriodState, setPrevPeriodState] = useState(null)
     const [pageNumber, setPageNumber] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -663,9 +696,17 @@ export default function Performance() {
                 <div className="filter-bar" style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div className="period-tabs" style={{ marginLeft: 0 }}>
                         <div className="custom-date-wrap">
-                            <input type="date" value={customStartDate} onChange={e => { setCustomStartDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
+                            <input type="date" value={displayStartDate} onChange={e => { 
+                                if (activePeriod !== 'custom') setCustomEndDate(displayEndDate);
+                                setCustomStartDate(e.target.value); 
+                                setActivePeriod('custom');
+                            }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
                             <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>-</span>
-                            <input type="date" value={customEndDate} onChange={e => { setCustomEndDate(e.target.value); setActivePeriod('custom') }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
+                            <input type="date" value={displayEndDate} onChange={e => { 
+                                if (activePeriod !== 'custom') setCustomStartDate(displayStartDate);
+                                setCustomEndDate(e.target.value); 
+                                setActivePeriod('custom');
+                            }} className="select-filter" style={{padding: '4px 10px', fontSize: '12px'}} />
                         </div>
                         {[
                             ['today', t('today')], ['yesterday', t('yesterday')], ['week', t('thisWeek')], 
