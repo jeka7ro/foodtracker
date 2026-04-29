@@ -1,0 +1,165 @@
+            {/* ═══════ RESTAURANT GRID BY CITY ═══════ */}
+            {Object.entries(citiesMap).map(([city, cityRestaurants], cityIdx) => (
+                <div key={city} style={{ marginBottom: '20px', animation: `fadeIn 0.4s ease ${cityIdx * 0.06}s both` }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        marginBottom: '10px', paddingLeft: '4px',
+                    }}>
+                        <IconMapPin size={14} color="#6366F1" />
+                        <h2 style={{
+                            fontSize: '15px', fontWeight: '600', color: colors.text, margin: 0, letterSpacing: '-0.2px',
+                        }}>
+                            {city}
+                        </h2>
+                        <span style={{
+                            fontSize: '11px', fontWeight: '400', color: colors.textSecondary,
+                            padding: '2px 8px', borderRadius: '6px',
+                            background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                        }}>
+                            {cityRestaurants.length}
+                        </span>
+                    </div>
+
+                    <div style={{ ...glass, overflow: 'hidden' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{
+                                    borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)',
+                                }}>
+                                    <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Restaurant
+                                    </th>
+                                    {platformsList.map(p => (
+                                        <th key={p} style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                <PlatformLogo platform={p} size={14} />
+                                                <span style={{ textTransform: 'capitalize' }}>{p}</span>
+                                            </div>
+                                        </th>
+                                    ))}
+                                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Ultima
+                                    </th>
+                                    <th style={{ padding: '12px 20px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Acțiuni
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {cityRestaurants.map((restaurant, idx) => {
+                                    const latestPlatformChecks = platformsList.map(p => getLatestCheck(restaurant.id, p))
+                                    const hasUrl = platformsList.map(p => !!restaurant[`${p}_url`])
+                                    const mostRecentCheck = latestPlatformChecks.filter(Boolean).sort((a, b) =>
+                                        new Date(b?.checked_at).getTime() - new Date(a?.checked_at).getTime()
+                                    )[0]
+
+                                    return (
+                                        <tr key={restaurant.id} className="glass-row" style={{
+                                            borderBottom: idx < cityRestaurants.length - 1
+                                                ? (isDark ? '0.5px solid rgba(255,255,255,0.04)' : '0.5px solid rgba(0,0,0,0.04)')
+                                                : 'none',
+                                        }}>
+                                            <td style={{ padding: '14px 20px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    {/* Brand logo */}
+                                                    <div style={{
+                                                        width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
+                                                        background: restaurant.brands?.logo_url ? 'white' : 'rgba(99,102,241,0.15)',
+                                                        border: '1px solid rgba(99,102,241,0.2)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        overflow: 'hidden', padding: restaurant.brands?.logo_url ? '3px' : 0,
+                                                        fontSize: '14px', fontWeight: '700', color: '#6366F1',
+                                                    }}>
+                                                        {restaurant.brands?.logo_url ? (
+                                                            <img src={restaurant.brands.logo_url} alt=""
+                                                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                                onError={e => { e.currentTarget.style.display = 'none' }}
+                                                            />
+                                                        ) : (
+                                                            restaurant.brands?.name?.charAt(0) || '?'
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: colors.text, letterSpacing: '-0.1px' }}>
+                                                            {restaurant.name}
+                                                        </div>
+                                                        {restaurant.brands?.name && (
+                                                            <div style={{ fontSize: '11px', color: colors.textSecondary, marginTop: '1px' }}>
+                                                                {restaurant.brands.name}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {platformsList.map((p, pIdx) => {
+                                                const check = latestPlatformChecks[pIdx]
+                                                const url = hasUrl[pIdx]
+                                                const platformUrl = restaurant[`${p}_url`]
+
+                                                if (!url) {
+                                                    return (
+                                                        <td key={p} style={{ padding: '14px 16px', textAlign: 'center' }}>
+                                                            <span style={{ fontSize: '12px', color: colors.textSecondary, opacity: 0.4 }}>—</span>
+                                                        </td>
+                                                    )
+                                                }
+
+                                                const info = check ? getStatusInfo(check.final_status) : statusConfig.pending
+                                                return (
+                                                    <td key={p} style={{ padding: '14px 16px', textAlign: 'center' }}>
+                                                        <a
+                                                            href={platformUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            title={`Deschide pe ${p}`}
+                                                            className="status-badge"
+                                                            style={{
+                                                                background: `${info.color}10`,
+                                                                color: info.color,
+                                                            }}
+                                                        >
+                                                            <span className={`status-dot ${info.dotClass}`} style={{ width: 7, height: 7 }} />
+                                                            {info.label}
+                                                            <IconExternalLink size={9} color={info.color} />
+                                                        </a>
+                                                    </td>
+                                                )
+                                            })}
+
+                                            <td style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', color: colors.textSecondary, fontWeight: '400' }}>
+                                                {getTimeSince(mostRecentCheck?.checked_at)}
+                                            </td>
+
+                                            <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                                                {(()=>{ const hasLinks = restaurant.glovo_url || restaurant.wolt_url || restaurant.bolt_url; return (
+                                                <button
+                                                    className="btn-hover"
+                                                    onClick={() => {
+                                                        if (hasLinks) triggerCheck(restaurant.id)
+                                                        else triggerAutoDiscover(restaurant)
+                                                    }}
+                                                    disabled={checkingId === restaurant.id || discoveringId === restaurant.id}
+                                                    style={{
+                                                        ...btnSmall,
+                                                        background: !hasLinks ? '#F59E0B' : btnSmall.background,
+                                                        opacity: (checkingId === restaurant.id || discoveringId === restaurant.id) ? 0.5 : 1,
+                                                        cursor: (checkingId === restaurant.id || discoveringId === restaurant.id) ? 'not-allowed' : 'pointer',
+                                                    }}
+                                                >
+                                                    {checkingId === restaurant.id || discoveringId === restaurant.id
+                                                        ? <IconLoader size={12} color="#fff" />
+                                                        : (!hasLinks ? <span style={{fontSize:'10px'}}>🔍</span> : <IconPlay size={10} color="#fff" />)
+                                                    }
+                                                    {checkingId === restaurant.id ? 'Verificare...' : (discoveringId === restaurant.id ? 'Cautare...' : (!hasLinks ? 'Auto Link' : 'Verifică'))}
+                                                </button>
+                                                );})()}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ))}

@@ -1,0 +1,258 @@
+1. Primire token, se face un POST request: https://api-eu.syrve.live/api/1/access_token
+in body pui asta: 
+{
+"apiLogin": "a1fe30cdeb934aa0af01b6a35244b7f0"
+}
+
+Ca raspuns o sa primesti ceva asemanator:
+{
+    "correlationId": "676897c4-df72-4218-acb3-bb7c9ee58862",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcGlMb2dpbklkIjoiNmRlZDA3ZDItOGU1Zi00YTNiLWE5YTItNTk4NGRmNjk5OTc0IiwibmJmIjoxNzc1Njc4MzU4LCJleHAiOjE3NzU2ODE5NTgsImlhdCI6MTc3NTY3ODM1OCwiaXNzIjoiU3lydmUiLCJhdWQiOiJjbGllbnRzIn0.LdFyj_Us0OXvCG1D8QduKhPO3e4_YzZZ8YimHdGb-zI"
+}
+
+2. Folosind token-ul, faci un POST requeste pentru a primi comenzile de livrare/pickup:
+
+https://api-eu.syrve.live/api/1/deliveries/by_delivery_date_and_status
+
+in body pui: 
+{
+    "organizationIds":[
+            "264cb8e8-0dc9-46c3-b8f5-6a38f6c43fe9", //balotesti
+            "0a7c46eb-f8e1-43f8-bac2-f7c34239d185", //unirii
+            "c45b986e-5297-47b7-b733-293bbc91da23", //sibiu
+            "f6c77b52-5bf8-4808-b4e4-e7fbfa1a2805", //botosani
+            "8ed15b53-e788-411b-8a06-96d0f9ee005a", //constanta
+            "958aefef-28b5-4f25-9f4d-97fb02d2bf9d", //mures
+            "26bc7c2c-5113-4a18-a9e9-c1c84da4ba9f", //iasi 1
+            "6956213e-6f71-48ed-9431-44d020511190", //cora
+            "04062575-5a47-426b-9d35-9dc748f24139", //buc titan
+            "742343d9-38c1-4712-add3-1035b6bd7637", //buc ceaikovski
+            "a7f99f17-1ded-4f6f-8920-931ace99b3e0", //craiova
+            "9f260bf3-b6d8-42db-b2f1-ee8bb01cc7aa", //iasi 2
+            "502e619b-c6bf-47b9-8c93-75833c810deb", //suceava
+            "90296b11-9ba9-4279-a69b-1f84e193315e", //cluj
+            "d0ca9d11-a38e-48e1-ae02-54ce627f8419", //bacau
+            "adddb5a0-26e5-4d50-b472-1c74726c3f72", //brasov
+            "d1cb5d9d-6aeb-4b0c-adf9-5ce8648ce4e1", //oradea ikura
+            "f4742901-905f-4b4c-86ea-ce85dc09a041", //oradea sm
+            "37512ec4-ce69-4ce7-91f8-76d7a4216091", //galati
+            "f0454d67-586e-4a21-9fda-f0b0f6f601e9", //pitesti
+            "f5cb901f-bff1-4b6a-b3a0-8d5b7b3cd5e3", //Timisoara
+            "effc9518-ceef-4eec-8ad5-9b48ae84c540", //Braila
+            "5989edaa-038d-4407-8d98-be180b5b5b65"  //Tulcea
+    ],
+"deliveryDateFrom":"2025-12-31 01:00:35.000",
+"deliveryDateTo":"2025-12-31 13:59:59.000",
+"statuses": [
+    "Closed"
+    ]
+}
+
+ca raspuns o sa primesti: 
+
+{
+    "correlationId": "adbc184b-bd0c-44a2-bfeb-f6fd10b3fcf2",
+    "maxRevision": 1775739741087,
+    "ordersByOrganizations": [
+        {
+            "organizationId": "d0ca9d11-a38e-48e1-ae02-54ce627f8419",
+            "orders": [
+                {
+                    "id": "04744dfa-6f86-4da0-9f06-6db9b6e3f597",
+                    "posId": "a004b82c-00a9-4364-80f4-b923819ec8f4",
+                    "externalNumber": "318",
+                    "organizationId": "d0ca9d11-a38e-48e1-ae02-54ce627f8419",
+                    "timestamp": 1775726021405,
+                    "creationStatus": "Success",
+                    "errorInfo": null,
+                    "order": {
+                        "parentDeliveryId": null,
+                        "customer": {
+                            "type": "regular",
+                            "id": "0691fdd0-32d6-4157-84ab-035be5c28eb3",
+                            "name": "Vlad Alexandru Fesan",
+                            "surname": null,
+                            "comment": null,
+                            "gender": "Male",
+                            "inBlacklist": false,
+                            "blacklistReason": null,
+                            "birthdate": null
+                        },
+                        "phone": "+40752938887",
+                        "deliveryPoint": {
+                            "coordinates": {
+                                "latitude": 46.5704628,
+                                "longitude": 26.9175872
+                            },
+                            "address": {
+                                "street": {
+                                    "id": "0bd75840-1c8b-c292-0186-358adaadd290",
+                                    "name": "Strada 9 Mai",
+                                    "city": {
+                                        "id": "0bd75840-1c8b-c292-0186-358adaadd227",
+                                        "name": "BACAU"
+                                    }
+                                },
+                                "index": null,
+                                "house": "1",
+                                "building": null,
+                                "flat": null,
+                                "entrance": null,
+                                "floor": null,
+                                "doorphone": null,
+                                "region": null,
+                                "line1": "BACAU, Strada 9 Mai, 1"
+                            },
+                            "externalCartographyId": null,
+                            "comment": "30 Avenue, 30 avenue, Etaj 3"
+                        },
+                        "status": "Closed",
+                        "cancelInfo": null,
+                        "courierInfo": {
+                            "courier": {
+                                "id": "b181a05d-4857-4a98-81f7-258b633f62e0",
+                                "name": "Andreea",
+                                "phone": null
+                            },
+                            "isCourierSelectedManually": false
+                        },
+                        "completeBefore": "2026-04-09 12:15:03.000",
+                        "whenCreated": "2026-04-09 12:00:05.244",
+                        "whenConfirmed": "2026-04-09 12:00:05.244",
+                        "whenPrinted": "2026-04-09 12:00:10.511",
+                        "whenCookingCompleted": "2026-04-09 12:13:29.999",
+                        "whenSended": "2026-04-09 12:13:30.516",
+                        "whenDelivered": "2026-04-09 12:13:35.531",
+                        "comment": null,
+                        "problem": null,
+                        "operator": {
+                            "id": "b181a05d-4857-4a98-81f7-258b633f62e0",
+                            "name": "Andreea",
+                            "phone": null
+                        },
+                        "marketingSource": null,
+                        "deliveryDuration": 10,
+                        "indexInCourierRoute": null,
+                        "cookingStartTime": "2026-04-09 12:05:03.000",
+                        "isDeleted": false,
+                        "whenReceivedByApi": "2026-04-09 09:00:05.159",
+                        "whenReceivedFromFront": "2026-04-09 09:00:06.875",
+                        "movedFromDeliveryId": null,
+                        "movedFromTerminalGroupId": null,
+                        "movedFromOrganizationId": null,
+                        "externalCourierService": null,
+                        "movedToDeliveryId": null,
+                        "movedToTerminalGroupId": null,
+                        "movedToOrganizationId": null,
+                        "menuId": null,
+                        "deliveryZone": null,
+                        "estimatedTime": null,
+                        "isAsap": false,
+                        "whenPacked": "2026-04-09 12:13:29.999",
+                        "sum": 57.4,
+                        "number": 4484,
+                        "sourceKey": "Glovo",
+                        "whenBillPrinted": "2026-04-09 12:13:29.999",
+                        "whenClosed": "2026-04-09 12:13:39.829",
+                        "conception": {
+                            "id": "667f5187-f1ae-4069-8bb9-31172a3eb481",
+                            "name": "Bacau-01 Strada 9 Mai 29",
+                            "code": "22"
+                        },
+                        "guestsInfo": {
+                            "count": 1,
+                            "splitBetweenPersons": false
+                        },
+                        "items": [
+                            {
+                                "type": "Product",
+                                "product": {
+                                    "id": "4eebd77e-042a-4e49-9462-bb270fcdbba1",
+                                    "name": "P_Soba Vegan in sos Sweet Sour"
+                                },
+                                "modifiers": null,
+                                "codes": null,
+                                "price": 45.0,
+                                "cost": 45.0,
+                                "pricePredefined": true,
+                                "positionId": "d3630e8c-d8be-494a-b89c-e69e3253fe71",
+                                "taxPercent": 11.0,
+                                "resultSum": 31.5,
+                                "status": "Served",
+                                "deleted": null,
+                                "amount": 1.0,
+                                "comment": null,
+                                "whenPrinted": "2026-04-09 12:00:10.511",
+                                "size": null,
+                                "comboInformation": null
+                            },
+                            {
+                                "type": "Product",
+                                "product": {
+                                    "id": "40d4acb5-feb0-4580-a6f6-0655bf0b0c9a",
+                                    "name": "P_Miso cu Tofu"
+                                },
+                                "modifiers": null,
+                                "codes": null,
+                                "price": 37.0,
+                                "cost": 37.0,
+                                "pricePredefined": true,
+                                "positionId": "833bc159-3115-46a3-a871-687d81ab40da",
+                                "taxPercent": 11.0,
+                                "resultSum": 25.9,
+                                "status": "Served",
+                                "deleted": null,
+                                "amount": 1.0,
+                                "comment": null,
+                                "whenPrinted": "2026-04-09 12:00:10.511",
+                                "size": null,
+                                "comboInformation": null
+                            }
+                        ],
+                        "combos": null,
+                        "payments": [
+                            {
+                                "paymentType": {
+                                    "id": "09322f46-578a-d210-add7-eec222a08871",
+                                    "name": "Numerar",
+                                    "kind": "Cash"
+                                },
+                                "sum": 57.4,
+                                "isPreliminary": false,
+                                "isExternal": true,
+                                "isProcessedExternally": true,
+                                "isFiscalizedExternally": false,
+                                "isPrepay": false
+                            }
+                        ],
+                        "tips": null,
+                        "discounts": [
+                            {
+                                "discountType": {
+                                    "id": "24b1dcee-6851-49d7-9e56-045b3bc33087",
+                                    "name": "Glovo discount"
+                                },
+                                "sum": 24.6,
+                                "selectivePositions": null,
+                                "selectivePositionsWithSum": null
+                            }
+                        ],
+                        "orderType": {
+                            "id": "bb335c9d-32eb-4f7b-aabb-80421ba13087",
+                            "name": "GLOVO Livrare",
+                            "orderServiceType": "DeliveryByCourier"
+                        },
+                        "terminalGroupId": "3801a774-aaa3-4a45-a03d-39565de441ce",
+                        "processedPaymentsSum": 57.4,
+                        "loyaltyInfo": {
+                            "coupon": null,
+                            "appliedManualConditions": null,
+                            "dynamicDiscounts": null
+                        },
+                        "externalData": null
+                    }
+                }
+			]	
+        }
+    ]
+}

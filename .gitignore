@@ -30,3 +30,9 @@ dist-ssr
 .env
 # Local Netlify folder
 .netlify
+
+# Ignore temporary data, DBs and Puppeteer Chrome
+data/
+*.csv
+*.db
+workers/chrome/
