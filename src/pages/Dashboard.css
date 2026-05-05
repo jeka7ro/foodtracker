@@ -31,18 +31,18 @@
     width: 44px;
     height: 44px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #116d74, #008080);
+    background: linear-gradient(135deg, #6366F1, #008080);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 20px rgba(17,109,116,0.3);
+    box-shadow: 0 8px 20px rgba(99,102,241,0.3);
 }
 
 .dash-title {
     font-size: 22px;
     font-weight: 800;
     margin: 0;
-    background: linear-gradient(135deg, var(--text-color, #111), var(--primary-color, #116d74));
+    background: linear-gradient(135deg, var(--text-color, #111), var(--primary-color, #6366F1));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
@@ -179,9 +179,9 @@
 }
 
 .period-pill.active {
-    background: linear-gradient(135deg, #116d74, #0d5156);
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(17,109,116,0.3);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
 }
 
 .platform-grid {

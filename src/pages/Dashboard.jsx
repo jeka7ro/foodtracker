@@ -5,7 +5,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { useLanguage } from '../lib/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { CreditCard, ShoppingBag, Activity, TrendingUp, TrendingDown, Minus, Wifi, WifiOff, RefreshCw } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, ComposedChart, Line } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, ComposedChart, Line, LabelList } from 'recharts'
 import './Performance.css'
 
 // ── Timezone: ora României (Europe/Bucharest) ──
@@ -44,9 +44,9 @@ const normPlat = raw => {
     if (!r || r === 'in-store' || r === 'instore') return 'in-store'
     return 'other' // web_site, app, kiosk, eEating, web_site_ws, etc.
 }
-const platLabel = r => {
-    const map = { glovo:'Glovo', wolt:'Wolt', bolt:'Bolt Food', 'in-store':'In-Store', other:'Altele' }
-    return map[r] || r || 'Altele'
+const platLabel = (r, t) => {
+    const map = { glovo:'Glovo', wolt:'Wolt', bolt:'Bolt Food', 'in-store':'In-Store', other: t ? t('Altele', 'Other', 'Другое') : 'Altele' }
+    return map[r] || r || (t ? t('Altele', 'Other', 'Другое') : 'Altele')
 }
 
 function PlatLogo({ raw, size=18 }) {
@@ -62,7 +62,7 @@ function Dlt({ v }) {
     return <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, fontWeight:700, color }}><Icon size={12}/>{v>0?'+':''}{v.toFixed(1)}%</span>
 }
 
-function agg(rows, rests, brands) {
+function agg(rows, rests, brands, t) {
     let rev = 0, orders = 0
     const byPlat = {}, byProd = {}, byRest = {}, byBrand = {}
     rows.forEach(s => {
@@ -73,12 +73,12 @@ function agg(rows, rests, brands) {
         byPlat[raw2] = byPlat[raw2] || { rev:0, orders:0 }
         byPlat[raw2].rev += amt; byPlat[raw2].orders++
         const rest = (rests || []).find(r => r.id === s.restaurant_id)
-        const rName = rest?.name || 'Altă locație'
+        const rName = rest?.name || (t ? t('Altă locație', 'Other location', 'Другая локация') : 'Altă locație')
         byRest[rName] = byRest[rName] || { name:rName, rev:0, orders:0 }
         byRest[rName].rev += amt; byRest[rName].orders++
         // brand breakdown
         const brand = (brands || []).find(b => b.id === rest?.brand_id)
-        const bName = brand?.name || 'Altele'
+        const bName = brand?.name || (t ? t('Altele', 'Other', 'Другие') : 'Altele')
         const bLogo = brand?.logo_url || null
         byBrand[bName] = byBrand[bName] || { name:bName, logo:bLogo, rev:0, orders:0, rests:new Set() }
         byBrand[bName].rev += amt; byBrand[bName].orders++
@@ -146,6 +146,7 @@ export default function Dashboard() {
     const [customFrom, setCustomFrom] = useState('')
     const [customTo, setCustomTo] = useState('')
     const [showCalendar, setShowCalendar] = useState(false)
+    const [selectedBrand, setSelectedBrand] = useState('all')
 
     const dateRange = useMemo(() => {
         if (activePreset === 'custom' && customFrom && customTo) {
@@ -220,7 +221,7 @@ export default function Dashboard() {
                 .select('*', { count: 'exact', head: true })
                 .gte('placed_at', from).lte('placed_at', to)
             if (!count) return []
-            const CHUNK = 1000, PARALLEL = 12
+            const CHUNK = 1000, PARALLEL = 3
             const all = []
             for (let b = 0; b < Math.ceil(count / CHUNK); b += PARALLEL) {
                 const batch = Array.from(
@@ -265,7 +266,7 @@ export default function Dashboard() {
             .select('*', { count: 'exact', head: true })
             .gte('placed_at', from).lte('placed_at', to)
         if (!count) return []
-        const CHUNK = 1000, PARALLEL = 12
+        const CHUNK = 1000, PARALLEL = 3
         const all = []
         for (let b = 0; b < Math.ceil(count / CHUNK); b += PARALLEL) {
             const batch = Array.from(
@@ -341,72 +342,86 @@ export default function Dashboard() {
             const year = now.getFullYear()
             const curMonth = toRO(now.toISOString()).getMonth()
 
-            // Funcție: preia TOATE rândurile pentru o perioadă prin paginare paralelă
-            const fetchAll = async (from, to) => {
-                // Pas 1: află numărul total de rânduri
-                const { count } = await supabase
-                    .from('platform_sales')
-                    .select('*', { count: 'exact', head: true })
-                    .gte('placed_at', from).lte('placed_at', to)
-                if (!count) return []
-                const CHUNK = 1000
-                const PARALLEL = 12
-                const numChunks = Math.ceil(count / CHUNK)
-                const all = []
-                // Pas 2: fetch în batches paralele
-                for (let b = 0; b < numChunks; b += PARALLEL) {
-                    const batch = Array.from(
-                        { length: Math.min(PARALLEL, numChunks - b) },
-                        (_, i) => supabase
-                            .from('platform_sales')
-                            .select('placed_at,total_amount,platform')
-                            .gte('placed_at', from).lte('placed_at', to)
-                            .range((b + i) * CHUNK, (b + i + 1) * CHUNK - 1)
-                            .then(r => r.data || [])
-                    )
-                    const results = await Promise.all(batch)
-                    results.forEach(r => all.push(...r))
-                }
-                return all
+            const from = new Date(year, 0, 1).toISOString()
+            const to   = new Date(year, curMonth + 1, 0, 23, 59, 59, 999).toISOString()
+
+            // Pas 1: află numărul total de rânduri pentru TOT anul
+            const { count } = await supabase
+                .from('platform_sales')
+                .select('*', { count: 'exact', head: true })
+                .gte('placed_at', from).lte('placed_at', to)
+            
+            if (!count) return []
+
+            const CHUNK = 1000
+            const PARALLEL = 6 // mărit la 6 pentru a reduce timpul de încărcare
+            const numChunks = Math.ceil(count / CHUNK)
+            const allYearData = []
+
+            // Pas 2: fetch în batches paralele mici
+            for (let b = 0; b < numChunks; b += PARALLEL) {
+                const batch = Array.from(
+                    { length: Math.min(PARALLEL, numChunks - b) },
+                    (_, i) => supabase
+                        .from('platform_sales')
+                        .select('id,placed_at,total_amount,platform,restaurant_id')
+                        .gte('placed_at', from).lte('placed_at', to)
+                        .order('id', { ascending: true })
+                        .range((b + i) * CHUNK, (b + i + 1) * CHUNK - 1)
+                        .then(r => r.data || [])
+                )
+                const results = await Promise.all(batch)
+                results.forEach(r => allYearData.push(...r))
             }
 
-            // Fetch fiecare lună în paralel (lunile se fetchez simultan, paginarea e internă)
-            const monthPromises = Array.from({ length: curMonth + 1 }, async (_, m) => {
-                const from = new Date(year, m, 1).toISOString()
-                const to   = new Date(year, m + 1, 0, 23, 59, 59, 999).toISOString()
-                const rows = await fetchAll(from, to)
-                return { month: m, rows }
+            // Pas 3: Grupează rândurile pe luni client-side
+            const months = Array.from({ length: curMonth + 1 }, () => [])
+            allYearData.forEach(row => {
+                const d = toRO(row.placed_at)
+                const m = d.getMonth()
+                if (m <= curMonth) {
+                    months[m].push(row)
+                }
             })
-            return Promise.all(monthPromises)
+
+            return months.map((rows, m) => ({ month: m, rows }))
         }
     })
 
     const monthlyChart = useMemo(() => {
         if (!yearlyData.length) return []
-        const MONTHS_RO = ['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec']
+        const MONTHS = lang === 'ru' ? ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'] :
+                       lang === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] :
+                       ['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec']
 
         // Ziua curentă în ora României (ex: 5 dacă azi e 5 Mai)
         const nowRO = toRO(now.toISOString())
         const todayDayRO = nowRO.getDate()
         const curMonthIdx = nowRO.getMonth()
 
+        const activeRestIds = selectedBrand === 'all' ? null : new Set(rests.filter(r => r.brand_id === selectedBrand).map(r => r.id))
+
         return yearlyData.map((md, i) => {
             const isCurrentMonth = md.month === curMonthIdx
 
+            // Filter rows by brand
+            const fRows = activeRestIds ? md.rows.filter(r => activeRestIds.has(r.restaurant_id)) : md.rows
+
             // Calculăm revenue/orders pentru luna curentă (toate zilele disponibile)
-            const rev = md.rows.reduce((s, r) => s + (parseFloat(r.total_amount) || 0), 0)
-            const orders = md.rows.length
+            const rev = fRows.reduce((s, r) => s + (parseFloat(r.total_amount) || 0), 0)
+            const orders = fRows.length
 
             let delta = null
-            let compNote = 'luna completă'
+            let compNote = lang === 'ru' ? 'весь месяц' : (lang === 'en' ? 'full month' : 'luna completă')
 
             if (i > 0) {
                 const prevMd = yearlyData[i - 1]
+                const prevFRows = activeRestIds ? prevMd.rows.filter(r => activeRestIds.has(r.restaurant_id)) : prevMd.rows
 
                 if (isCurrentMonth) {
                     // Luna curentă: compară zilele 1-N cu aceleași zile 1-N din luna trecută
-                    compNote = `zile 1-${todayDayRO}`
-                    const prevFiltered = prevMd.rows.filter(r => {
+                    compNote = lang === 'ru' ? `дни 1-${todayDayRO}` : (lang === 'en' ? `days 1-${todayDayRO}` : `zile 1-${todayDayRO}`)
+                    const prevFiltered = prevFRows.filter(r => {
                         const d = toRO(r.placed_at)
                         return d.getDate() <= todayDayRO
                     })
@@ -414,30 +429,82 @@ export default function Dashboard() {
                     delta = prevRev > 0 ? ((rev - prevRev) / prevRev) * 100 : null
                 } else {
                     // Luni complete: compară totalurile
-                    const prevRev = prevMd.rows.reduce((s, r) => s + (parseFloat(r.total_amount) || 0), 0)
+                    const prevRev = prevFRows.reduce((s, r) => s + (parseFloat(r.total_amount) || 0), 0)
                     delta = prevRev > 0 ? ((rev - prevRev) / prevRev) * 100 : null
                 }
             }
 
             // Breakdown pe platforme (în ora României)
             const byPlat = {}
-            md.rows.forEach(r => {
-                const p = (r.platform || 'other').toLowerCase()
-                byPlat[p] = (byPlat[p] || 0) + (parseFloat(r.total_amount) || 0)
-            })
+            const byBrand = {}
+            
+            // Pre-fill brands cu 0 pentru a fi mereu vizibile în tooltip în toate lunile
+            const visibleBrands = selectedBrand === 'all' ? brands : brands.filter(b => b.id === selectedBrand)
+            visibleBrands.forEach(b => { byBrand[b.name] = 0 })
+            byBrand['Altele'] = 0
 
-            return {
-                month: MONTHS_RO[md.month],
+            fRows.forEach(r => {
+                const p = (r.platform || 'other').toLowerCase()
+                const amt = parseFloat(r.total_amount) || 0
+                byPlat[p] = (byPlat[p] || 0) + amt
+
+                // Map rest -> brand
+                const restObj = rests.find(x => x.id === r.restaurant_id)
+                const brandObj = restObj ? brands.find(b => b.id === restObj.brand_id) : null
+                const brandName = brandObj ? brandObj.name : 'Altele'
+                byBrand[brandName] = (byBrand[brandName] || 0) + amt
+            })
+            
+            // Ștergem 'Altele' dacă a rămas 0 pentru a nu polua tooltip-ul degeaba
+            if (byBrand['Altele'] === 0) {
+                delete byBrand['Altele']
+            }
+
+            const prevByBrand = {}
+            if (i > 0) {
+                const prevMd = yearlyData[i - 1]
+                const prevFRows = activeRestIds ? prevMd.rows.filter(r => activeRestIds.has(r.restaurant_id)) : prevMd.rows
+                
+                let prevFiltered = prevFRows;
+                if (isCurrentMonth) {
+                    prevFiltered = prevFRows.filter(r => {
+                        const d = toRO(r.placed_at)
+                        return d.getDate() <= todayDayRO
+                    })
+                }
+                
+                prevFiltered.forEach(r => {
+                    const amt = parseFloat(r.total_amount) || 0
+                    const restObj = rests.find(x => x.id === r.restaurant_id)
+                    const brandObj = restObj ? brands.find(b => b.id === restObj.brand_id) : null
+                    const brandName = brandObj ? brandObj.name : 'Altele'
+                    prevByBrand[brandName] = (prevByBrand[brandName] || 0) + amt
+                })
+            }
+
+            const item = {
+                month: MONTHS[md.month],
                 rev: Math.round(rev),
                 orders,
                 delta,
                 aov: orders > 0 ? Math.round(rev / orders) : 0,
                 byPlat,
+                byBrand,
+                prevByBrand,
                 isCurrentMonth,
                 compNote
             }
+            
+            // Flatten brands for Recharts Bar stacking
+            Object.entries(byBrand).forEach(([bName, val]) => {
+                if (val > 0) {
+                    item[`b_${bName}`] = Math.round(val)
+                }
+            })
+            
+            return item
         })
-    }, [yearlyData])
+    }, [yearlyData, rests, brands, lang, selectedBrand])
 
     const an = useMemo(() => {
         // Labeluri perioadă selectată vs comparație
@@ -446,27 +513,31 @@ export default function Dashboard() {
             // Use timezone to extract Romanian parts accurately
             const getRO = (date) => new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }))
             const fRO = getRO(f), tRO = getRO(t)
-            
+            const loc = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')
             const sameMonth = fRO.getMonth() === tRO.getMonth() && fRO.getFullYear() === tRO.getFullYear()
-            if (sameMonth) return f.toLocaleString('ro-RO', { timeZone: 'Europe/Bucharest', month: 'long', year: 'numeric' })
-            const df = f.toLocaleDateString('ro-RO', { timeZone: 'Europe/Bucharest', day:'2-digit', month:'short' })
-            const dt = t.toLocaleDateString('ro-RO', { timeZone: 'Europe/Bucharest', day:'2-digit', month:'short', year:'numeric' })
+            if (sameMonth) return f.toLocaleString(loc, { timeZone: 'Europe/Bucharest', month: 'long', year: 'numeric' })
+            const df = f.toLocaleDateString(loc, { timeZone: 'Europe/Bucharest', day:'2-digit', month:'short' })
+            const dt = t.toLocaleDateString(loc, { timeZone: 'Europe/Bucharest', day:'2-digit', month:'short', year:'numeric' })
             return `${df} – ${dt}`
         }
         const pL = fmtPeriod(dateRange.from, dateRange.to)
         const sL = fmtPeriod(compRange.from, compRange.to)
 
-        const A = agg(salesCur, rests, brands)
-        const B = agg(salesComp, rests, brands)
+        const activeRestIds = selectedBrand === 'all' ? null : new Set(rests.filter(r => r.brand_id === selectedBrand).map(r => r.id))
+        const fSalesCur = activeRestIds ? salesCur.filter(s => activeRestIds.has(s.restaurant_id)) : salesCur
+        const fSalesComp = activeRestIds ? salesComp.filter(s => activeRestIds.has(s.restaurant_id)) : salesComp
+
+        const A = agg(fSalesCur, rests, brands, t)
+        const B = agg(fSalesComp, rests, brands, t)
 
         // Today — filtrat strict în ora României
         const nowRO = toRO(new Date().toISOString())
         const curKey = monthKey(nowRO)
-        const todayRows = salesCur.filter(s => {
+        const todayRows = fSalesCur.filter(s => {
             const d = toRO(s.placed_at)
             return d.getDate() === nowRO.getDate() && d.getMonth() === nowRO.getMonth() && d.getFullYear() === nowRO.getFullYear()
         })
-        const T = agg(todayRows, rests)
+        const T = agg(todayRows, rests, null, t)
 
         const delta = (a, b) => b > 0 ? ((a - b) / b) * 100 : null
 
@@ -476,15 +547,22 @@ export default function Dashboard() {
         const platRows = PLAT_ORDER
             .filter(raw => allPlats.has(raw))
             .map(raw => ({
-                raw, label: platLabel(raw), color: pc(raw),
+                raw, label: platLabel(raw, t), color: pc(raw),
                 aRev: A.byPlat[raw]?.rev || 0, aOrd: A.byPlat[raw]?.orders || 0,
                 bRev: B.byPlat[raw]?.rev || 0, bOrd: B.byPlat[raw]?.orders || 0,
                 dRev: delta(A.byPlat[raw]?.rev || 0, B.byPlat[raw]?.rev || 0),
                 dOrd: delta(A.byPlat[raw]?.orders || 0, B.byPlat[raw]?.orders || 0),
             }))
 
-        const pieA = platRows.filter(p => p.aRev > 0).map(p => ({ name:p.label, value:Math.round(p.aRev), color:p.color }))
-        const pieB = platRows.filter(p => p.bRev > 0).map(p => ({ name:p.label, value:Math.round(p.bRev), color:p.color }))
+        const pieA = platRows.filter(p => p.aRev > 0).map(p => ({ name:p.label, value:Math.round(p.aRev), color:p.color, raw:p.raw }))
+        const pieB = platRows.filter(p => p.bRev > 0).map(p => ({ name:p.label, value:Math.round(p.bRev), color:p.color, raw:p.raw }))
+        const pieBrands = Object.values(A.byBrand)
+            .filter(b => b.rev > 0)
+            .sort((a,b) => b.rev - a.rev)
+            .map((b, i) => {
+                const bc = { 'sushi master': '#EF4444', 'smash me': '#8B5CF6', 'we love sushi': '#F59E0B', 'ikura sushi': '#10B981' }
+                return { name: b.name, value: Math.round(b.rev), color: bc[b.name.toLowerCase()] || RC[i % RC.length], logo: b.logo }
+            })
 
         const topProds = Object.values(A.byProd)
             .filter(p => isRealProduct(p.name))
@@ -504,7 +582,7 @@ export default function Dashboard() {
 
         const barChart = platRows.slice(0,7).map(p => ({ name: p.label, [pL]: Math.round(p.aRev), [sL]: Math.round(p.bRev) }))
 
-        return { A, B, T, pL, sL, delta, platRows, pieA, pieB, topProds, topRests, dayChart, barChart, hasToday: todayRows.length > 0 }
+        return { A, B, T, pL, sL, delta, platRows, pieA, pieB, pieBrands, topProds, topRests, dayChart, barChart, hasToday: todayRows.length > 0 }
     }, [salesCur, salesComp, rests, brands, dateRange, compRange])
 
     const C = (extra) => ({ background: isDark ? 'rgba(28,28,36,0.9)' : '#fff', border:`1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`, borderRadius:20, padding:24, boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 2px 16px rgba(0,0,0,0.04)', ...extra })
@@ -523,16 +601,28 @@ export default function Dashboard() {
         const d = payload[0]?.payload
         if (!d) return null
         const platEntries = Object.entries(d.byPlat || {}).sort((a,b) => b[1]-a[1]).slice(0,4)
+        const brandEntries = Object.entries(d.byBrand || {}).sort((a,b) => b[1]-a[1])
         return (
             <div style={{ background: isDark ? '#1a1a24' : '#fff', border:'1px solid rgba(128,128,128,0.15)', borderRadius:12, padding:'12px 16px', fontSize:12, minWidth:180, boxShadow:'0 8px 24px rgba(0,0,0,0.12)' }}>
                 <div style={{ fontWeight:800, fontSize:14, marginBottom:8 }}>{d.month}</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{opacity:0.6}}>Venituri</span><span style={{fontWeight:700}}>{d.rev.toLocaleString('ro-RO')} RON</span></div>
-                    <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{opacity:0.6}}>Comenzi</span><span style={{fontWeight:700}}>{d.orders.toLocaleString('ro-RO')}</span></div>
+                    <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{opacity:0.6}}>{t('Venituri', 'Revenue', 'Выручка')}</span><span style={{fontWeight:700}}>{d.rev.toLocaleString('ro-RO')} RON</span></div>
+                    <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{opacity:0.6}}>{t('Comenzi', 'Orders', 'Заказы')}</span><span style={{fontWeight:700}}>{d.orders.toLocaleString('ro-RO')}</span></div>
                     <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{opacity:0.6}}>AOV</span><span style={{fontWeight:700}}>{d.aov} RON</span></div>
-                    {d.delta != null && <div style={{ display:'flex', justifyContent:'space-between', gap:16, marginTop:4, paddingTop:4, borderTop:'1px solid rgba(128,128,128,0.15)' }}>
-                        <span style={{opacity:0.6}}>vs luna prec. ({d.compNote})</span>
-                        <span style={{fontWeight:800, color: d.delta >= 0 ? '#10B981' : '#EF4444'}}>{d.delta >= 0 ? '+' : ''}{d.delta.toFixed(1)}%</span>
+                    {brandEntries.length > 0 && <div style={{marginTop:6, paddingTop:6, borderTop:'1px solid rgba(128,128,128,0.15)'}}>
+                        {brandEntries.map(([b,v]) => {
+                            const prev = d.prevByBrand?.[b] || 0;
+                            const pct = prev > 0 ? ((v - prev) / prev) * 100 : null;
+                            return <div key={b} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:2}}>
+                                <span style={{opacity:0.6,fontSize:11,fontWeight:500,flex:1}}>{b}</span>
+                                {pct !== null && (
+                                    <span style={{ fontSize:10, fontWeight:700, color: pct >= 0 ? '#10B981' : '#EF4444' }}>
+                                        {pct >= 0 ? '▲' : '▼'}{Math.abs(pct).toFixed(1)}%
+                                    </span>
+                                )}
+                                <span style={{fontSize:11,fontWeight:600}}>{Math.round(v).toLocaleString('ro-RO')} RON</span>
+                            </div>
+                        })}
                     </div>}
                     {platEntries.length > 0 && <div style={{marginTop:6, paddingTop:6, borderTop:'1px solid rgba(128,128,128,0.15)'}}>
                         {platEntries.map(([p,v]) => <div key={p} style={{display:'flex',justifyContent:'space-between',gap:12,marginBottom:2}}>
@@ -550,6 +640,7 @@ export default function Dashboard() {
         if (!d || d.delta == null) return null
         const color = d.delta >= 0 ? '#10B981' : '#EF4444'
         const bg = d.delta >= 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'
+        // Ajustăm Y ca să fie mereu deasupra (indiferent de înălțimea acestui segment specific)
         return (
             <g>
                 <foreignObject x={x + width/2 - 28} y={y - 28} width={56} height={22}>
@@ -561,6 +652,39 @@ export default function Dashboard() {
         )
     }
 
+    const CustomPieLegend = (props) => {
+        const { payload } = props;
+        const total = payload.reduce((acc, entry) => acc + (entry.payload?.value || 0), 0)
+        return (
+            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:8, justifyContent:'center', height:'100%' }}>
+                {payload.map((entry, index) => {
+                    const { color, payload: d } = entry;
+                    const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
+                    return (
+                        <li key={`item-${index}`} style={{ display:'flex', alignItems:'center', gap:8, fontSize:11, fontWeight:600 }}>
+                            {d.logo ? <img src={d.logo} style={{width:16,height:16,objectFit:'contain', borderRadius:4}} alt={d.name}/> : d.raw ? <PlatLogo raw={d.raw} size={16}/> : <div style={{width:8,height:8,borderRadius:'50%',backgroundColor:color}}/>}
+                            <span style={{color:color}}>{d.name} <span style={{opacity:0.6, fontSize:10}}>({pct}%)</span></span>
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    }
+
+    const RADIAN = Math.PI / 180;
+    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+        if (percent < 0.05) return null; // hide if < 5% to prevent overlap
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text x={x} y={y} fill="#ffffff" fontSize={10} fontWeight={800} textAnchor="middle" dominantBaseline="central" style={{ pointerEvents: 'none' }}>
+                {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        );
+    };
+
     // ── Freshness badge ──
     const FreshnessBadge = () => {
         if (!lastSale) return null
@@ -570,8 +694,10 @@ export default function Dashboard() {
         const diffMin = Math.round(diffMs / 60000)
         const diffH = Math.round(diffMs / 3600000)
         const isStale = diffMin > 120 // mai mult de 2 ore = posibil sync oprit
-        const label = diffMin < 60 ? `${diffMin} min ago` : diffH < 24 ? `${diffH}h ago` : lastRO.toLocaleDateString('ro-RO', { day:'2-digit', month:'short' })
-        const lastStr = lastRO.toLocaleString('ro-RO', { timeZone:'Europe/Bucharest', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+        const loc = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')
+        const agoTxt = lang === 'ru' ? 'назад' : (lang === 'en' ? 'ago' : 'în urmă')
+        const label = diffMin < 60 ? `${diffMin} min ${agoTxt}` : diffH < 24 ? `${diffH}h ${agoTxt}` : lastRO.toLocaleDateString(loc, { day:'2-digit', month:'short' })
+        const lastStr = lastRO.toLocaleString(loc, { timeZone:'Europe/Bucharest', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
         return (
             <div title={`Ultima comandă: ${lastStr}`}
                 style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700,
@@ -580,7 +706,7 @@ export default function Dashboard() {
                     color: isStale ? '#EF4444' : '#10B981',
                     cursor:'default' }}>
                 {isStale ? <WifiOff size={11}/> : <Wifi size={11}/>}
-                {isStale ? `Sync oprit — ultima comandă acum ${label}` : `Live · ${label}`}
+                {isStale ? `${t('Sync oprit — ultima comandă acum', 'Sync stopped — last order', 'Синхр. остановлена — последний заказ')} ${label}` : `Live · ${label}`}
             </div>
         )
     }
@@ -593,8 +719,8 @@ export default function Dashboard() {
                     <div>
                         <h1 className="perf-title">{t('Dashboard KPI', 'Dashboard KPI', 'Аналитика KPI')}</h1>
                         <p className="perf-subtitle" style={{ margin:0 }}>
-                            {isLoading ? 'Se încarcă…' : `${an.pL} vs ${an.sL}`}
-                            {an.hasToday && !isLoading && <span style={{ marginLeft:12, background:'#6366F120', color:'#6366F1', padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>Azi: {an.T.orders} comenzi</span>}
+                            {isLoading ? t('Se încarcă…', 'Loading…', 'Загрузка…') : `${an.pL} vs ${an.sL}`}
+                            {an.hasToday && !isLoading && <span style={{ marginLeft:12, background:'#6366F120', color:'#6366F1', padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>{t('Azi', 'Today', 'Сегодня')}: {an.T.orders} {t('comenzi', 'orders', 'заказов')}</span>}
                         </p>
                     </div>
                     {/* Interval + Freshness */}
@@ -630,7 +756,7 @@ export default function Dashboard() {
                             background: activePreset === 'custom' ? 'rgba(99,102,241,0.12)' : 'transparent',
                             color: activePreset === 'custom' ? '#6366F1' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)'),
                             cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:5 }}>
-                        📅 Personalizat
+                        📅 {t('Personalizat', 'Custom', 'Свой')}
                     </button>
 
                     {/* Calendar inputs — apar când e activ */}
@@ -645,6 +771,16 @@ export default function Dashboard() {
                                 style={{ fontSize:12, fontWeight:600, background:'transparent', border:'none', color:'var(--text-color)', outline:'none', cursor:'pointer' }}/>
                         </div>
                     )}
+
+                    {/* Brand Filter */}
+                    <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} 
+                        style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', 
+                            border:`1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, 
+                            borderRadius:99, padding:'6px 12px', fontSize:11, fontWeight:700, 
+                            color:'var(--text-color)', outline:'none', cursor:'pointer' }}>
+                        <option value="all">{t('Toate Brandurile', 'All Brands', 'Все Бренды')}</option>
+                        {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
                 </div>
             </div>
 
@@ -679,20 +815,9 @@ export default function Dashboard() {
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
                         <div>
                             <h3 className="card-heading" style={{ margin:0, marginBottom:4 }}>{t('Comparație Lunară', 'Monthly Comparison', 'Сравнение по месяцам')} {new Date().getFullYear()}</h3>
-                            <p style={{ margin:0, fontSize:11, opacity:0.5 }}>Venituri totale per lună · hover pentru detalii · linia = AOV</p>
+                            <p style={{ margin:0, fontSize:11, opacity:0.5 }}>{t('Venituri totale per lună · hover pentru detalii · linia = AOV', 'Total monthly revenue · hover for details · line = AOV', 'Общая месячная выручка · наведите для деталей · линия = AOV')}</p>
                         </div>
                         <div style={{ display:'flex', gap:16, fontSize:11 }}>
-                            {monthlyChart.map(m => (
-                                <div key={m.month} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
-                                    <span style={{ fontWeight:800, fontSize:13 }}>{m.month}</span>
-                                    <span style={{ opacity:0.5 }}>{(m.rev/1000).toFixed(0)}k</span>
-                                    {m.delta != null && (
-                                        <span style={{ fontSize:10, fontWeight:700, color: m.delta >= 0 ? '#10B981' : '#EF4444' }}>
-                                            {m.delta >= 0 ? '▲' : '▼'}{Math.abs(m.delta).toFixed(1)}%
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
                         </div>
                     </div>
                     <div style={{ height: 280 }}>
@@ -703,22 +828,19 @@ export default function Dashboard() {
                                 <YAxis yAxisId="rev" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
                                     tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : ''} width={36}/>
                                 <YAxis yAxisId="aov" orientation="right" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
-                                    tickFormatter={v => v > 0 ? `${v}↵` : ''} width={40}/>
+                                    tickFormatter={v => v > 0 ? `${v}` : ''} width={40}/>
                                 <Tooltip content={<YearlyTT />}/>
-                                <Bar yAxisId="rev" dataKey="rev" name="Venituri" radius={[8,8,0,0]} maxBarSize={72}
-                                    label={<MonthDeltaLabel />}>
-                                    {monthlyChart.map((m, i) => (
-                                        <Cell key={i} fill={
-                                            m.isCurrentMonth
-                                                ? (isDark ? 'rgba(99,102,241,0.9)' : '#6366F1')
-                                                : m.delta == null
-                                                    ? (isDark ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.45)')
-                                                    : m.delta >= 0
-                                                        ? (isDark ? 'rgba(16,185,129,0.65)' : 'rgba(16,185,129,0.75)')
-                                                        : (isDark ? 'rgba(239,68,68,0.55)' : 'rgba(239,68,68,0.65)')
-                                        }/>
-                                    ))}
-                                </Bar>
+                                {[...brands, { id: 'altele', name: 'Altele' }].map((br, idx, arr) => {
+                                    const isLast = idx === arr.length - 1
+                                    const bc = { 'sushi master': '#EF4444', 'smash me': '#8B5CF6', 'we love sushi': '#F59E0B', 'ikura sushi': '#10B981' }
+                                    const color = bc[(br.name || '').toLowerCase()] || RC[idx % RC.length]
+                                    return (
+                                        <Bar key={br.id} yAxisId="rev" dataKey={`b_${br.name}`} name={br.name} stackId="a" fill={color} maxBarSize={72} minPointSize={12}
+                                            radius={isLast ? [8,8,0,0] : [0,0,0,0]}>
+                                            {isLast && <LabelList dataKey="rev" content={<MonthDeltaLabel />} />}
+                                        </Bar>
+                                    )
+                                })}
                                 <Line yAxisId="aov" type="monotone" dataKey="aov" name="AOV" stroke="#F59E0B"
                                     strokeWidth={2} dot={{ fill:'#F59E0B', r:4, strokeWidth:0 }}
                                     activeDot={{ r:6 }}/>
@@ -730,25 +852,30 @@ export default function Dashboard() {
 
             {/* ── BRAND BREAKDOWN — imediat după graficul lunar ── */}
             {brands.length > 0 && Object.keys(an.A.byBrand).length > 0 && (
-                <div style={C({})}>
+                <div style={{ marginBottom: 24 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
                         <h3 className="card-heading" style={{ margin:0 }}>{t('Performanță pe Branduri', 'Performance by Brand', 'Производительность по брендам')} — {an.pL}</h3>
                         <span style={{ fontSize:11, opacity:0.4 }}>vs {an.sL}</span>
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:`repeat(${Math.min(brands.length, 4)}, 1fr)`, gap:14 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:14 }}>
                         {brands.map((br, idx) => {
                             const col = RC[idx % RC.length]
                             const curBrand = an.A.byBrand[br.name] || { rev:0, orders:0 }
                             const prevBrand = an.B.byBrand[br.name] || { rev:0, orders:0 }
                             const d = an.delta(curBrand.rev, prevBrand.rev)
                             const aov = curBrand.orders > 0 ? curBrand.rev / curBrand.orders : 0
+                            const numLocs = curBrand.rests?.size || 0
+                            const avgRevPerLoc = numLocs > 0 ? Math.round(curBrand.rev / numLocs) : 0
+                            const avgOrdPerLoc = numLocs > 0 ? Math.round(curBrand.orders / numLocs) : 0
                             return (
                                 <div key={br.id} onClick={() => navigate(`/performance?b=${br.id}`)}
-                                    style={{ background: isDark ? 'rgba(255,255,255,0.03)' : `${col}08`,
-                                        border:`1.5px solid ${col}30`, borderRadius:16, padding:18,
+                                    style={{ background: isDark ? 'rgba(28,28,36,0.9)' : '#fff',
+                                        border:`1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`,
+                                        boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.2)' : '0 2px 16px rgba(0,0,0,0.04)',
+                                        borderRadius:20, padding:24,
                                         cursor:'pointer', transition:'all 0.15s' }}
                                     onMouseEnter={e => { e.currentTarget.style.borderColor=`${col}80`; e.currentTarget.style.transform='translateY(-2px)' }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor=`${col}30`; e.currentTarget.style.transform='' }}>
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor=isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'; e.currentTarget.style.transform='' }}>
                                     <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
                                         {br.logo_url
                                             ? <img src={br.logo_url} alt={br.name} style={{ height:28, maxWidth:80, objectFit:'contain' }}/>
@@ -756,14 +883,16 @@ export default function Dashboard() {
                                         }
                                         <div>
                                             <span style={{ fontSize:12, fontWeight:700, opacity:0.7, display:'block' }}>{br.name}</span>
-                                            {curBrand.rests?.size > 0 && <span style={{ fontSize:10, opacity:0.5 }}>{curBrand.rests.size} {t('locații', 'locations', 'локаций')}</span>}
+                                            {numLocs > 0 && <span style={{ fontSize:10, opacity:0.5, display:'block', marginTop:1 }}>
+                                                {numLocs} {t('locații', 'locations', 'локаций')} · {avgOrdPerLoc} {t('cmd', 'ord', 'зак')}/{t('loc', 'loc', 'лок')} · {avgRevPerLoc.toLocaleString('ro-RO')} RON/{t('loc', 'loc', 'лок')}
+                                            </span>}
                                         </div>
                                     </div>
                                     <div style={{ fontSize:22, fontWeight:800, letterSpacing:'-0.5px', color:col, marginBottom:4 }}>
                                         {Math.round(curBrand.rev).toLocaleString('ro-RO')} RON
                                     </div>
                                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                                        <span style={{ fontSize:11, opacity:0.5 }}>{curBrand.orders} comenzi · AOV {Math.round(aov)} RON</span>
+                                        <span style={{ fontSize:11, opacity:0.5 }}>{curBrand.orders} {t('comenzi', 'orders', 'заказов')} · AOV {Math.round(aov)} RON</span>
                                         <Dlt v={d}/>
                                     </div>
                                     <div style={{ fontSize:10, opacity:0.4 }}>vs {Math.round(prevBrand.rev).toLocaleString('ro-RO')} RON ({an.sL})</div>
@@ -773,7 +902,7 @@ export default function Dashboard() {
                                             transition:'width 0.5s' }}/>
                                     </div>
                                     <div style={{ fontSize:10, opacity:0.4, marginTop:4, textAlign:'right' }}>
-                                        {an.A.rev > 0 ? ((curBrand.rev/an.A.rev)*100).toFixed(1) : 0}% din total
+                                        {an.A.rev > 0 ? ((curBrand.rev/an.A.rev)*100).toFixed(1) : 0}% {t('din total', 'of total', 'от общего')}
                                     </div>
                                 </div>
                             )
@@ -782,32 +911,13 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* 2 PIE CHARTS */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
-                {[[an.pieA, an.pL], [an.pieB, an.sL]].map(([data, lbl], pi) => (
-                    <div key={pi} style={C({})}>
-                        <h3 className="card-heading">{t('Distribuție', 'Distribution', 'Распределение')} — {lbl}</h3>
-                        {data.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>Fără date</div> :
-                        <div style={{ height:200 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={data} cx="40%" cy="50%" outerRadius={75} innerRadius={40} dataKey="value" paddingAngle={2} stroke="none">
-                                        {data.map((e,i) => <Cell key={i} fill={e.color}/>)}
-                                    </Pie>
-                                    <Tooltip formatter={v => [`${Number(v).toLocaleString('ro-RO')} RON`]} contentStyle={{ borderRadius:10, border:'none', boxShadow:'0 4px 16px rgba(0,0,0,0.1)', fontSize:12 }}/>
-                                    <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" iconSize={8} formatter={v => <span style={{ fontSize:11, fontWeight:600 }}>{v}</span>}/>
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>}
-                    </div>
-                ))}
-            </div>
+
 
             {/* DAILY TREND + PLATFORM BAR */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Trend Zilnic', 'Daily Trend', 'Ежедневный тренд')} — {an.pL}</h3>
-                    {an.dayChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>Fără date</div> :
+                    {an.dayChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
                     <div style={{ height:220 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={an.dayChart} margin={{ top:4, right:4, left:0, bottom:30 }}>
@@ -826,7 +936,7 @@ export default function Dashboard() {
 
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Platforme Comparative', 'Platforms Comparison', 'Сравнение платформ')}</h3>
-                    {an.barChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>Fără date</div> :
+                    {an.barChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
                     <div style={{ height:200 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={an.barChart} margin={{ top:4, right:4, left:0, bottom:0 }}>
@@ -845,11 +955,11 @@ export default function Dashboard() {
 
             {/* TOP PRODUSE PE BRANDURI */}
             {brands.length > 0 && (
-                <div style={C({})}>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+                <div style={{ marginBottom:24 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
                         <h3 className="card-heading" style={{ margin:0 }}>{t('Top Produse pe Branduri', 'Top Products by Brand', 'Лучшие продукты по брендам')} — {an.pL}</h3>
                         <div style={{ display:'flex', gap:4, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', borderRadius:99, padding:3 }}>
-                            {[['month', 'Perioadă'], ['alltime', '2026']].map(([key, lbl]) => (
+                            {[['month', t('Perioadă', 'Period', 'Период')], ['alltime', '2026']].map(([key, lbl]) => (
                                 <button key={key} onClick={() => setProdView(key)}
                                     style={{ fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:99, border:'none',
                                         background: prodView === key ? '#6366F1' : 'transparent',
@@ -860,7 +970,7 @@ export default function Dashboard() {
                             ))}
                         </div>
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:`repeat(${Math.min(brands.length, 4)}, 1fr)`, gap:16 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))', gap:16 }}>
                         {brands.map((br, bIdx) => {
                             const col = RC[bIdx % RC.length]
                             const brandRests = rests.filter(r => r.brand_id === br.id).map(r => r.id)
@@ -879,13 +989,15 @@ export default function Dashboard() {
                             const topProds = Object.values(prodMap).sort((a,b) => b.qty - a.qty).slice(0, 5)
                             const maxQty = topProds[0]?.qty || 1
                             return (
-                                <div key={br.id} style={{ borderLeft:`3px solid ${col}`, paddingLeft:14 }}>
-                                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
-                                        {br.logo_url
-                                            ? <img src={br.logo_url} alt={br.name} style={{ height:20, maxWidth:60, objectFit:'contain' }}/>
-                                            : <span style={{ fontSize:11, fontWeight:800, color:col }}>{br.name}</span>
-                                        }
-                                        <span style={{ fontSize:10, opacity:0.4 }}>{brandRows.length} cmd</span>
+                                <div key={br.id} style={C({})}>
+                                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, paddingBottom:12, borderBottom:`1px dashed ${col}40` }}>
+                                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                                            {br.logo_url && (
+                                                <img src={br.logo_url} alt={br.name} style={{ height:24, maxWidth:80, objectFit:'contain' }}/>
+                                            )}
+                                            <span style={{ fontSize:13, fontWeight:800, marginLeft: br.logo_url ? 8 : 0 }}>{br.name}</span>
+                                        </div>
+                                        <span style={{ fontSize:10, opacity:0.4, fontWeight:700 }}>{brandRows.length} cmd</span>
                                     </div>
                                     {topProds.length === 0
                                         ? <div style={{ fontSize:11, opacity:0.3, padding:'8px 0' }}>Fără date</div>
@@ -929,7 +1041,7 @@ export default function Dashboard() {
             {/* TOP LOCAȚII — grid 2 coloane */}
             <div style={C({})}>
                 <h3 className="card-heading">{t('Top Locații', 'Top Locations', 'Лучшие локации')} — {an.pL}</h3>
-                {an.topRests.length === 0 ? <div style={{ opacity:0.4, fontSize:13 }}>Fără date</div> :
+                {an.topRests.length === 0 ? <div style={{ opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 32px' }}>
                 {an.topRests.map((item, i) => {
                     const col = RC[i % RC.length]
@@ -951,7 +1063,7 @@ export default function Dashboard() {
                             </div>
                             <div style={{ textAlign:'right' }}>
                                 <div style={{ fontSize:12, fontWeight:800, color:col }}>{Math.round(item.rev).toLocaleString('ro-RO')} RON</div>
-                                <div style={{ fontSize:10, opacity:0.5 }}>{item.orders} cmd</div>
+                                <div style={{ fontSize:10, opacity:0.5 }}>{item.orders} {t('cmd', 'ord', 'зак')}</div>
                             </div>
                         </div>
                     )
@@ -966,8 +1078,17 @@ export default function Dashboard() {
                     <table style={{ width:'100%', borderCollapse:'collapse' }}>
                         <thead>
                             <tr style={{ borderBottom:`1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)'}` }}>
-                                {['Platformă','Vânzări','Prev.','Δ Rev','Comenzi','Prev.','Δ Cmd','AOV'].map(h => (
-                                    <th key={h} style={{ padding:'10px 12px', fontSize:11, fontWeight:700, opacity:0.5, textTransform:'uppercase', letterSpacing:'0.4px', textAlign:h==='Platformă'?'left':'right', whiteSpace:'nowrap' }}>{h}</th>
+                                {[
+                                    { key: 'Platformă', label: t('Platformă', 'Platform', 'Платформа') },
+                                    { key: 'Vânzări', label: t('Vânzări', 'Revenue', 'Выручка') },
+                                    { key: 'PrevRev', label: t('Prev.', 'Prev.', 'Пред.') },
+                                    { key: 'DRev', label: `Δ ${t('Rev', 'Rev', 'Выр')}` },
+                                    { key: 'Comenzi', label: t('Comenzi', 'Orders', 'Заказы') },
+                                    { key: 'PrevOrd', label: t('Prev.', 'Prev.', 'Пред.') },
+                                    { key: 'DCmd', label: `Δ ${t('Cmd', 'Ord', 'Зак')}` },
+                                    { key: 'AOV', label: 'AOV' }
+                                ].map(h => (
+                                    <th key={h.key} style={{ padding:'10px 12px', fontSize:11, fontWeight:700, opacity:0.5, textTransform:'uppercase', letterSpacing:'0.4px', textAlign:h.key==='Platformă'?'left':'right', whiteSpace:'nowrap' }}>{h.label}</th>
                                 ))}
                             </tr>
                         </thead>

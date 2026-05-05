@@ -197,7 +197,7 @@ function Layout({ children }) {
         <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif',
             background: isDark
                 ? 'linear-gradient(135deg, #0f0f14 0%, #1a1a2e 30%, #0d1b2a 60%, #12121a 100%)'
-                : 'linear-gradient(135deg, #e0f4f5 0%, #b2e8ec 20%, #d4f0e8 45%, #c8dff0 70%, #dde8f5 100%)',
+                : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
             color: colors.text,
         }}>
             {/* Background blobs for glass effect */}
@@ -220,13 +220,14 @@ function Layout({ children }) {
             </div>
             {/* ─── Sidebar ─── */}
             <aside style={{
-                background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(8,90,97,0.55)',
+                width: SIDEBAR_W,
+                background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(255, 255, 255, 0.75)',
                 backdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
                 WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
-                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)'}`,
-                boxShadow: isDark ? '2px 0 32px rgba(0,0,0,0.5)' : '2px 0 32px rgba(0,80,80,0.2)',
+                borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                boxShadow: isDark ? '2px 0 32px rgba(0,0,0,0.5)' : '2px 0 32px rgba(0,0,0,0.05)',
                 overflowY: 'auto', overflowX: 'hidden',
-                transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)',
+                transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
                 zIndex: 10, position: 'relative',
             }}>
                 {/* GET App Logo */}
@@ -241,7 +242,7 @@ function Layout({ children }) {
                     boxSizing: 'border-box',
                 }}>
                     <img
-                        src="/getapp_smart_food_white.png"
+                        src={isDark || sidebarCollapsed ? "/getapp_smart_food_white.png" : "/getapp_smart_food_black.png"}
                         alt="Logo"
                         style={{
                             height: sidebarCollapsed ? '42px' : '64px',
@@ -265,7 +266,7 @@ function Layout({ children }) {
                                 borderRadius: '10px', textDecoration: 'none',
                                 fontSize: '15px', fontWeight: '600',
                                 letterSpacing: '-0.15px',
-                                color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                 background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -286,7 +287,7 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isStopActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                            color: isStopActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                             background: isStopActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isStopActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isStopActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -314,7 +315,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                            color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -335,7 +336,7 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isOwnProductsActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                            color: isOwnProductsActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                             background: isOwnProductsActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isOwnProductsActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isOwnProductsActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -363,7 +364,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                             letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                            color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -383,7 +384,7 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isMarketingActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                            color: isMarketingActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                             background: isMarketingActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isMarketingActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isMarketingActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -414,7 +415,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                            color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -436,7 +437,7 @@ function Layout({ children }) {
                                 borderRadius: '10px', textDecoration: 'none',
                                 fontSize: '15px', fontWeight: '600',
                                 letterSpacing: '-0.15px',
-                                color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                 background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -455,7 +456,7 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isDeliveryActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                            color: isDeliveryActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                             background: isDeliveryActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isDeliveryActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isDeliveryActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -485,7 +486,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                 letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                            color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                             background: isActive ? 'rgba(43,190,200,0.08)' : 'transparent',
                                             transition: 'all 0.15s',
                                         }}>
@@ -505,7 +506,7 @@ function Layout({ children }) {
                             justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                             borderRadius: '10px', cursor: 'pointer',
                             fontSize: '15px', fontWeight: '600',
-                            color: isUsersActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                            color: isUsersActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                             background: isUsersActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isUsersActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isUsersActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -534,7 +535,7 @@ function Layout({ children }) {
                                             textDecoration: 'none', fontSize: '15px',
                                             letterSpacing: '-0.15px',
                                             fontWeight: isActive ? '700' : '500',
-                                            color: isActive ? (isDark ? '#2bbec8' : '#ffffff') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.7)'),
+                                            color: isActive ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)'),
                                             background: isActive ? (isDark ? 'rgba(43,190,200,0.12)' : 'rgba(255,255,255,0.2)') : 'transparent',
                                             backdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
                                             WebkitBackdropFilter: isActive ? 'blur(10px) saturate(180%)' : 'none',
@@ -551,7 +552,7 @@ function Layout({ children }) {
                     {/* Sidebar Footer */}
                     <div style={{ padding: '16px', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
                         {!sidebarCollapsed && (
-                            <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ color: isDark ? colors.textSecondary : '#ffffff', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>www.getapp.ro</a>
+                            <a href="https://www.getapp.ro" target="_blank" rel="noopener noreferrer" style={{ color: isDark ? colors.textSecondary : 'rgba(0,0,0,0.6)', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>www.getapp.ro</a>
                         )}
                     </div>
                 </nav>
@@ -570,7 +571,7 @@ function Layout({ children }) {
                     boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', zIndex: 100,
-                    color: isDark ? colors.textSecondary : '#116d74',
+                    color: isDark ? colors.textSecondary : '#6366F1',
                     transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
                 }}
                 title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
@@ -585,17 +586,16 @@ function Layout({ children }) {
                 <header style={{
                     height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                     padding: '0 24px', gap: '16px',
-                    background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(8,90,97,0.55)',
+                    background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(255, 255, 255, 0.75)',
                     backdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
                     WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)'}`,
-                    boxShadow: isDark ? '0 2px 32px rgba(0,0,0,0.5)' : '0 2px 32px rgba(0,80,80,0.2)',
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: isDark ? '0 2px 32px rgba(0,0,0,0.5)' : '0 2px 32px rgba(0,0,0,0.05)',
                     position: 'sticky', top: 0, zIndex: 50,
                 }}>
-
-                    {/* ── Theme circle toggle ── */}
+                        {/* ── Theme circle toggle ── */}
                     <div onClick={toggleTheme}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, boxSizing: 'border-box', borderRadius: '50%', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, transition: 'all 0.18s', userSelect: 'none', color: isDark ? colors.textSecondary : '#ffffff', flexShrink: 0 }}>
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, boxSizing: 'border-box', borderRadius: '50%', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', border: `1px solid ${isDark ? colors.border : 'rgba(0,0,0,0.1)'}`, transition: 'all 0.18s', userSelect: 'none', color: isDark ? colors.textSecondary : '#000000', flexShrink: 0 }}>
                         {isDark ? (
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                         ) : (
@@ -604,7 +604,7 @@ function Layout({ children }) {
                     </div>
 
                     {/* ── Language segmented control ── */}
-                    <div style={{ display: 'flex', padding: '2px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', borderRadius: '22px', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, gap: '2px', height: 36, alignItems: 'center', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'flex', padding: '2px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', borderRadius: '22px', border: `1px solid ${isDark ? colors.border : 'rgba(0,0,0,0.08)'}`, gap: '2px', height: 36, alignItems: 'center', boxSizing: 'border-box' }}>
                         {[{ code: 'ro', label: 'RO', flag: '🇷🇴' }, { code: 'en', label: 'EN', flag: '🇬🇧' }, { code: 'ru', label: 'RU', flag: '🇷🇺' }].map(l => (
                             <button key={l.code} onClick={() => setLang(l.code)}
                                 style={{
@@ -612,7 +612,7 @@ function Layout({ children }) {
                                     fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
                                     transition: 'all 0.18s', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     background: lang === l.code ? (isDark ? 'rgba(99,102,241,0.25)' : '#ffffff') : 'transparent',
-                                    color: lang === l.code ? (isDark ? '#2bbec8' : '#116d74') : (isDark ? colors.textSecondary : 'rgba(255,255,255,0.8)'),
+                                    color: lang === l.code ? (isDark ? '#2bbec8' : '#000000') : (isDark ? colors.textSecondary : 'rgba(0,0,0,0.5)'),
                                     boxShadow: lang === l.code ? '0 1px 4px rgba(0,0,0,0.14)' : 'none',
                                 }}>
                                 {lang === l.code && <span style={{ marginRight: '4px', fontSize: '13px', lineHeight: 1 }}>{l.flag}</span>}
@@ -628,8 +628,8 @@ function Layout({ children }) {
                     {showUserPanel && <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setShowUserPanel(false)} />}
                     <div style={{ position: 'relative' }}>
                         <div onClick={() => { setShowUserPanel(s => !s) }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 2px 2px 12px', height: 36, boxSizing: 'border-box', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${isDark ? colors.border : 'rgba(255,255,255,0.3)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', transition: 'all 0.18s' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: isDark ? colors.text : '#ffffff', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 2px 2px 12px', height: 36, boxSizing: 'border-box', borderRadius: '22px', cursor: 'pointer', border: `1px solid ${isDark ? colors.border : 'rgba(0,0,0,0.1)'}`, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', backdropFilter: 'blur(10px) saturate(180%)', WebkitBackdropFilter: 'blur(10px) saturate(180%)', transition: 'all 0.18s' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: isDark ? colors.text : '#000000', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {dbUser?.display_name || dbUser?.full_name || user?.email?.split('@')[0] || 'User'}
                             </span>
                             <div style={{ width: 28, height: 28, borderRadius: '50%', background: dbUser?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', fontWeight: '700', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 6px rgba(99,102,241,0.35)' }}>

@@ -174,40 +174,94 @@ export class SalesSync {
                                 } catch(e) {}
                                 if (!placed_at) placed_at = new Date().toISOString()
                                     
-                                let order_id = o.order.id || o.id
+                                const baseId = o.order.id || o.id
+                                const uniqueOrderId = baseId + '_' + r.id
+
+                                const bName = (r.brands?.name || '').toLowerCase()
+                                const isSmashRest = bName.includes('smash')
+                                const isWlsRest = bName.includes('we love')
+                                const isIkuraRest = bName.includes('ikura')
+                                const isSmRest = !isSmashRest && !isWlsRest && !isIkuraRest
+
+                                const orderTypeName = (o.order.orderType?.name || '').toLowerCase()
+                                const isIkuraOrder = orderTypeName.includes('_i ') || orderTypeName.includes('ikura')
+                                const isWlsOrder = orderTypeName.includes('_w ') || orderTypeName.includes('wls') || orderTypeName.includes('we love')
 
                                 const items = []
+                                let orderSum = 0
+
                                 if (o.order.items) {
                                     for (const it of o.order.items) {
                                         if (it.type === 'Product' && it.product) {
+                                            const pName = (it.product.name || '').toLowerCase()
+                                            
+                                            if (isSmashRest) {
+                                                // No filter for Smash, it has its own server
+                                            } else if (isWlsRest) {
+                                                // If the whole order is marked WLS, keep all items (except maybe obvious Sushi Master ones)
+                                                // Otherwise fallback to item level check
+                                                if (!isWlsOrder) {
+                                                    const hasWlsWords = pName.includes('we love') || pName.includes('wls') || pName.includes('w_') || pName.includes('love ') || pName.includes('delivery') || pName.includes('cola') || pName.includes('apa minerala') || pName.includes('apa plata');
+                                                    if (!hasWlsWords) continue;
+                                                } else {
+                                                    // Even if it's a WLS order, exclude obvious SM products if they got mixed in
+                                                    if (pName.includes('sushimaster') || pName.includes('shanghai') || pName.includes('big in japan')) continue;
+                                                }
+                                            } else if (isIkuraRest) {
+                                                if (!isIkuraOrder) {
+                                                    const hasIkuraWords = pName.includes('ikura') || pName.startsWith('i_') || pName.includes(' i_') || pName.includes('delivery') || pName.includes('cola') || pName.includes('apa minerala') || pName.includes('apa plata');
+                                                    if (!hasIkuraWords) continue;
+                                                } else {
+                                                    if (pName.includes('sushimaster') || pName.includes('shanghai') || pName.includes('big in japan')) continue;
+                                                }
+                                            } else if (isSmRest) {
+                                                if (pName.includes('we love') || pName.includes('wls') || pName.includes('w_') || pName.includes('love ') || pName.includes('ikura') || pName.startsWith('i_') || pName.includes(' i_') || pName.includes('burger') || pName.includes('smash')) {
+                                                    continue
+                                                }
+                                            }
+
+                                            const itemSum = it.resultSum || it.price || 0
+                                            orderSum += itemSum
+
                                             items.push({
                                                 product_name: it.product.name,
                                                 price: it.price,
                                                 amount: it.amount,
                                                 resultSum: it.resultSum,
-                                                quantity: it.amount
+                                                sum: itemSum,
+                                                quantity: it.amount || 1
                                             })
                                         }
                                     }
                                 }
 
+                                if (items.length === 0) continue
+
                                 dbRows.push({
                                     restaurant_id: r.id,
-                                    order_id: order_id,
+                                    restaurant_name: r.name,
+                                    order_id: uniqueOrderId,
                                     platform: platform,
-                                    total_amount: total_amount,
+                                    total_amount: orderSum,
                                     placed_at: placed_at,
                                     items: items
                                 })
                             }
 
-                            if (dbRows.length > 0) {
+                            // Deduplicate before upsert
+                            const uniqueRowsMap = new Map()
+                            for (const row of dbRows) {
+                                uniqueRowsMap.set(row.order_id, row)
+                            }
+                            const uniqueDbRows = Array.from(uniqueRowsMap.values())
+
+                            if (uniqueDbRows.length > 0) {
                                 const { error: insErr } = await supabase
                                     .from('platform_sales')
-                                    .upsert(dbRows, { onConflict: 'order_id' })
+                                    .upsert(uniqueDbRows, { onConflict: 'order_id' })
                                 
                                 if (!insErr) {
-                                    totalUpserted += dbRows.length
+                                    totalUpserted += uniqueDbRows.length
                                 }
                             }
                         }

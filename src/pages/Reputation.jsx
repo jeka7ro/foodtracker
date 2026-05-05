@@ -645,7 +645,7 @@ export default function Reputation() {
                         <button 
                             onClick={() => document.getElementById('rev-upload').click()}
                             disabled={isUploading}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', backgroundColor: '#116d74', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: isUploading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(17,109,116,0.2)' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', backgroundColor: '#6366F1', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: isUploading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(99,102,241,0.2)' }}>
                             <UploadCloud size={14} />
                             {isUploading ? '...' : 'Importă Excel'}
                         </button>

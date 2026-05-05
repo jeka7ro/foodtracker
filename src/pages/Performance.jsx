@@ -7,6 +7,17 @@ import { Line, Bar, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Respons
 import { Activity, ShoppingBag, CreditCard, Package, RefreshCw } from 'lucide-react'
 import './Performance.css'
 
+// ── Timezone: ora României (Europe/Bucharest) ──
+const toRO = (isoStr) => new Date(new Date(isoStr).toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }))
+
+const roMidnight = (year, month, day = 1) => {
+    const probe = new Date(year, month, day, 12, 0, 0)
+    const roStr = probe.toLocaleString('en-US', { timeZone: 'Europe/Bucharest', hour12: false })
+    const roDate = new Date(roStr)
+    const offsetMs = probe.getTime() - roDate.getTime()
+    const midnight = new Date(year, month, day, 0, 0, 0)
+    return new Date(midnight.getTime() + offsetMs).toISOString()
+}
 // ── Romanian holiday utilities ──────────────────────────────────────────────
 function orthodoxEaster(year) {
     const a = year % 19, b = year % 4, c = year % 7
@@ -137,8 +148,15 @@ export default function Performance() {
 
     // Filters
     const platformParam = searchParams.get('platform') || 'all'
+    const brandParam = searchParams.get('b') || 'all'
     const [platformFilter, setPlatformFilter] = useState(platformParam)
-    const [brandFilter, setBrandFilter] = useState('all')
+    const [brandFilter, setBrandFilter] = useState(brandParam)
+    
+    useEffect(() => {
+        setPlatformFilter(searchParams.get('platform') || 'all')
+        setBrandFilter(searchParams.get('b') || 'all')
+    }, [searchParams])
+
     const [cityFilter, setCityFilter] = useState('all')
     const [restaurantFilter, setRestaurantFilter] = useState('all')
     const initialPeriod = localStorage.getItem('analyticsActivePeriod') || 'week'
@@ -319,38 +337,41 @@ export default function Performance() {
 
         const fetchRealData = async () => {
              try {
-                const now = new Date()
-                let fromDate = new Date(now)
-                let toDate = new Date(now)
+                const nowRO = toRO(new Date().toISOString())
+                const yr = nowRO.getFullYear()
+                const mo = nowRO.getMonth()
+                const day = nowRO.getDate()
+                
+                let fromIso, toIso
                 
                 if (activePeriod === 'today') {
-                    fromDate.setHours(0,0,0,0)
+                    fromIso = roMidnight(yr, mo, day)
+                    toIso = new Date().toISOString()
                 } else if (activePeriod === 'yesterday') {
-                    fromDate.setDate(fromDate.getDate() - 1)
-                    fromDate.setHours(0,0,0,0)
-                    toDate.setHours(0,0,0,0) 
+                    fromIso = roMidnight(yr, mo, day - 1)
+                    toIso = new Date(new Date(roMidnight(yr, mo, day)).getTime() - 1000).toISOString()
                 } else if (activePeriod === 'week') {
-                    fromDate.setDate(fromDate.getDate() - 7)
-                    fromDate.setHours(0,0,0,0)
+                    fromIso = roMidnight(yr, mo, day - 6)
+                    toIso = new Date().toISOString()
                 } else if (activePeriod === 'month') {
-                    fromDate = new Date(now.getFullYear(), now.getMonth(), 1)
-                    toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+                    fromIso = roMidnight(yr, mo, 1)
+                    toIso = new Date().toISOString()
                 } else if (activePeriod === 'lastmonth') {
-                    fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-                    toDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
+                    fromIso = roMidnight(yr, mo - 1, 1)
+                    toIso = new Date(new Date(roMidnight(yr, mo, 1)).getTime() - 1000).toISOString()
                 } else if (activePeriod === 'year') {
-                    fromDate = new Date(now.getFullYear(), 0, 1)
-                    toDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+                    fromIso = roMidnight(yr, 0, 1)
+                    toIso = new Date().toISOString()
                 } else if (activePeriod === 'custom') {
                     if (customStartDate) {
-                        fromDate = new Date(customStartDate)
-                        fromDate.setHours(0,0,0,0)
-                    } else fromDate = new Date(2000, 0, 1)
+                        const d = new Date(customStartDate)
+                        fromIso = roMidnight(d.getFullYear(), d.getMonth(), d.getDate())
+                    } else fromIso = roMidnight(2000, 0, 1)
                     
                     if (customEndDate) {
-                        toDate = new Date(customEndDate)
-                        toDate.setHours(23,59,59,999)
-                    } else toDate = new Date()
+                        const d = new Date(customEndDate)
+                        toIso = new Date(new Date(roMidnight(d.getFullYear(), d.getMonth(), d.getDate() + 1)).getTime() - 1000).toISOString()
+                    } else toIso = new Date().toISOString()
                 }
 
                 const isYearlyView = activePeriod === 'year' || periodDays > 90
@@ -367,8 +388,9 @@ export default function Performance() {
                     for (let c = 0; c < concurrency; c++) {
                         const start = i + c * step
                         let query = supabase.from('platform_sales').select(selectFields)
-                            .gte('placed_at', fromDate.toISOString())
-                            .lte('placed_at', toDate.toISOString())
+                            .gte('placed_at', fromIso)
+                            .lte('placed_at', toIso)
+                            .order('id', { ascending: true })
                             .range(start, start + step - 1)
                         
                         if (platformFilter !== 'all') query = query.eq('platform', platformFilter)
@@ -425,7 +447,7 @@ export default function Performance() {
         }
 
         realSalesArray.forEach(sale => {
-             const dt = new Date(sale.placed_at)
+             const dt = toRO(sale.placed_at)
              let dk = ''; let sortKey = 0
              if (isYearlyView) {
                  const mlistFull = t('months')
@@ -550,7 +572,7 @@ export default function Performance() {
         let maxS = 0
         const map = {}
         realSalesArray.forEach(sale => {
-            const dt = new Date(sale.placed_at)
+            const dt = toRO(sale.placed_at)
             const dName = allDaysTrans[dt.getDay()]
             const hr = dt.getHours()
             const key = `${dName}-${hr}`
@@ -578,7 +600,7 @@ export default function Performance() {
                 const rInfo = restaurants.find(r => r.id === sale.restaurant_id)
                 const bInfo = rInfo ? brands.find(b => b.id === rInfo.brand_id) : null
 
-                const dt = new Date(sale.placed_at)
+                const dt = toRO(sale.placed_at)
                 const dayStr = dayMap[dt.getDay()]
                 const locStr = rInfo ? rInfo.name : `Rest. ${sale.restaurant_id}`
                 const platStr = sale.platform || sale.source || 'iiko'
@@ -647,7 +669,7 @@ export default function Performance() {
     }
 
     const platformTabs = [
-        { id: 'all', label: t('allPlatforms'), color: '#116d74' },
+        { id: 'all', label: t('allPlatforms'), color: '#6366F1' },
         { id: 'iiko', label: t('ecosystem'), color: '#FF3366' },
         { id: 'glovo', label: 'Glovo', color: '#FFC244' },
         { id: 'wolt', label: 'Wolt', color: '#009DE0' },
@@ -746,7 +768,7 @@ export default function Performance() {
             <div className="kpi-grid">
                 <div className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}>
                     <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
-                        <div style={{padding:'8px', background:'rgba(17,109,116,0.1)', borderRadius:'10px', color:'#116d74'}}><CreditCard size={20} /></div>
+                        <div style={{padding:'8px', background:'rgba(99,102,241,0.1)', borderRadius:'10px', color:'#6366F1'}}><CreditCard size={20} /></div>
                         <span className="kpi-title" style={{ margin: 0, fontSize: '13px', paddingTop: '2px' }}>{t('totalRevenue')}</span>
                     </div>
                     <div className="kpi-value" style={{ margin: 0, fontSize: '20px' }}>
@@ -762,19 +784,17 @@ export default function Performance() {
                 >
                     <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
                         <div style={{padding:'8px', background:'rgba(16,185,129,0.1)', borderRadius:'10px', color:'#10b981'}}><ShoppingBag size={20} /></div>
-                        <span className="kpi-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0, fontSize: '13px', paddingTop: '2px' }}>
+                        <span className="kpi-title" style={{ margin: 0, fontSize: '13px', paddingTop: '2px', whiteSpace: 'nowrap' }}>
                             Comenzi & Produse
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                         </span>
                     </div>
                     
-                    <div className="kpi-value" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap', margin: 0 }}>
-                         <div style={{display: 'flex', alignItems: 'baseline', gap: '4px'}}>
+                    <div className="kpi-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', margin: 0 }}>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px', fontSize: '18px', lineHeight: 1}}>
                               {isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}
                               <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comenzi</span>
                          </div>
-                         <div style={{ width: '1px', background: 'var(--glass-border)', height: '16px' }}></div>
-                         <div style={{display: 'flex', alignItems: 'baseline', gap: '4px'}}>
+                         <div style={{display: 'flex', alignItems: 'baseline', gap: '6px', fontSize: '18px', lineHeight: 1}}>
                               {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
                               <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Produse</span>
                          </div>
@@ -865,7 +885,7 @@ export default function Performance() {
                                                 const holidays = getRomanianHolidays(yr)
                                                 const holiday = holidays[ddMM]
                                                 const isLegal = holiday?.legal
-                                                const textColor = isLegal ? '#f59e0b' : isWeekend ? '#116d74' : 'var(--text-secondary)'
+                                                const textColor = isLegal ? '#f59e0b' : isWeekend ? '#6366F1' : 'var(--text-secondary)'
                                                 
                                                 return (
                                                     <g style={{ cursor: holiday ? 'help' : 'default' }}>
@@ -904,8 +924,8 @@ export default function Performance() {
                                 <Line yAxisId="right" type="monotone" dataKey="orders" name={t('orders')} stroke="#f97316" strokeWidth={4} dot={{ strokeWidth: 2, r: 4, fill: '#fff' }} activeDot={{ r: 8, stroke: '#f97316', strokeWidth: 4, fill: '#fff' }} />
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#116d74" stopOpacity={1}/>
-                                        <stop offset="100%" stopColor="#0d5156" stopOpacity={0.4}/>
+                                        <stop offset="0%" stopColor="#6366F1" stopOpacity={1}/>
+                                        <stop offset="100%" stopColor="#4F46E5" stopOpacity={0.4}/>
                                     </linearGradient>
                                 </defs>
                             </ComposedChart>
@@ -937,7 +957,7 @@ export default function Performance() {
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <div style={{ flex: 1, height: '8px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '4px' }}></div>
+                                                <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #4F46E5 0%, #10b981 100%)', borderRadius: '4px' }}></div>
                                             </div>
                                             <div style={{ color: 'var(--text-color)', fontSize: '12px', fontWeight: 800, flexShrink: 0 }}>
                                                 {loc.sales.toLocaleString('ro-RO')} lei
@@ -1191,7 +1211,7 @@ export default function Performance() {
                                                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{loc.name}</span>
                                                     {restaurantObj?.city && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{restaurantObj.city}</span>}
                                                     <div style={{ marginTop: '6px', height: '4px', background: 'var(--glass-border)', borderRadius: '2px', overflow: 'hidden', maxWidth: '85%' }}>
-                                                        <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #0d5156 0%, #10b981 100%)', borderRadius: '2px' }}></div>
+                                                        <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #4F46E5 0%, #10b981 100%)', borderRadius: '2px' }}></div>
                                                     </div>
                                                 </div>
                                             </div>

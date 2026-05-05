@@ -1,18 +1,25 @@
+/* ─────────────────────────────────────────────────────────────
+   Performance.css — Design System Apple / Google Style
+   Accent: Indigo #6366F1  |  Surface: neutral glass
+   NO teal, NO turquoise, NO emerald
+───────────────────────────────────────────────────────────── */
+
 .perf-container {
     padding: 32px 40px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 28px;
-    font-family: "Outfit", "Inter", sans-serif;
-    animation: fadeIn 0.4s ease-out;
+    gap: 24px;
+    font-family: -apple-system, 'SF Pro Display', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Header ── */
 .perf-header {
     display: flex;
     justify-content: space-between;
@@ -23,75 +30,77 @@
     margin: 0;
     font-size: 22px;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--text-color, #111), var(--primary-color, #116d74));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+    color: var(--text-color, #111);
 }
 
 .perf-subtitle {
-    margin: 6px 0 0;
-    font-size: 15px;
-    opacity: 0.7;
+    margin: 4px 0 0;
+    font-size: 14px;
+    opacity: 0.55;
+    font-weight: 500;
 }
 
 .perf-actions {
     display: flex;
-    gap: 14px;
+    gap: 10px;
 }
 
+/* ── Buttons — Apple/Google style, NO teal ── */
 .btn-primary {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 8px 18px;
     height: 36px;
-    background: linear-gradient(135deg, #116d74 0%, #0d5156 100%);
+    background: #6366F1;
     color: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 9999px;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(17,109,116,0.25);
-    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 4px 14px rgba(99,102,241,0.3);
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s ease;
     white-space: nowrap;
+    user-select: none;
 }
-
 .btn-primary:not(:disabled):hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 20px rgba(17,109,116,0.35);
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 6px 20px rgba(99,102,241,0.35);
 }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
 
 .btn-secondary {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
     height: 36px;
-    background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+    background: var(--glass-bg, rgba(255,255,255,0.05));
     border: var(--glass-border, 1px solid rgba(0,0,0,0.1));
     color: var(--text-color, #111);
-    border-radius: 10px;
+    border-radius: 9999px;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     white-space: nowrap;
 }
-
 .btn-secondary:hover {
-    background: var(--glass-bg-hover, rgba(255, 255, 255, 0.1));
-    transform: translateY(-2px);
+    background: var(--glass-bg-hover, rgba(0,0,0,0.04));
+    transform: translateY(-1px);
 }
 
+/* ── Filter Bar ── */
 .filter-bar {
     display: flex;
     gap: 12px;
     align-items: center;
-    background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-    border: var(--glass-border, 1px solid rgba(0,0,0,0.1));
-    padding: 12px 16px;
+    background: var(--glass-bg, rgba(255,255,255,0.05));
+    border: var(--glass-border, 1px solid rgba(0,0,0,0.08));
+    padding: 10px 16px;
     border-radius: 18px;
     backdrop-filter: blur(12px);
     overflow-x: auto;
@@ -101,29 +110,29 @@
 
 .platform-tabs {
     display: flex;
-    gap: 8px;
-    border-right: var(--glass-border, 1px solid rgba(0,0,0,0.1));
-    padding-right: 16px;
+    gap: 6px;
+    border-right: var(--glass-border, 1px solid rgba(0,0,0,0.08));
+    padding-right: 14px;
 }
 
 .platform-tab {
     padding: 0 14px;
-    height: 36px;
-    border-radius: 10px;
+    height: 34px;
+    border-radius: 9999px;
     border: none;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     white-space: nowrap;
 }
 
 .select-filter {
     padding: 0 12px;
-    height: 36px;
-    border-radius: 10px;
+    height: 34px;
+    border-radius: 9999px;
     border: var(--glass-border, 1px solid rgba(0,0,0,0.1));
-    background: var(--input-bg, rgba(255, 255, 255, 0.8));
+    background: var(--input-bg, rgba(255,255,255,0.8));
     color: var(--text-color, #111);
     font-weight: 600;
     font-size: 13px;
@@ -131,86 +140,94 @@
     cursor: pointer;
 }
 
+/* ── Period Tabs — NO teal ── */
 .period-tabs {
     margin-left: auto;
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
+    background: var(--glass-bg, rgba(0,0,0,0.04));
+    padding: 3px;
+    border-radius: 9999px;
 }
 
 .period-tab {
-    padding: 0 12px;
-    height: 30px;
-    border-radius: 8px;
+    padding: 0 13px;
+    height: 28px;
+    border-radius: 9999px;
     border: none;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     background: transparent;
     white-space: nowrap;
+    color: var(--text-secondary, #64748b);
 }
 .period-tab.active {
-    background: #116d74;
+    background: #6366F1;
     color: #fff;
-    box-shadow: 0 3px 8px rgba(17,109,116,0.3);
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
 }
 
+/* ── KPI Grid ── */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+    gap: 20px;
 }
 
+/* ── Glass Card ── */
 .glass-card {
-    background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+    background: var(--glass-bg, rgba(255,255,255,0.05));
     border: var(--glass-border, 1px solid rgba(0,0,0,0.06));
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
     backdrop-filter: blur(20px);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-
 .glass-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.07);
 }
 
+/* ── Typography ── */
 .kpi-title {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    opacity: 0.6;
+    letter-spacing: 0.6px;
+    opacity: 0.5;
 }
 
 .kpi-value {
     font-size: 26px;
     font-weight: 800;
-    margin: 10px 0 0;
-    background: linear-gradient(to right, var(--text-color, #111), #6b7280);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin: 8px 0 0;
+    letter-spacing: -0.5px;
+    color: var(--text-color, #111);
 }
 
+/* ── Charts ── */
 .charts-row {
     display: grid;
     grid-template-columns: minmax(0, 85fr) minmax(0, 15fr);
-    gap: 24px;
+    gap: 20px;
 }
 
 .card-heading {
-    margin: 0 0 20px 0;
-    font-size: 15px;
+    margin: 0 0 18px 0;
+    font-size: 14px;
     font-weight: 700;
+    letter-spacing: -0.2px;
 }
 
+/* ── Heatmap ── */
 .heatmap-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .heatmap-cell {
@@ -220,35 +237,36 @@
     align-items: center;
     justify-content: center;
     height: 44px;
-    transition: transform 0.2s ease, filter 0.2s ease;
+    transition: transform 0.15s ease, filter 0.15s ease;
     cursor: crosshair;
 }
-
 .heatmap-cell:hover {
     transform: scale(1.05);
-    filter: brightness(1.2);
+    filter: brightness(1.15);
     z-index: 10;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
+/* ── List Row ── */
 .list-row {
     display: grid;
     grid-template-columns: 40px 1fr auto;
-    padding: 16px 20px;
+    padding: 14px 18px;
     align-items: center;
-    transition: background 0.2s ease;
+    transition: background 0.15s ease;
     border-radius: 12px;
 }
 .list-row:hover {
     background: var(--glass-bg-hover, rgba(0,0,0,0.02));
 }
 
+/* ── Custom Date ── */
 .custom-date-wrap {
     display: flex;
     align-items: center;
     gap: 6px;
-    border-right: var(--glass-border, 1px solid rgba(0,0,0,0.1));
+    border-right: var(--glass-border, 1px solid rgba(0,0,0,0.08));
     padding-right: 12px;
     margin-right: 6px;
 }
