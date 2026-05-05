@@ -2010,17 +2010,23 @@ app.get('/api/own-brands/stopped-products', async (req, res) => {
     }
 })
 
-// GET /api/nomenclature?orgId=xxx
+// GET /api/nomenclature?orgId=xxx&server=smashme-co.syrve.online
 app.get('/api/nomenclature', async (req, res) => {
-    const { orgId } = req.query;
+    const { orgId, server } = req.query;
     if (!orgId) return res.status(400).json({ error: 'orgId is required' });
 
     try {
-        const IIKO_BASE = 'https://api-eu.iiko.services/api/1';
+        // Syrve API always uses the same base URL, but we need different API keys per brand
+        const isSmash = server && server.includes('smashme')
+        const IIKO_BASE = 'https://api-eu.syrve.live/api/1';
+        const apiLogin = isSmash
+            ? '124d0880f4b44717b69ee21d45fc2656'
+            : 'a1fe30cdeb934aa0af01b6a35244b7f0';
+
         const tokenResp = await fetch(`${IIKO_BASE}/access_token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apiLogin: 'a1fe30cdeb934aa0af01b6a35244b7f0' })
+            body: JSON.stringify({ apiLogin })
         });
         if (!tokenResp.ok) return res.status(502).json({ error: 'iiko auth failed' });
         const { token } = await tokenResp.json();

@@ -120,39 +120,60 @@ export default function ProductAnalytics() {
     useEffect(() => {
         async function fetchImage() {
             try {
-                const { data: rests } = await supabase.from('restaurants').select('iiko_config').not('iiko_config', 'is', null)
+                const { data: rests } = await supabase.from('restaurants').select('iiko_config, iiko_restaurant_id, brands(name)').not('iiko_config', 'is', null)
                 if (!rests || rests.length === 0) return
-                const orgId = rests.find(r => r.iiko_config?.organizationId)?.iiko_config?.organizationId
-                if (!orgId) return
+
+                // Collect all unique org IDs across all restaurants and servers, along with their assigned server
+                const orgTargets = []
+                const seenOrg = new Set()
+                rests.forEach(r => {
+                    const orgId = r.iiko_config?.organizationId || r.iiko_restaurant_id
+                    if (!orgId || seenOrg.has(orgId)) return
+                    seenOrg.add(orgId)
+                    const brandName = (r.brands?.name || '').toLowerCase()
+                    const server = brandName.includes('smash') ? 'smashme-co.syrve.online' : 'api-eu.syrve.live'
+                    orgTargets.push({ orgId, server })
+                })
+                if (orgTargets.length === 0) return
 
                 const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
-                const resp = await fetch(`${workerUrl}/api/nomenclature?orgId=${orgId}`, {
-                    headers: { 'x-iiko-token': IIKO_API_KEY }
-                })
-                if (resp.ok) {
-                    const data = await resp.json()
-                const cleanNameText = decodedName.split('[')[0].trim().toLowerCase();
-                const excludeWords = ['sushimaster', 'sushi', 'master', 'bucuresti', 'brasov', 'constanta', 'iasi'];
-                let cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ')
-                    .filter(w => w.length > 2 && !excludeWords.includes(w));
                 
-                let found = null;
-                const fullList = [...(data.products || []), ...(data.groups || [])];
+                // Strip prefixes to get a clean search name
+                let cleanName = decodedName.split('[')[0].trim()
+                if (cleanName.toUpperCase().startsWith('P_')) cleanName = cleanName.substring(2)
+                if (cleanName.toUpperCase().startsWith('I_')) cleanName = cleanName.substring(2)
+                if (cleanName.toUpperCase().startsWith('W_')) cleanName = cleanName.substring(2)
+                const cleanNameText = cleanName.toLowerCase().trim()
                 
-                // Prioritize exact substring match first
-                found = fullList.find(p => p.name?.toLowerCase().includes(cleanNameText));
-                
-                if (!found && cleanWords.length > 0) {
-                    // Fuzzy match using important keywords
-                    found = fullList.find(p => {
-                        const n = p.name?.toLowerCase() || '';
-                        return cleanWords.every(w => n.includes(w));
-                    });
-                }
-                
-                if (found && found.imageLinks && found.imageLinks.length > 0) {
-                    setProductImage(found.imageLinks[0])
-                }
+                const excludeWords = ['sushimaster', 'sushi', 'master', 'bucuresti', 'brasov', 'constanta', 'iasi', 'meniu']
+                const cleanWords = cleanNameText.replace(/[^a-z0-9\s]/g, '').split(' ')
+                    .filter(w => w.length > 2 && !excludeWords.includes(w))
+
+                // Query all orgs in parallel and stop when we find a match
+                for (const { orgId, server } of orgTargets) {
+                    try {
+                        const resp = await fetch(`${workerUrl}/api/nomenclature?orgId=${orgId}&server=${server}`)
+                        if (!resp.ok) continue
+                        const data = await resp.json()
+                        
+                        const fullList = [...(data.products || []), ...(data.groups || [])]
+                        
+                        // 1. Exact substring match
+                        let found = fullList.find(p => p.name?.toLowerCase().includes(cleanNameText))
+                        
+                        // 2. Fuzzy keyword match
+                        if (!found && cleanWords.length > 0) {
+                            found = fullList.find(p => {
+                                const n = p.name?.toLowerCase() || ''
+                                return cleanWords.every(w => n.includes(w))
+                            })
+                        }
+                        
+                        if (found?.imageLinks?.length > 0) {
+                            setProductImage(found.imageLinks[0])
+                            return // Found it, stop searching
+                        }
+                    } catch(e) { /* continue to next org */ }
                 }
             } catch(e) { console.log('Image fetch fail', e) }
         }
@@ -367,14 +388,14 @@ export default function ProductAnalytics() {
                 .product-hero {
                     display: flex; gap: 20px; align-items: stretch;
                     padding: 20px; border-radius: 16px;
-                    background: ${isDark ? 'rgba(17,109,116,0.1)' : 'rgba(17,109,116,0.06)'};
-                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(17,109,116,0.15)'};
+                    background: ${isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)'};
+                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(99,102,241,0.15)'};
                     box-shadow: inset 0 2px 10px rgba(255,255,255,0.4);
                 }
                 .hero-tabs-card {
                     display: flex; align-items: center; padding: 20px; border-radius: 16px;
-                    background: ${isDark ? 'rgba(17,109,116,0.1)' : 'rgba(17,109,116,0.06)'};
-                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(17,109,116,0.15)'};
+                    background: ${isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)'};
+                    border: 1px solid ${isDark ? 'rgba(20, 184, 166, 0.2)' : 'rgba(99,102,241,0.15)'};
                     box-shadow: inset 0 2px 10px rgba(255,255,255,0.4);
                 }
                 .hero-img {
@@ -394,14 +415,14 @@ export default function ProductAnalytics() {
                     border: 1px solid var(--glass-border); text-decoration: none;
                     font-weight: 700; transition: all 0.2s; cursor: pointer;
                 }
-                .back-btn:hover { background: #0d9488; color: #fff; transform: translateY(-2px); border-color: #0d9488; }
+                .back-btn:hover { background: #6366F1; color: #fff; transform: translateY(-2px); border-color: #6366F1; }
                 .tab-row {
                     display: flex; gap: 6px; flex-wrap: wrap; background: var(--glass-bg); padding: 4px; border-radius: 10px; border: var(--glass-border);
                 }
                 .tab-btn {
                     padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;
                 }
-                .tab-btn.active { background: #0d9488; color: #fff; }
+                .tab-btn.active { background: #6366F1; color: #fff; }
                 .tab-btn:not(.active) { background: transparent; color: var(--text-secondary); }
                 .tab-btn:not(.active):hover { background: var(--glass-bg-hover); color: var(--text-color); }
                 
@@ -475,7 +496,7 @@ export default function ProductAnalytics() {
                     )}
                     
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#0d9488', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', display:'flex', alignItems:'center', gap:'6px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#6366F1', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', display:'flex', alignItems:'center', gap:'6px' }}>
                             <ListOrdered size={14}/> PRODUCT ANALYTICS
                         </div>
                         <h1 style={{ fontSize: '22px', fontWeight: '900', color: 'var(--text-color)', margin: '0 0 4px 0', lineHeight: 1.2 }}>{decodedName}</h1>
