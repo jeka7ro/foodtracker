@@ -14,7 +14,7 @@ export class WoltPartnerScraper {
         let browser;
         try {
             browser = await puppeteer.launch({
-                headless: false, // Setat fals ptr debugging & bypass eventual 2FA la primul login
+                headless: true, // Mod invizibil pentru a nu deranja utilizatorul
                 defaultViewport: null,
                 args: ['--start-maximized', '--no-sandbox']
             });

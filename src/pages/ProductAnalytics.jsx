@@ -78,6 +78,7 @@ export default function ProductAnalytics() {
     const [isLoading, setIsLoading] = useState(true)
     const [productImage, setProductImage] = useState(null)
     const [lightboxOpen, setLightboxOpen] = useState(false)
+    const [brandProducts, setBrandProducts] = useState([])  // for brand comparison
     const [selectedRows, setSelectedRows] = useState(new Set())
 
     const t = (key) => {
@@ -101,7 +102,29 @@ export default function ProductAnalytics() {
             colLocation: { ro: 'Locație', en: 'Location', ru: 'Локация' },
             colPlatform: { ro: 'Platformă', en: 'Platform', ru: 'Платформа' },
             colQty: { ro: 'Cantitate', en: 'Quantity', ru: 'Кол-во' },
-            colRev: { ro: 'Total Generat', en: 'Total Generated', ru: 'Итого Выручка' }
+            colRev: { ro: 'Total Generat', en: 'Total Generated', ru: 'Итого Выручка' },
+            cheapest: { ro: 'Cel Mai Ieftin', en: 'Cheapest', ru: 'Самый дешёвый' },
+            priciest: { ro: 'Cel Mai Scump', en: 'Most Expensive', ru: 'Самый дорогой' },
+            priceVariation: { ro: 'Variație Preț', en: 'Price Spread', ru: 'Разброс цены' },
+            locCompared: { ro: 'locații comparate', en: 'locations compared', ru: 'локаций сравнено' },
+            colLocHeader: { ro: 'Locație', en: 'Location', ru: 'Локация' },
+            colPriceDistr: { ro: 'Distribuție preț', en: 'Price distribution', ru: 'Распределение цены' },
+            colAvgPrice: { ro: 'Preț mediu', en: 'Avg. price', ru: 'Средняя цена' },
+            colUnits: { ro: 'Buc.', en: 'Units', ru: 'Шт.' },
+            colScore: { ro: 'Scor', en: 'Score', ru: 'Оценка' },
+            scoreA: { ro: 'Preț echilibrat + vânzări mari', en: 'Balanced price + high sales', ru: 'Баланс цены + высокие продажи' },
+            scoreB: { ro: 'Performanță bună', en: 'Good performance', ru: 'Хорошая производительность' },
+            scoreC: { ro: 'Echilibru mediocru', en: 'Mediocre balance', ru: 'Посредственный баланс' },
+            scoreD: { ro: 'Preț sau volum dezechilibrat', en: 'Price or volume imbalance', ru: 'Дисбаланс цены или объёма' },
+            scoreF: { ro: 'Preț mare + puține vânzări', en: 'High price + low sales', ru: 'Высокая цена + мало продаж' },
+            rowsPerPage: { ro: 'Rânduri pe pagină:', en: 'Rows per page:', ru: 'Строк на странице:' },
+            pageOf: { ro: 'Pagina', en: 'Page', ru: 'Страница' },
+            pageOfSep: { ro: 'din', en: 'of', ru: 'из' },
+            brandCompTitle: { ro: 'Eficiență Produse — Acelaşi Brand', en: 'Product Efficiency — Same Brand', ru: 'Эффективность Продуктов — Тот же Бренд' },
+            brandCompSub: { ro: 'Scor compozit: venituri (50%) + acoperire locații (30%) + frecvență comenzi (20%)', en: 'Composite score: revenue (50%) + location coverage (30%) + order frequency (20%)', ru: 'Композитный балл: выручка (50%) + охват локаций (30%) + частота заказов (20%)' },
+            promoteLabel: { ro: 'Promovează', en: 'Promote', ru: 'Продвигай' },
+            reviewLabel: { ro: 'Revizuieşte', en: 'Review', ru: 'Пересмотри' },
+            currentLabel: { ro: 'Curent', en: 'Current', ru: 'Текущий' },
         }
         return d[key]?.[lang || 'ro'] || key
     }
@@ -179,6 +202,78 @@ export default function ProductAnalytics() {
         }
         fetchImage()
     }, [decodedName])
+
+    // ── Brand-wide product comparison ──
+    useEffect(() => {
+        async function loadBrandProducts() {
+            const now = new Date()
+            let fromDate = new Date(now)
+            let toDate = new Date(now)
+            if (activePeriod === 'today') { fromDate.setHours(0,0,0,0) }
+            else if (activePeriod === 'yesterday') { fromDate.setDate(fromDate.getDate()-1); fromDate.setHours(0,0,0,0); toDate.setHours(0,0,0,0) }
+            else if (activePeriod === 'week') { fromDate.setDate(fromDate.getDate()-7); fromDate.setHours(0,0,0,0) }
+            else if (activePeriod === 'month') { fromDate = new Date(now.getFullYear(), now.getMonth(), 1) }
+            else if (activePeriod === 'lastmonth') { fromDate = new Date(now.getFullYear(), now.getMonth()-1, 1); toDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999) }
+            else if (activePeriod === 'year') { fromDate = new Date(now.getFullYear(), 0, 1) }
+
+            // Get restaurant ids for this brand (find brand via decodedName match in recent data)
+            const { data: allSales } = await supabase
+                .from('platform_sales')
+                .select('restaurant_id,total_amount,items,placed_at')
+                .gte('placed_at', fromDate.toISOString())
+                .lte('placed_at', toDate.toISOString())
+                .limit(5000)
+
+            if (!allSales || !allSales.length) return
+
+            // Find which restaurant_ids contain our product
+            const myRestIds = new Set()
+            allSales.forEach(s => {
+                if ((s.items||[]).some(it => parseItemName(it.product_name||it.name) === decodedName))
+                    myRestIds.add(s.restaurant_id)
+            })
+            if (!myRestIds.size) return
+
+            // Only sales from same brand restaurants
+            const brandSales = allSales.filter(s => myRestIds.has(s.restaurant_id))
+
+            // Aggregate all products across brand
+            const prodMap = {}
+            const prodLocs = {}
+            brandSales.forEach(s => {
+                if (!Array.isArray(s.items)) return
+                const totalQty = s.items.reduce((sum, i) => sum + (parseInt(i.quantity)||1), 0)
+                const pricePerUnit = parseFloat(s.total_amount||0) / (totalQty||1)
+                s.items.forEach(it => {
+                    const name = parseItemName(it.product_name||it.name)
+                    if (!name || name.length < 3) return
+                    const qty = parseInt(it.quantity)||1
+                    const rev = pricePerUnit * qty
+                    if (!prodMap[name]) { prodMap[name] = { name, rev: 0, orders: 0, qty: 0 }; prodLocs[name] = new Set() }
+                    prodMap[name].rev += rev
+                    prodMap[name].orders++
+                    prodMap[name].qty += qty
+                    prodLocs[name].add(s.restaurant_id)
+                })
+            })
+
+            const maxRev = Math.max(...Object.values(prodMap).map(p => p.rev), 1)
+            const maxLocs = Math.max(...Object.values(prodLocs).map(s => s.size), 1)
+            const maxOrders = Math.max(...Object.values(prodMap).map(p => p.orders), 1)
+
+            const ranked = Object.values(prodMap)
+                .filter(p => p.orders >= 2)  // ignore noise
+                .map(p => {
+                    const score = (p.rev/maxRev)*50 + (prodLocs[p.name].size/maxLocs)*30 + (p.orders/maxOrders)*20
+                    return { ...p, locs: prodLocs[p.name].size, score: Math.round(score*10)/10 }
+                })
+                .sort((a,b) => b.score - a.score)
+                .slice(0, 20)
+
+            setBrandProducts(ranked)
+        }
+        loadBrandProducts()
+    }, [activePeriod, decodedName])
 
     useEffect(() => {
         setIsLoading(true)
@@ -557,30 +652,30 @@ export default function ProductAnalytics() {
                         {/* Top summary row */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
                             <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', padding: '14px' }}>
-                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 Cel Mai Ieftin</div>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 {t('cheapest')}</div>
                                 <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{globalMin.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{cheapest.name}</div>
                             </div>
                             <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '14px' }}>
-                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 Cel Mai Scump</div>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📍 {t('priciest')}</div>
                                 <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{globalMax.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{priciest.name}</div>
                             </div>
                             <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '14px' }}>
-                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚡ Variație Preț</div>
+                                <div style={{ fontSize: '11px', fontWeight: '700', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚡ {t('priceVariation')}</div>
                                 <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-color)', margin: '4px 0 2px' }}>{spread.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '12px', opacity: 0.6 }}>RON</span></div>
-                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{priceStats.length} locații comparate</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{priceStats.length} {t('locCompared')}</div>
                             </div>
                         </div>
 
                         {/* Score legend */}
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                             {[
-                                { label: 'A', color: '#10b981', bg: 'rgba(16,185,129,0.1)', tip: 'Preț echilibrat + vânzări mari' },
-                                { label: 'B', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', tip: 'Performanță bună' },
-                                { label: 'C', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tip: 'Echilibru mediocru' },
-                                { label: 'D', color: '#f97316', bg: 'rgba(249,115,22,0.1)', tip: 'Preț sau volum dezechilibrat' },
-                                { label: 'F', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', tip: 'Preț mare + puține vânzări' },
+                                { label: 'A', color: '#10b981', bg: 'rgba(16,185,129,0.1)', tip: t('scoreA') },
+                                { label: 'B', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', tip: t('scoreB') },
+                                { label: 'C', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tip: t('scoreC') },
+                                { label: 'D', color: '#f97316', bg: 'rgba(249,115,22,0.1)', tip: t('scoreD') },
+                                { label: 'F', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', tip: t('scoreF') },
                             ].map(g => (
                                 <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
                                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '16px', borderRadius: '4px', background: g.bg, color: g.color, fontSize: '11px', fontWeight: '900' }}>{g.label}</span>
@@ -592,11 +687,11 @@ export default function ProductAnalytics() {
                         {/* Per-location price bars */}
                         {/* Column headers */}
                         <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 110px 52px 52px', gap: '10px', marginBottom: '6px', padding: '0 0 6px 0', borderBottom: '1px solid var(--glass-border)' }}>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locație</div>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Distribuție preț</div>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Preț mediu</div>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Buc.</div>
-                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Scor</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('colLocHeader')}</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('colPriceDistr')}</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>{t('colAvgPrice')}</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>{t('colUnits')}</div>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>{t('colScore')}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {priceStats.map(loc => {
@@ -816,7 +911,7 @@ export default function ProductAnalytics() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: 'var(--glass-border)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-                                    {lang === 'ru' ? 'Строк на странице:' : 'Rânduri pe pagină:'}
+                                    {t('rowsPerPage')}
                                 </span>
                                 <select 
                                     value={itemsPerPage} 
@@ -834,7 +929,7 @@ export default function ProductAnalytics() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-color)' }}>
-                                    {lang === 'ru' ? `Страница ${pageNumber} из ${Math.ceil(recentTransactions.length / itemsPerPage)}` : `Pagina ${pageNumber} din ${Math.ceil(recentTransactions.length / itemsPerPage)}`}
+                                    {t('pageOf')} {pageNumber} {t('pageOfSep')} {Math.ceil(recentTransactions.length / itemsPerPage)}
                                 </span>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button onClick={() => setPageNumber(Math.max(1, pageNumber - 1))} disabled={pageNumber === 1} className="back-btn" style={{padding:'8px 14px', borderRadius:'10px', fontSize:'14px', opacity: pageNumber === 1 ? 0.5 : 1}}>&lt;</button>
@@ -847,6 +942,82 @@ export default function ProductAnalytics() {
                     <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>{t('noData')}</div>
                 )}
             </div>
+            {/* ── Brand Product Efficiency Ranking ── */}
+            {brandProducts.length > 1 && (
+                <div className="glass-card" style={{ marginTop: '14px', padding: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <div>
+                            <h3 className="card-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', margin: 0 }}>
+                                <TrendingUp size={16} color="#6366f1" /> {t('brandCompTitle')}
+                            </h3>
+                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '4px 0 0', fontStyle: 'italic' }}>{t('brandCompSub')}</p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {brandProducts.map((p, idx) => {
+                            const isCurrent = p.name === decodedName
+                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`
+                            const isTop3 = idx < 3
+                            const recommend = p.score >= 70 ? { label: t('promoteLabel'), color: '#10b981', bg: 'rgba(16,185,129,0.1)' }
+                                : p.score >= 40 ? { label: t('reviewLabel'), color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' }
+                                : { label: '⚠️', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' }
+                            const maxScore = brandProducts[0]?.score || 1
+
+                            return (
+                                <div
+                                    key={p.name}
+                                    onClick={() => navigate(`/product-analytics/${encodeURIComponent(p.name)}?period=${activePeriod}`)}
+                                    style={{
+                                        display: 'grid', gridTemplateColumns: '28px 1fr 80px 70px 60px 70px',
+                                        alignItems: 'center', gap: '10px',
+                                        padding: '10px 12px', borderRadius: '12px',
+                                        background: isCurrent
+                                            ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)')
+                                            : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                                        border: isCurrent
+                                            ? '1.5px solid rgba(99,102,241,0.4)'
+                                            : '1px solid transparent',
+                                        cursor: 'pointer', transition: 'all 0.15s',
+                                    }}
+                                    onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+                                    onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}
+                                >
+                                    {/* Rank */}
+                                    <div style={{ fontSize: isTop3 ? '16px' : '12px', fontWeight: '800', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1 }}>
+                                        {medal}
+                                    </div>
+                                    {/* Name + bar */}
+                                    <div>
+                                        <div style={{ fontSize: '12px', fontWeight: isCurrent ? '800' : '600', color: 'var(--text-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' }}>
+                                            {p.name} {isCurrent && <span style={{ fontSize: '10px', color: '#6366f1', fontWeight: '700', marginLeft: 4 }}>◀ {t('currentLabel')}</span>}
+                                        </div>
+                                        <div style={{ height: '3px', background: 'var(--glass-bg-hover)', borderRadius: '99px', marginTop: '5px', width: '100%' }}>
+                                            <div style={{ height: '100%', borderRadius: '99px', width: `${(p.score/maxScore)*100}%`, background: isCurrent ? '#6366f1' : isTop3 ? '#10b981' : 'rgba(100,116,139,0.5)', transition: 'width 0.5s' }} />
+                                        </div>
+                                    </div>
+                                    {/* Revenue */}
+                                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-color)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                        {Math.round(p.rev).toLocaleString('ro-RO')} RON
+                                    </div>
+                                    {/* Units sold */}
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>
+                                        {p.qty} {t('colUnits')} / {p.locs} {t('colLocHeader')}
+                                    </div>
+                                    {/* Score */}
+                                    <div style={{ fontSize: '13px', fontWeight: '900', color: isTop3 ? '#10b981' : 'var(--text-secondary)', textAlign: 'right' }}>
+                                        {p.score}
+                                    </div>
+                                    {/* Recommendation badge */}
+                                    <div style={{ fontSize: '10px', fontWeight: '800', color: recommend.color, background: recommend.bg, padding: '3px 8px', borderRadius: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                        {recommend.label}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

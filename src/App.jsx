@@ -242,7 +242,7 @@ function Layout({ children }) {
                     boxSizing: 'border-box',
                 }}>
                     <img
-                        src={isDark || sidebarCollapsed ? "/getapp_smart_food_white.png" : "/getapp_smart_food_black.png"}
+                        src="/getapp_smart_food_white.png"
                         alt="Logo"
                         style={{
                             height: sidebarCollapsed ? '42px' : '64px',

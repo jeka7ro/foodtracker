@@ -1,0 +1,68 @@
+{\rtf1\mac\ansicpg10000\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Ai mai multe variante foarte simple pentru a le folosi \'een noua aplica\uc0\u539 ie:\
+\
+**Varianta 1: Din fi\uc0\u537 ierul generat (Cea mai u\u537 oar\u259 )**\
+1. D\uc0\u259  click pe linkul din mesajul meu anterior: [ui_design_standards.md](file:///Users/eugeniucazmal/.gemini/antigravity/brain/65d56d67-9831-46d4-a51f-8b9eac2efd54/artifacts/ui_design_standards.md).\
+2. Fi\uc0\u537 ierul se va deschide chiar aici \'een editorul t\u259 u (VS Code).\
+3. Selecteaz\uc0\u259  tot textul (`Cmd + A` pe Mac), copiaz\u259 -l (`Cmd + C`) \u537 i d\u259 -i paste (`Cmd + V`) \'eentr-un fi\u537 ier nou din cealalt\u259  aplica\u539 ie.\
+\
+**Varianta 2: Las\uc0\u259 -m\u259  pe mine s\u259  \'eel creez acolo**\
+Dac\uc0\u259  \'eemi spui calea c\u259 tre folderul noii tale aplica\u539 ii (de exemplu: `/Users/eugeniucazmal/Documents/alta-aplicatie`), pot s\u259  creez eu automat acest fi\u537 ier acolo pentru tine, printr-o singur\u259  comand\u259 .\
+\
+**Varianta 3: Direct din chat**\
+Po\uc0\u539 i copia direct con\u539 inutul de mai jos folosind butonul de copy din col\u539 ul din dreapta-sus al chenarului urm\u259 tor, pentru a-l pune direct \'een prompt-urile de AI ale noii aplica\u539 ii:\
+\
+```markdown\
+# \uc0\u55357 \u57041  Standarde UI / UX Design (Extrase)\
+\
+## 1. Regula Rotunjirii Uniforme \'97 macOS Tahoe Design (MANDATORIU)\
+**NIMIC P\uc0\u258 TR\u258 \u538 OS!**\
+Toate elementele interactive (butoane, inputuri, avatare utilizator/client, bule) trebuie s\uc0\u259  aib\u259  form\u259  complet rotund\u259  de tip pastil\u259  (PILL - `rounded-full`).\
+\
+| Element | Clas\uc0\u259  obligatorie |\
+|---|---|\
+| Butoane ac\uc0\u539 iune principale | `btn-primary` \u8594  `rounded-full` |\
+| Butoane ghost/secundare | `btn-ghost` \uc0\u8594  `rounded-full` |\
+| Butoane icon (mici, p\uc0\u259 trate) | `btn-icon` \u8594  `rounded-full` |\
+| Butoane danger (\uc0\u537 tergere) | `btn-danger` \u8594  `rounded-full` |\
+| C\'e2mpuri input / dropdowns | `glass-input`, `glass-select` \uc0\u8594  `rounded-full` |\
+| Badge-uri Status / Counters | `rounded-full` (exclusiv `px-2.5 py-0.5 rounded-full`) |\
+| Bule counter Search Bar | `h-6 px-3 rounded-full text-xs` |\
+| Card-uri / Panouri / Modale | `glass-panel`, `modal-panel` \uc0\u8594  `rounded-2xl` sau `rounded-[1.5rem]` |\
+| Avatare Clien\uc0\u539 i / Utilizatori | `rounded-full` (cerc perfect) |\
+\
+**Excep\uc0\u539 ia Unic\u259  (Avatare de Entitate Major\u259  - ex. Evenimente):**\
+P\uc0\u259 tr\u259 \u539 os DOAR logoul unei entit\u259 \u539 i majore (tip Squircle - `rounded-xl` sau `rounded-2xl` + `border-2 border-[var(--surface)]` / `shadow-sm`), NICIODAT\u258  cerc perfect!\
+\
+## 2. Arhitectura Vizual\uc0\u259  a Tabelelor de Date\
+- Tabelele au clase de l\uc0\u259 \u539 ime maxim\u259  \u537 i spa\u539 iere intern\u259 : `class="data-table w-full"`.\
+- **Header Tabel**: \'centotdeauna majuscule (`uppercase`), culoare text subtil\uc0\u259  (gri deschis), spa\u539 iat (`tracking-wider`).\
+- **R\'e2ndurile (tr)**: Efect vizual de hover subtil pentru a indica elementele interactive: `hover:bg-[var(--surface-hover)]`.\
+\
+## 3. Aerisirea Barelor de Filtrare \uc0\u537 i C\u259 utare\
+**F\uc0\u259 r\u259  compresie vizual\u259 !**\
+- Barele de filtrare secundare, bara de c\uc0\u259 utare (Search) \u537 i butoanele de ac\u539 iune NU trebuie s\u259  fie pe acela\u537 i r\'e2nd cu Titlul Paginii. Ele au propriul r\'e2nd (ex: `flex-col sm:flex-row`).\
+- **F\uc0\u259 r\u259  Fundal Ocupativ:** Box-urile de filtrare / c\u259 utare NU se includ \'een containerul panoului principal de date. Ele trebuie s\u259  "pluteasc\u259 " vizual (`transparent`) deasupra datelor pentru a oferi o estetic\u259  modern\u259  (tip macOS), f\u259 r\u259  un fundal solid care s\u259  sufoce interfa\u539 a.\
+\
+## 4. Bara de C\uc0\u259 utare Global\u259  (Design)\
+- **Input-ul**: Rotunjit complet (`rounded-full`), cu padding la st\'e2nga pentru iconi\uc0\u539 \u259 .\
+- **Iconi\uc0\u539 a**: Plasat\u259  absolut \'een st\'e2nga (`absolute left-3`), cu culoare subtil\u259 .\
+- **Bula Counter \'een Search**: Bula care afi\uc0\u537 eaz\u259  num\u259 rul de rezultate din interiorul c\'e2mpului de c\u259 utare trebuie s\u259  fie **INVIZIBIL\u258 ** c\'e2nd c\'e2mpul este gol. Aceasta apare natural, doar c\'e2nd utilizatorul \'eencepe s\u259  tasteze.\
+\
+## 5. Ac\uc0\u539 iuni, Butoane \u537 i Modale\
+- **Iconi\uc0\u539 e Rotunjite**: Toate butoanele de ac\u539 iune pe r\'e2nduri folosesc forme rotunjite (nu p\u259 trate ascu\u539 ite).\
+- **Lightboxes (F\uc0\u259 r\u259  Tab-uri noi)**: Ata\u537 amentele/pozele/actele se afi\u537 eaz\u259  DOAR \'een ferestre tip Lightbox sau Modale pe aceea\u537 i pagin\u259 . F\u259 r\u259  trimiteri \'een pagini externe (`target="_blank"`).\
+- **F\uc0\u259 r\u259  Dialoguri Native**: Func\u539 iile native `window.confirm`, `window.prompt`, `window.alert` blocheaz\u259  interfa\u539 a \u537 i distrug imersiunea. Ele trebuie \'eenlocuite cu Modale de design custom (tip `<ConfirmModal>`, `<ErrorModal>`) care respect\u259  rotunjirea temei.\
+\
+## 6. Fluxul Natural de Paginare\
+- Containerul tabelului trebuie s\uc0\u259  aib\u259  un design curat `glass-panel`.\
+- Paginarea se integreaz\uc0\u259  la baza tabelului, \'een partea de jos, f\u259 c\'e2nd corp comun cu acesta.\
+- **St\'e2nga**: Selector de num\uc0\u259 r de r\'e2nduri (ex: "Afi\u537 eaz\u259  10 v").\
+- **Dreapta**: Controale simple de navigare (ex: "Pagina 1 din 2 [ < ] [ > ]") rotunjite.\
+```}

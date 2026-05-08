@@ -29,7 +29,7 @@ export const PUPPETEER_ARGS = [
 
 export async function launchBrowser(extraArgs = []) {
     const opts = {
-        headless: 'new',
+        headless: true,
         args: [...PUPPETEER_ARGS, ...(extraArgs.args || extraArgs)],
         executablePath: CHROME_PATH,
     }

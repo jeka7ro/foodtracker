@@ -7,7 +7,7 @@ import { processAndNotify, notifyStopResolved } from './notifications/telegram.j
 import { RulesEngine } from './services/rules-engine.js'
 import { LossCalculator } from './services/loss-calculator.js'
 import { ownBrandScraper } from './scrapers/own-brand-scraper.js'
-import { ReputationScraper } from './scrapers/reputation-scraper.js'
+// ReputationScraper disabled — Glovo/Wolt portals require manual login, cannot automate
 import { CompetitorScraper } from './scrapers/competitor-scraper.js'
 import cron from 'node-cron'
 import { config } from './config.js'
@@ -299,16 +299,9 @@ cron.schedule('0 9 * * *', async () => {
     }
 })
 
-// ─── BRAND REPUTATION: la fiecare oră ───
-const reputationScraper = new ReputationScraper()
-cron.schedule('0 * * * *', async () => {
-    console.log('\n🌟 [CRON] Starting hourly Reputation scraping (Phase 1 MVP)...')
-    try {
-        await reputationScraper.runAllScrapes()
-    } catch (err) {
-        console.error('❌ [CRON] Reputation scan error:', err.message)
-    }
-})
+// ─── BRAND REPUTATION: DEZACTIVAT ───
+// Glovo/Wolt portale necesită autentificare manuală — scraping-ul automat nu funcționează.
+// De reactivat dacă se implementează cookie-based session sau API oficial.
 
 // ─── DYNAMIC STOP SCAN SCHEDULER (Verificare Produse) ───
 cron.schedule('* * * * *', async () => {

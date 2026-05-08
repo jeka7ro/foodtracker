@@ -147,6 +147,8 @@ export default function Dashboard() {
     const [customTo, setCustomTo] = useState('')
     const [showCalendar, setShowCalendar] = useState(false)
     const [selectedBrand, setSelectedBrand] = useState('all')
+    const [isSyncing, setIsSyncing] = useState(false)
+    const [syncMessage, setSyncMessage] = useState(null)
 
     const dateRange = useMemo(() => {
         if (activePreset === 'custom' && customFrom && customTo) {
@@ -316,6 +318,34 @@ export default function Dashboard() {
         queryFn: async () => { const { data } = await supabase.from('restaurants').select('id,name,city,brand_id').eq('is_active',true); return data || [] }
     })
 
+    const triggerSync = async (days = 1) => {
+        if (isSyncing) return
+        setIsSyncing(true)
+        setSyncMessage(t('Sincronizarea a pornit...', 'Sync started...', 'Синхронизация запущена...'))
+        try {
+            const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
+            const resp = await fetch(`${workerUrl}/api/sync-sales`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days })
+            })
+            const data = await resp.json()
+            if (data.success) {
+                setSyncMessage(t('Sync în fundal...', 'Syncing in background...', 'Синхр. в фоне...'))
+                // Keep showing message for a bit
+                setTimeout(() => setSyncMessage(null), 5000)
+            } else {
+                setSyncMessage(data.error || 'Error')
+                setTimeout(() => setSyncMessage(null), 5000)
+            }
+        } catch (e) {
+            setSyncMessage('Error')
+            setTimeout(() => setSyncMessage(null), 5000)
+        } finally {
+            setIsSyncing(false)
+        }
+    }
+
     const { data: brands = [] } = useQuery({
         queryKey: ['dash-brands'],
         staleTime: 10 * 60 * 1000,
@@ -334,57 +364,38 @@ export default function Dashboard() {
     })
 
     // ── Yearly monthly comparison ──
-    // Supabase PostgREST are max 1000 rânduri/request → folosim paginare paralelă
+    // Fiecare lună e fetchuită în PARALEL (5 requesturi simultane) — corect și rapid
     const { data: yearlyData = [] } = useQuery({
         queryKey: ['dash-yearly'],
-        staleTime: 5 * 60 * 1000,
+        staleTime: 15 * 60 * 1000, // 15 min — datele nu se schimbă des
         queryFn: async () => {
             const year = now.getFullYear()
             const curMonth = toRO(now.toISOString()).getMonth()
-
-            const from = new Date(year, 0, 1).toISOString()
-            const to   = new Date(year, curMonth + 1, 0, 23, 59, 59, 999).toISOString()
-
-            // Pas 1: află numărul total de rânduri pentru TOT anul
-            const { count } = await supabase
-                .from('platform_sales')
-                .select('*', { count: 'exact', head: true })
-                .gte('placed_at', from).lte('placed_at', to)
-            
-            if (!count) return []
-
             const CHUNK = 1000
-            const PARALLEL = 6 // mărit la 6 pentru a reduce timpul de încărcare
-            const numChunks = Math.ceil(count / CHUNK)
-            const allYearData = []
 
-            // Pas 2: fetch în batches paralele mici
-            for (let b = 0; b < numChunks; b += PARALLEL) {
-                const batch = Array.from(
-                    { length: Math.min(PARALLEL, numChunks - b) },
-                    (_, i) => supabase
+            const fetchMonth = async (m) => {
+                const mFrom = new Date(year, m, 1).toISOString()
+                const mTo   = new Date(year, m + 1, 0, 23, 59, 59, 999).toISOString()
+                const rows = []
+                let offset = 0
+                while (true) {
+                    const { data, error } = await supabase
                         .from('platform_sales')
-                        .select('id,placed_at,total_amount,platform,restaurant_id')
-                        .gte('placed_at', from).lte('placed_at', to)
-                        .order('id', { ascending: true })
-                        .range((b + i) * CHUNK, (b + i + 1) * CHUNK - 1)
-                        .then(r => r.data || [])
-                )
-                const results = await Promise.all(batch)
-                results.forEach(r => allYearData.push(...r))
+                        .select('placed_at,total_amount,platform,restaurant_id')
+                        .gte('placed_at', mFrom).lte('placed_at', mTo)
+                        .order('placed_at', { ascending: true })
+                        .range(offset, offset + CHUNK - 1)
+                    if (error || !data || data.length === 0) break
+                    rows.push(...data)
+                    if (data.length < CHUNK) break
+                    offset += CHUNK
+                }
+                return { month: m, rows }
             }
 
-            // Pas 3: Grupează rândurile pe luni client-side
-            const months = Array.from({ length: curMonth + 1 }, () => [])
-            allYearData.forEach(row => {
-                const d = toRO(row.placed_at)
-                const m = d.getMonth()
-                if (m <= curMonth) {
-                    months[m].push(row)
-                }
-            })
-
-            return months.map((rows, m) => ({ month: m, rows }))
+            const monthIndexes = Array.from({ length: curMonth + 1 }, (_, i) => i)
+            const results = await Promise.all(monthIndexes.map(fetchMonth))
+            return results
         }
     })
 
@@ -699,14 +710,34 @@ export default function Dashboard() {
         const label = diffMin < 60 ? `${diffMin} min ${agoTxt}` : diffH < 24 ? `${diffH}h ${agoTxt}` : lastRO.toLocaleDateString(loc, { day:'2-digit', month:'short' })
         const lastStr = lastRO.toLocaleString(loc, { timeZone:'Europe/Bucharest', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
         return (
-            <div title={`Ultima comandă: ${lastStr}`}
-                style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700,
-                    padding:'4px 10px', borderRadius:99,
-                    background: isStale ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-                    color: isStale ? '#EF4444' : '#10B981',
-                    cursor:'default' }}>
-                {isStale ? <WifiOff size={11}/> : <Wifi size={11}/>}
-                {isStale ? `${t('Sync oprit — ultima comandă acum', 'Sync stopped — last order', 'Синхр. остановлена — последний заказ')} ${label}` : `Live · ${label}`}
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div title={`Ultima comandă: ${lastStr}`}
+                    style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700,
+                        padding:'4px 10px', borderRadius:99,
+                        background: isStale ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                        color: isStale ? '#EF4444' : '#10B981',
+                        cursor:'default' }}>
+                    {isStale ? <WifiOff size={11}/> : <Wifi size={11}/>}
+                    {isStale ? `${t('Sync oprit — ultima comandă acum', 'Sync stopped — last order', 'Синхр. остановлена — последний заказ')} ${label}` : `Live · ${label}`}
+                </div>
+
+                <button 
+                    onClick={() => triggerSync(1)}
+                    disabled={isSyncing}
+                    className="sync-btn"
+                    style={{ 
+                        display:'flex', alignItems:'center', gap:6, 
+                        padding:'5px 12px', borderRadius:99, border:'none',
+                        background: isSyncing ? 'var(--glass-bg-hover)' : 'rgba(99,102,241,0.1)',
+                        color: isSyncing ? 'var(--text-secondary)' : '#6366F1',
+                        fontSize:11, fontWeight:800, cursor:'pointer',
+                        transition:'all 0.2s ease',
+                        outline:'none'
+                    }}
+                >
+                    <RefreshCw size={12} className={isSyncing ? 'spin' : ''}/>
+                    {syncMessage || t('Sincronizează', 'Sync Now', 'Синхронизировать')}
+                </button>
             </div>
         )
     }
