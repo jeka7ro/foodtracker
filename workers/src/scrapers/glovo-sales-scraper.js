@@ -15,7 +15,7 @@ export class GlovoSalesScraper {
         let browser;
         try {
             browser = await puppeteer.launch({
-                headless: false, // Lasam pe false ca sa putem vedea sau trece de 2FA
+                headless: true,
                 defaultViewport: null,
                 args: ['--start-maximized', '--no-sandbox']
             });

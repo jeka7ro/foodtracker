@@ -12,7 +12,7 @@ export class WoltSalesScraper {
         let browser;
         try {
             browser = await puppeteer.launch({
-                headless: false, // Lasam fals ca sa vedem sau sa validam Magic Link-ul Wolt 
+                headless: true,
                 defaultViewport: null,
                 args: ['--start-maximized', '--no-sandbox']
             });

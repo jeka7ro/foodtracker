@@ -6,7 +6,7 @@ const GLOVO_PASS = 'Glovo12345';
 async function authAndExtract() {
     console.log("🚀 ROBOT GLOVO: Se porneste instanta Google Chrome...");
     const browser = await puppeteer.launch({ 
-        headless: false, // Arata-i utilizatorului!
+        headless: true,
         defaultViewport: null,
         args: ['--window-size=1280,800', '--no-sandbox']
     });
@@ -49,4 +49,5 @@ async function authAndExtract() {
     }
 }
 
-authAndExtract();
+// authAndExtract() — DEZACTIVAT: nu se mai rulează automat
+// Rulează manual: node workers/src/scrapers/glovo-crawler-phase1.js

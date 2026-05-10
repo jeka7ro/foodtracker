@@ -7,7 +7,7 @@ const GLOVO_PASS = 'Glovo12345';
 async function authAndExtract() {
     console.log("🚀 PORNIRE ROBOT GLOVO: Deschidem Chrome pe calculatorul tau...");
     const browser = await puppeteer.launch({ 
-        headless: false, // Iti aratam tie
+        headless: true,
         defaultViewport: null,
         args: ['--window-size=1280,800', '--no-sandbox']
     });
@@ -72,4 +72,6 @@ async function authAndExtract() {
     }
 }
 
-authAndExtract();
+// authAndExtract() — DEZACTIVAT: se rulează manual din terminal, nu automat
+// Ca să rulezi manual: node workers/src/scrapers/glv-init.js
+// if (process.argv[1] === new URL(import.meta.url).pathname) authAndExtract();
