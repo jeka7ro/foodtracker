@@ -25,6 +25,7 @@ export const PUPPETEER_ARGS = [
     '--disable-dev-shm-usage',
     '--disable-accelerated-2d-canvas',
     '--disable-gpu',
+    '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()
 ]
 
 export async function launchBrowser(extraArgs = []) {

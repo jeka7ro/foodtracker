@@ -8,7 +8,7 @@ async function authAndExtract() {
     const browser = await puppeteer.launch({ 
         headless: true,
         defaultViewport: null,
-        args: ['--window-size=1280,800', '--no-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()]
     });
     
     try {

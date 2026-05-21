@@ -233,7 +233,7 @@ export async function discoverUrls() {
 
     const browser = await puppeteer.launch({
         headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()]
     })
 
     const page = await browser.newPage()

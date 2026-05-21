@@ -195,7 +195,7 @@ export class ReputationScraper {
         if (!loc.url) return []
         
         console.log(`      [Reputation] Launching Puppeteer for ${loc.platform} ...`)
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] })
+        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()] })
         
         try {
             const page = await browser.newPage()

@@ -17,7 +17,7 @@ export class GlovoSalesScraper {
             browser = await puppeteer.launch({
                 headless: true,
                 defaultViewport: null,
-                args: ['--start-maximized', '--no-sandbox']
+                args: ['--no-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()]
             });
 
             const page = await browser.newPage();

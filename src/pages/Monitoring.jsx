@@ -147,6 +147,7 @@ function glassCardInner(isDark) {
 
 export default function Monitoring() {
     const { lang } = useLanguage()
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
     const { colors, isDark } = useTheme()
     const navigate = useNavigate()
     const [restaurants, setRestaurants] = useState([])
@@ -461,7 +462,7 @@ export default function Monitoring() {
         return (
             <div style={{ padding: '24px 32px' }}>
                 <div style={{ fontSize: '26px', fontWeight: '700', color: colors.text, marginBottom: '28px', letterSpacing: '-0.5px' }}>
-                    Monitorizare Live
+                    {t('Monitorizare Live', 'Live Monitoring', 'Live Мониторинг')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
                     {[1, 2, 3, 4].map(i => <CardSkeleton key={i} />)}
@@ -609,9 +610,9 @@ export default function Monitoring() {
                                         extraMsg = r.error;
                                     } else if (r.missing_products && r.missing_products.length > 0) {
                                         const count = r.missing_products.reduce((acc, p) => acc + (p.count || 1), 0);
-                                        extraMsg = `Atenție: ${count} produs(e) indisponibil(e)`;
+                                        extraMsg = t(`Atenție: ${count} produs(e) indisponibil(e)`, `Warning: ${count} product(s) unavailable`, `Внимание: ${count} продукт(ов) недоступно`);
                                     } else if (r.raw_data && r.raw_data.product_stops && r.raw_data.product_stops.stopped > 0) {
-                                        extraMsg = `Atenție: ${r.raw_data.product_stops.stopped} pe STOP din ${r.raw_data.product_stops.total}`;
+                                        extraMsg = t(`Atenție: ${r.raw_data.product_stops.stopped} pe STOP din ${r.raw_data.product_stops.total}`, `Warning: ${r.raw_data.product_stops.stopped} STOPPED out of ${r.raw_data.product_stops.total}`, `Внимание: ${r.raw_data.product_stops.stopped} в СТОПЕ из ${r.raw_data.product_stops.total}`);
                                     }
 
                                     return (
@@ -665,7 +666,7 @@ export default function Monitoring() {
                                     marginTop: '12px'
                                 }}
                             >
-                                Anulează
+                                {t('Anulează', 'Cancel', 'Отмена')}
                             </button>
                         )}
 
@@ -675,7 +676,7 @@ export default function Monitoring() {
                                 onClick={() => setCheckModal(prev => ({ ...prev, open: false }))}
                                 style={{ ...btnPrimary, width: '100%', justifyContent: 'center' }}
                             >
-                                Închide
+                                {t('Închide', 'Close', 'Закрыть')}
                             </button>
                         )}
                     </div>
@@ -720,7 +721,7 @@ export default function Monitoring() {
                             fontSize: '26px', fontWeight: '700', margin: 0, color: colors.text,
                             letterSpacing: '-0.5px',
                         }}>
-                            Monitorizare Live
+                            {t('Monitorizare Live', 'Live Monitoring', 'Live Мониторинг')}
                         </h1>
                     </div>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, paddingLeft: '32px' }}>
@@ -757,7 +758,7 @@ export default function Monitoring() {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
                         </svg>
-                        Istoric Sync
+                        {t('Istoric Sync', 'Sync History', 'История Синхронизации')}
                     </button>
 
                     <button className="btn-hover" onClick={() => fetchData()}
@@ -807,11 +808,11 @@ export default function Monitoring() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <IconServer size={20} color="#FF9500" />
                         <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: colors.text }}>
-                            Rapoarte Sync 1:1 (Iiko vs Agregatoare)
+                            {t('Rapoarte Sync 1:1 (Iiko vs Agregatoare)', 'Sync 1:1 Reports (Iiko vs Aggregators)', 'Отчеты Sync 1:1 (Iiko vs Агрегаторы)')}
                         </h2>
                         {syncReports.length > 0 && (
                             <span style={{ fontSize: '11px', background: 'rgba(255,149,0,0.15)', color: '#FF9500', padding: '3px 8px', borderRadius: '8px', fontWeight: '600' }}>
-                                {syncReports.length} rapoarte
+                                {syncReports.length} {t('rapoarte', 'reports', 'отчетов')}
                             </span>
                         )}
                     </div>
@@ -831,13 +832,13 @@ export default function Monitoring() {
 
                 {syncReportsLoading ? (
                     <div style={{ textAlign: 'center', padding: '32px', color: colors.textSecondary, fontSize: '13px' }}>
-                        <IconLoader size={20} color="#6366F1" /> &nbsp;Se încarcă rapoartele...
+                        <IconLoader size={20} color="#6366F1" /> &nbsp;{t('Se încarcă rapoartele...', 'Loading reports...', 'Загрузка отчетов...')}
                     </div>
                 ) : syncReports.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textSecondary }}>
                         <IconServer size={32} color={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} />
-                        <p style={{ marginTop: '12px', fontSize: '14px' }}>Niciun raport salvat încă.</p>
-                        <p style={{ fontSize: '12px', margin: 0 }}>Apasă <strong>Rulează Test Nou</strong> pentru a analiza produsele.</p>
+                        <p style={{ marginTop: '12px', fontSize: '14px' }}>{t('Niciun raport salvat încă.', 'No saved report yet.', 'Пока нет сохраненных отчетов.')}</p>
+                        <p style={{ fontSize: '12px', margin: 0 }}>{t('Apasă', 'Click', 'Нажмите')} <strong>{t('Rulează Test Nou', 'Run New Test', 'Запустить Новый Тест')}</strong> {t('pentru a analiza produsele.', 'to analyze products.', 'чтобы проанализировать продукты.')}</p>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>

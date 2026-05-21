@@ -957,7 +957,7 @@ export default function Dashboard() {
                                     angle={-45} textAnchor="end" height={40} interval={an.dayChart.length > 14 ? Math.floor(an.dayChart.length / 10) : 0}/>
                                 <YAxis fontSize={9} tickLine={false} axisLine={false} stroke="var(--text-secondary)" tickFormatter={v => v>0?`${(v/1000).toFixed(0)}k`:''} width={28}/>
                                 <Tooltip content={<TT/>}/>
-                                <Bar dataKey="rev" name="Vânzări" radius={[4,4,0,0]} maxBarSize={32}>
+                                <Bar dataKey="rev" name={t('Vânzări', 'Sales', 'Продажи')} radius={[4,4,0,0]} maxBarSize={32}>
                                     {an.dayChart.map((_,i) => <Cell key={i} fill={isDark ? 'rgba(99,102,241,0.65)' : '#6366F1'}/>)}
                                 </Bar>
                             </BarChart>
@@ -1031,7 +1031,7 @@ export default function Dashboard() {
                                         <span style={{ fontSize:10, opacity:0.4, fontWeight:700 }}>{brandRows.length} cmd</span>
                                     </div>
                                     {topProds.length === 0
-                                        ? <div style={{ fontSize:11, opacity:0.3, padding:'8px 0' }}>Fără date</div>
+                                        ? <div style={{ fontSize:11, opacity:0.3, padding:'8px 0' }}>{t('Fără date', 'No data', 'Нет данных')}</div>
                                         : topProds.map((p, i) => {
                                             const cleanForImg = p.name.replace(/^(I_|W_|P_)/i,'').replace(/SushiMaster/ig,'').trim().toLowerCase()
                                             const imgUrl = prodImgMap[cleanForImg] || prodImgMap[p.name.toLowerCase()] ||
@@ -1139,7 +1139,7 @@ export default function Dashboard() {
                                     <td style={{ padding:'12px 12px', textAlign:'right', fontSize:12, fontWeight:600 }}>{p.aOrd > 0 ? (p.aRev/p.aOrd).toFixed(1) : '—'} RON</td>
                                 </tr>
                             ))}
-                            {an.platRows.length === 0 && <tr><td colSpan="8" style={{ textAlign:'center', padding:28, opacity:0.4 }}>Fără date</td></tr>}
+                            {an.platRows.length === 0 && <tr><td colSpan="8" style={{ textAlign:'center', padding:28, opacity:0.4 }}>{t('Fără date', 'No data', 'Нет данных')}</td></tr>}
                         </tbody>
                     </table>
                 </div>

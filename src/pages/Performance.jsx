@@ -131,7 +131,15 @@ const dict = {
         ro: ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         ru: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
-    }
+    },
+    syncingText: { ro: 'Se sincronizează...', en: 'Syncing...', ru: 'Синхронизация...' },
+    syncLive: { ro: 'Sincronizează Live', en: 'Live Sync', ru: 'Синхронизация Live' },
+    syncHist: { ro: 'Se sincronizează datele istorice...', en: 'Syncing historical data...', ru: 'Синхронизация исторических данных...' },
+    ordersProducts: { ro: 'Comenzi & Produse', en: 'Orders & Products', ru: 'Заказы и Продукты' },
+    ordersUpper: { ro: 'Comenzi', en: 'Orders', ru: 'Заказы' },
+    productsUpper: { ro: 'Produse', en: 'Products', ru: 'Продукты' },
+    cmdShort: { ro: 'cmd.', en: 'ord.', ru: 'зак.' },
+    prodShort: { ro: 'prod.', en: 'prod.', ru: 'прод.' }
 }
 
 export default function Performance() {
@@ -228,7 +236,7 @@ export default function Performance() {
 
     const triggerSync = async () => {
         if (syncStatus.isSyncing) return;
-        setSyncStatus({ isSyncing: true, percent: 0, message: 'Se contactează serverul...' });
+        setSyncStatus({ isSyncing: true, percent: 0, message: t('syncingText') });
         try {
             await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/sync-sales`, {
                 method: 'POST',
@@ -742,7 +750,7 @@ export default function Performance() {
 
                     <div className="perf-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
                         <button onClick={triggerSync} disabled={syncStatus.isSyncing} className="btn-secondary" style={{ color: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? 'Se sincronizează...' : 'Sincronizează Live'}
+                            <RefreshCw size={16} className={syncStatus.isSyncing ? "spinner" : ""} /> {syncStatus.isSyncing ? t('syncingText') : t('syncLive')}
                         </button>
                     </div>
                 </div>
@@ -754,7 +762,7 @@ export default function Performance() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <RefreshCw size={18} className="spinner" color="#10b981" />
                             <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-color)' }}>
-                                {syncStatus.message || 'Se sincronizează datele istorice...'}
+                                {syncStatus.message || t('syncHist')}
                             </span>
                         </div>
                         <span style={{ fontSize: '13px', fontWeight: '800', color: '#10b981' }}>{syncStatus.percent}%</span>
@@ -785,18 +793,18 @@ export default function Performance() {
                     <div style={{display:'flex', gap:'16px', alignItems:'center'}}>
                         <div style={{padding:'8px', background:'rgba(16,185,129,0.1)', borderRadius:'10px', color:'#10b981'}}><ShoppingBag size={20} /></div>
                         <span className="kpi-title" style={{ margin: 0, fontSize: '13px', paddingTop: '2px', whiteSpace: 'nowrap' }}>
-                            Comenzi & Produse
+                            {t('ordersProducts')}
                         </span>
                     </div>
                     
                     <div className="kpi-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', margin: 0 }}>
                          <div style={{display: 'flex', alignItems: 'baseline', gap: '6px', fontSize: '18px', lineHeight: 1}}>
                               {isLoading ? '...' : totalOrders.toLocaleString('ro-RO')}
-                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comenzi</span>
+                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{t('ordersUpper')}</span>
                          </div>
                          <div style={{display: 'flex', alignItems: 'baseline', gap: '6px', fontSize: '18px', lineHeight: 1}}>
                               {topItems.reduce((sum, it) => sum + (it.count || 0), 0).toLocaleString('ro-RO')}
-                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Produse</span>
+                              <span style={{fontSize:'10px', color:'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px'}}>{t('productsUpper')}</span>
                          </div>
                     </div>
                 </div>
@@ -1020,7 +1028,7 @@ export default function Performance() {
                                                 border: val === 0 ? 'var(--glass-border)' : 'none'
                                             }}>
                                                 <span style={{ fontSize: '12px', fontWeight: '800' }}>{val ? `${val.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
-                                                {cell.orders > 0 && <span style={{ fontSize: '10px', fontWeight: '600', opacity: 0.85 }}>{cell.orders} cmd. | {cell.products} prod.</span>}
+                                                {cell.orders > 0 && <span style={{ fontSize: '10px', fontWeight: '600', opacity: 0.85 }}>{cell.orders} {t('cmdShort')} | {cell.products} {t('prodShort')}</span>}
                                             </div>
                                         )
                                     })}
@@ -1041,7 +1049,7 @@ export default function Performance() {
                                         color: 'var(--text-color)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.05)'
                                     }}>
                                         <span style={{ fontSize: '12px', fontWeight: '900' }}>{totalDay > 0 ? `${totalDay.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON` : ''}</span>
-                                        {totalOrders > 0 && <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{totalOrders} cmd. | {totalProducts} prod.</span>}
+                                        {totalOrders > 0 && <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{totalOrders} {t('cmdShort')} | {totalProducts} {t('prodShort')}</span>}
                                     </div>
                                 )
                             })}

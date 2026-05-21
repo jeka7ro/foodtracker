@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useTheme } from '../lib/ThemeContext'
+import { useLanguage } from '../lib/LanguageContext'
 import toast, { Toaster } from 'react-hot-toast'
 import { TableSkeleton, CardSkeleton } from '../components/LoadingSkeleton'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
 
 export default function Reports() {
     const { colors, isDark } = useTheme()
+    const { lang } = useLanguage()
+    const t = (ro, en, ru) => lang === 'ru' ? ru : (lang === 'en' ? en : ro)
     const [activeTab, setActiveTab] = useState('stops')
     const [loading, setLoading] = useState(true)
 
@@ -317,7 +320,7 @@ export default function Reports() {
         return (
             <div style={{ padding: '24px 32px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: colors.text, marginBottom: '24px' }}>
-                    Reports & Analytics
+                    {t('Rapoarte & Analize', 'Reports & Analytics', 'Отчеты и Аналитика')}
                 </h1>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
                     {[1, 2, 3, 4].map(i => <CardSkeleton key={i} />)}
@@ -333,10 +336,10 @@ export default function Reports() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                     <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: colors.text, letterSpacing: '-0.5px' }}>
-                        Reports & Analytics
+                        {t('Rapoarte & Analize', 'Reports & Analytics', 'Отчеты и Аналитика')}
                     </h1>
                     <p style={{ fontSize: '13px', color: colors.textSecondary, marginTop: '4px' }}>
-                        Comprehensive analysis of stops, losses, and marketing metrics
+                        {t('Analiză detaliată a opririlor, pierderilor și metricilor de marketing', 'Comprehensive analysis of stops, losses, and marketing metrics', 'Детальный анализ остановок, потерь и маркетинговых метрик')}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -345,13 +348,13 @@ export default function Reports() {
                         border: `0.5px solid ${colors.border}`, borderRadius: '8px',
                         fontSize: '13px', fontWeight: '500', cursor: 'pointer'
                     }}>
-                        Refresh
+                        {t('Reîmprospătare', 'Refresh', 'Обновить')}
                     </button>
                     <button onClick={exportCSV} style={{
                         padding: '8px 16px', background: colors.green, color: 'white',
                         border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
                     }}>
-                        Export CSV
+                        {t('Export', 'Export CSV', 'Экспорт')}
                     </button>
                 </div>
             </div>
@@ -359,10 +362,10 @@ export default function Reports() {
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
                 {[
-                    { id: 'sales', label: '🏆 Vânzări (Performanță Live)' },
-                    { id: 'stops', label: 'Stop Control' },
-                    { id: 'marketing', label: 'Marketing' },
-                    { id: 'comparison', label: 'Comparison' }
+                    { id: 'sales', label: t('🏆 Vânzări (Performanță Live)', '🏆 Sales (Live Performance)', '🏆 Продажи (Live)') },
+                    { id: 'stops', label: t('Stop Control', 'Stop Control', 'Стоп-Контроль') },
+                    { id: 'marketing', label: t('Marketing', 'Marketing', 'Маркетинг') },
+                    { id: 'comparison', label: t('Comparație', 'Comparison', 'Сравнение') }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={tabStyle(activeTab === tab.id)}>
                         {tab.label}
@@ -377,7 +380,7 @@ export default function Reports() {
                 borderRadius: '10px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={labelStyle}>Period:</span>
+                    <span style={labelStyle}>{t('Perioadă:', 'Period:', 'Период:')}</span>
                     {[7, 14, 30, 90].map(days => (
                         <button key={days} onClick={() => setFilterDays(days)} style={{
                             padding: '5px 12px',
@@ -394,7 +397,7 @@ export default function Reports() {
                 <div style={{ width: '1px', height: '20px', background: colors.border }} />
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={labelStyle}>Platform:</span>
+                    <span style={labelStyle}>{t('Platformă:', 'Platform:', 'Платформа:')}</span>
                     {['all', 'glovo', 'wolt', 'bolt'].map(p => (
                         <button key={p} onClick={() => setFilterPlatform(p)} style={{
                             padding: '5px 12px',
@@ -412,7 +415,7 @@ export default function Reports() {
                 <div style={{ width: '1px', height: '20px', background: colors.border }} />
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={labelStyle}>Restaurant:</span>
+                    <span style={labelStyle}>{t('Restaurant:', 'Restaurant:', 'Ресторан:')}</span>
                     <select
                         value={filterRestaurant}
                         onChange={e => setFilterRestaurant(e.target.value)}
@@ -422,7 +425,7 @@ export default function Reports() {
                             fontSize: '12px', cursor: 'pointer', minWidth: '140px'
                         }}
                     >
-                        <option value="all">All Restaurants</option>
+                        <option value="all">{t('Toate Restaurantele', 'All Restaurants', 'Все рестораны')}</option>
                         {restaurants.map(r => (
                             <option key={r.id} value={r.id}>{r.name} ({r.city})</option>
                         ))}
@@ -440,7 +443,7 @@ export default function Reports() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                        {['Ultimele 7 zile', 'Ultimele 30 de zile', 'Ultimele 6 luni', '📅 Personalizat'].map((btn, i) => (
+                        {[t('Ultimele 7 zile', 'Last 7 days', 'Последние 7 дней'), t('Ultimele 30 de zile', 'Last 30 days', 'Последние 30 дней'), t('Ultimele 6 luni', 'Last 6 months', 'Последние 6 мес'), t('📅 Personalizat', '📅 Custom', '📅 Свой период')].map((btn, i) => (
                             <button key={i} style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', background: i === 0 ? 'transparent' : 'transparent', color: i === 0 ? colors.blue : colors.text, border: `1px solid ${i === 0 ? colors.blue : colors.border}`, cursor: 'pointer' }}>
                                 {btn}
                             </button>
@@ -580,7 +583,7 @@ export default function Reports() {
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '24px' }}>
                         {/* Timeline Chart */}
                         <div style={{ background: colors.card, border: `0.5px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
-                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>Evoluție Pierderi & Downtime</h3>
+                            <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 16px', color: colors.text }}>{t('Evoluție Pierderi & Downtime', 'Loss & Downtime Evolution', 'Эволюция потерь и простоя')}</h3>
                             {stopsTimelineData.length > 0 ? (
                             <div style={{ width: '100%', height: 280 }}>
                                 <ResponsiveContainer>

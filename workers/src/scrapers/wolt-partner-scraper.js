@@ -16,7 +16,7 @@ export class WoltPartnerScraper {
             browser = await puppeteer.launch({
                 headless: true, // Mod invizibil pentru a nu deranja utilizatorul
                 defaultViewport: null,
-                args: ['--start-maximized', '--no-sandbox']
+                args: ['--no-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()]
             });
 
             const page = await browser.newPage();

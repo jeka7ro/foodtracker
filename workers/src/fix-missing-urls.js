@@ -11,7 +11,7 @@ const supabase = createClient(
 
 async function getLinks(keyword, city) {
     const urls = { glovo_url: '', wolt_url: '', bolt_url: '' };
-    const browser = await puppeteer.launch({ headless: 'new' });
+    const browser = await puppeteer.launch({ headless: 'new', args: ['--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()] });
     const page = await browser.newPage();
     try {
         console.log(`Caut pe Glovo: ${keyword} ${city}...`);

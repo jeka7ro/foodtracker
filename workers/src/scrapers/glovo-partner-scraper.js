@@ -21,30 +21,12 @@ export class GlovoPartnerScraper {
         
         let browser;
         try {
-            // Încearcă să te conectezi la o instanță Chrome deja pornită cu remote‑debugging (port 9222)
-            let wsEndpoint = null;
-            try {
-                const resp = await fetch('http://localhost:9222/json/version');
-                const data = await resp.json();
-                wsEndpoint = data.webSocketDebuggerUrl;
-            } catch (e) {
-                // nu există Chrome cu remote‑debugging
-            }
-            if (wsEndpoint) {
-                browser = await puppeteer.connect({
-                    browserWSEndpoint: wsEndpoint,
-                    defaultViewport: null,
-                });
-                console.log('[Glovo Scraper] Conectat la Chrome existent (detectat automat)');
-            } else {
-                // fallback la lansare nouă
-                browser = await puppeteer.launch({
-                    headless: true,
-                    defaultViewport: null,
-                    args: ['--start-maximized', '--no-sandbox']
-                });
-                console.log('[Glovo Scraper] Lansat browser nou (se vor folosi cookie-urile).');
-            }
+            browser = await puppeteer.launch({
+                headless: true,
+                defaultViewport: null,
+                args: ['--no-sandbox', '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()]
+            });
+            console.log('[Glovo Scraper] Lansat browser nou (se vor folosi cookie-urile).');
 
             const page = await browser.newPage();
             
