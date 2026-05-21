@@ -239,7 +239,6 @@ export class SalesSync {
 
                                 dbRows.push({
                                     restaurant_id: r.id,
-                                    restaurant_name: r.name,
                                     order_id: uniqueOrderId,
                                     platform: platform,
                                     total_amount: orderSum,
@@ -262,6 +261,8 @@ export class SalesSync {
                                 
                                 if (!insErr) {
                                     totalUpserted += uniqueDbRows.length
+                                } else {
+                                    console.error('[Sync] Upsert error:', insErr)
                                 }
                             }
                         }

@@ -552,9 +552,9 @@ async function startWorker() {
 
   // Autopilot nocturn - se trage ziua de ieri, în fiecare dimineață la 05:00
   cron.schedule('0 5 * * *', async () => {
-    console.log('[CRON] Pornire automată sincronizare Iiko (1 zi, după tura anterioară)');
+    console.log('[CRON] Pornire automată sincronizare Iiko (2 zile, după tura anterioară)');
     try {
-        await salesSync.syncSales(1);
+        await salesSync.syncSales(2);
         console.log('[CRON] Sincronizare nocturnă finalizată.');
     } catch(e) {
         console.error('[CRON] Eroare la sincronizare nocturnă:', e);

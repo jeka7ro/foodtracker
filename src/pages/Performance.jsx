@@ -233,7 +233,7 @@ export default function Performance() {
             await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/sync-sales`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ days: 180 })
+                body: JSON.stringify({ days: Math.max(3, periodDays) })
             });
         } catch (e) {}
     };
