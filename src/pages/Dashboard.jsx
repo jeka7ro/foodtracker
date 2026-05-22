@@ -318,21 +318,30 @@ export default function Dashboard() {
         queryFn: async () => { const { data } = await supabase.from('restaurants').select('id,name,city,brand_id').eq('is_active',true); return data || [] }
     })
 
-    const triggerSync = async (days = 1) => {
+    const triggerSync = async (days) => {
         if (isSyncing) return
         setIsSyncing(true)
-        setSyncMessage(t('Sincronizarea a pornit...', 'Sync started...', 'Синхронизация запущена...'))
+        // Auto-detect missing days if not specified
+        let daysToSync = days
+        if (!daysToSync && lastSale) {
+            const lastRO = toRO(lastSale)
+            const nowRO = toRO(new Date().toISOString())
+            const diffMs = nowRO.getTime() - lastRO.getTime()
+            daysToSync = Math.max(1, Math.ceil(diffMs / 86400000) + 1) // +1 for safety
+        } else if (!daysToSync) {
+            daysToSync = 2
+        }
+        setSyncMessage(t(`Sincronizare ${daysToSync} zile...`, `Syncing ${daysToSync} days...`, `Синхр. ${daysToSync} дн...`))
         try {
             const workerUrl = import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'
             const resp = await fetch(`${workerUrl}/api/sync-sales`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ days })
+                body: JSON.stringify({ days: daysToSync })
             })
             const data = await resp.json()
             if (data.success) {
-                setSyncMessage(t('Sync în fundal...', 'Syncing in background...', 'Синхр. в фоне...'))
-                // Keep showing message for a bit
+                setSyncMessage(t(`Sync ${daysToSync}z în fundal...`, `Syncing ${daysToSync}d in bg...`, `Синхр. ${daysToSync}дн в фоне...`))
                 setTimeout(() => setSyncMessage(null), 5000)
             } else {
                 setSyncMessage(data.error || 'Error')
@@ -722,7 +731,7 @@ export default function Dashboard() {
                 </div>
 
                 <button 
-                    onClick={() => triggerSync(1)}
+                    onClick={() => triggerSync()}
                     disabled={isSyncing}
                     className="sync-btn"
                     style={{ 
@@ -840,8 +849,40 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            {/* ── MONTHLY COMPARISON CHART ── */}
-            {monthlyChart.length > 0 && (
+            {/* ── DAILY CHART: primary when short range (≤ 90 zile) ── */}
+            {['azi','ieri','7z','sapt','luna','luna_trec'].includes(activePreset) && an.dayChart.length > 0 && (
+                <div style={C({ marginBottom: 24 })}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+                        <div>
+                            <h3 className="card-heading" style={{ margin:0, marginBottom:4 }}>
+                                {t('Trend Zilnic', 'Daily Trend', 'Ежедневный тренд')} — {an.pL}
+                            </h3>
+                            <p style={{ margin:0, fontSize:11, opacity:0.5 }}>
+                                {t('Venituri pe zi · hover pentru detalii', 'Revenue per day · hover for details', 'Выручка по дням · наведите для деталей')}
+                            </p>
+                        </div>
+                    </div>
+                    <div style={{ height: 260 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={an.dayChart} margin={{ top:4, right:4, left:0, bottom:36 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
+                                <XAxis dataKey="day" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                    angle={-45} textAnchor="end" height={44}
+                                    interval={an.dayChart.length > 14 ? Math.floor(an.dayChart.length / 10) : 0}/>
+                                <YAxis fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                    tickFormatter={v => v>0?`${(v/1000).toFixed(0)}k`:''} width={32}/>
+                                <Tooltip content={<TT/>}/>
+                                <Bar dataKey="rev" name={t('Vânzări', 'Sales', 'Продажи')} radius={[5,5,0,0]} maxBarSize={40}>
+                                    {an.dayChart.map((_,i) => <Cell key={i} fill={isDark ? 'rgba(99,102,241,0.75)' : '#6366F1'}/>)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {/* ── MONTHLY COMPARISON CHART — only for YTD / quarter / full-year presets ── */}
+            {monthlyChart.length > 1 && ['trim','ytd','custom'].includes(activePreset) && (
                 <div style={C({ })}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
                         <div>
@@ -944,8 +985,9 @@ export default function Dashboard() {
 
 
 
-            {/* DAILY TREND + PLATFORM BAR */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
+            {/* PLATFORM BAR — full-width on short ranges, half-width alongside daily on long ranges */}
+            <div style={{ display:'grid', gridTemplateColumns: ['trim','ytd','custom'].includes(activePreset) ? '1fr 1fr' : '1fr', gap:18 }}>
+                {['trim','ytd','custom'].includes(activePreset) && (
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Trend Zilnic', 'Daily Trend', 'Ежедневный тренд')} — {an.pL}</h3>
                     {an.dayChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
@@ -964,6 +1006,7 @@ export default function Dashboard() {
                         </ResponsiveContainer>
                     </div>}
                 </div>
+                )}
 
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Platforme Comparative', 'Platforms Comparison', 'Сравнение платформ')}</h3>
