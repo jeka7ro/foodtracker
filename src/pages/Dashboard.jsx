@@ -59,7 +59,7 @@ function Dlt({ v }) {
     if (v == null || isNaN(v)) return <span style={{ color:'#94A3B8', fontSize:12 }}>—</span>
     const color = v > 0 ? '#10B981' : v < 0 ? '#EF4444' : '#94A3B8'
     const Icon = v > 0 ? TrendingUp : v < 0 ? TrendingDown : Minus
-    return <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, fontWeight:700, color }}><Icon size={12}/>{v>0?'+':''}{v.(v => v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}))(an.A.rev/an.A.orders)}%</span>
+    return <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, fontWeight:700, color }}><Icon size={12}/>{v>0?'+':''}{v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1})}%</span>
 }
 
 function agg(rows, rests, brands, t) {
@@ -637,7 +637,7 @@ export default function Dashboard() {
                                 <span style={{opacity:0.6,fontSize:11,fontWeight:500,flex:1}}>{b}</span>
                                 {pct !== null && (
                                     <span style={{ fontSize:10, fontWeight:700, color: pct >= 0 ? '#10B981' : '#EF4444' }}>
-                                        {pct >= 0 ? '▲' : '▼'}{Math.abs(pct).(v => v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}))(an.A.rev/an.A.orders)}%
+                                        {pct >= 0 ? '▲' : '▼'}{Math.abs(pct).toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1})}%
                                     </span>
                                 )}
                                 <span style={{fontSize:11,fontWeight:600}}>{Math.round(v).toLocaleString('ro-RO')} RON</span>
@@ -665,7 +665,7 @@ export default function Dashboard() {
             <g>
                 <foreignObject x={x + width/2 - 28} y={y - 28} width={56} height={22}>
                     <div xmlns="http://www.w3.org/1999/xhtml" style={{fontSize:10,fontWeight:800,color,background:bg,borderRadius:6,padding:'2px 5px',textAlign:'center',whiteSpace:'nowrap'}}>
-                        {d.delta >= 0 ? '▲' : '▼'} {Math.abs(d.delta).(v => v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}))(an.A.rev/an.A.orders)}%
+                        {d.delta >= 0 ? '▲' : '▼'} {Math.abs(d.delta).toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1})}%
                     </div>
                 </foreignObject>
             </g>
@@ -974,7 +974,7 @@ export default function Dashboard() {
                                             transition:'width 0.5s' }}/>
                                     </div>
                                     <div style={{ fontSize:10, opacity:0.4, marginTop:4, textAlign:'right' }}>
-                                        {an.A.rev > 0 ? ((curBrand.rev/an.A.rev)*100).(v => v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}))(an.A.rev/an.A.orders) : 0}% {t('din total', 'of total', 'от общего')}
+                                        {an.A.rev > 0 ? ((curBrand.rev/an.A.rev)*100).toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}) : 0}% {t('din total', 'of total', 'от общего')}
                                     </div>
                                 </div>
                             )
@@ -1179,7 +1179,7 @@ export default function Dashboard() {
                                     <td style={{ padding:'12px 12px', textAlign:'right', fontWeight:700 }}>{p.aOrd}</td>
                                     <td style={{ padding:'12px 12px', textAlign:'right', fontSize:12, opacity:0.6 }}>{p.bOrd}</td>
                                     <td style={{ padding:'12px 12px', textAlign:'right' }}><Dlt v={p.dOrd}/></td>
-                                    <td style={{ padding:'12px 12px', textAlign:'right', fontSize:12, fontWeight:600 }}>{p.aOrd > 0 ? (p.aRev/p.aOrd).(v => v.toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}))(an.A.rev/an.A.orders) : '—'} RON</td>
+                                    <td style={{ padding:'12px 12px', textAlign:'right', fontSize:12, fontWeight:600 }}>{p.aOrd > 0 ? (p.aRev/p.aOrd).toLocaleString('ro-RO', {minimumFractionDigits:1, maximumFractionDigits:1}) : '—'} RON</td>
                                 </tr>
                             ))}
                             {an.platRows.length === 0 && <tr><td colSpan="8" style={{ textAlign:'center', padding:28, opacity:0.4 }}>{t('Fără date', 'No data', 'Нет данных')}</td></tr>}
