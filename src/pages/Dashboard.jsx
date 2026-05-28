@@ -849,8 +849,8 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            {/* ── DAILY CHART: primary when short range (≤ 90 zile) ── */}
-            {['azi','ieri','7z','sapt','luna','luna_trec'].includes(activePreset) && an.dayChart.length > 0 && (
+            {/* ── DAILY CHART: primary when short range (azi / ieri / 7z / sapt) ── */}
+            {['azi','ieri','7z','sapt'].includes(activePreset) && an.dayChart.length > 0 && (
                 <div style={C({ marginBottom: 24 })}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
                         <div>
@@ -874,6 +874,38 @@ export default function Dashboard() {
                                 <Tooltip content={<TT/>}/>
                                 <Bar dataKey="rev" name={t('Vânzări', 'Sales', 'Продажи')} radius={[5,5,0,0]} maxBarSize={40}>
                                     {an.dayChart.map((_,i) => <Cell key={i} fill={isDark ? 'rgba(99,102,241,0.75)' : '#6366F1'}/>)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {/* ── DAILY BREAKDOWN CHART — when 'luna' or 'luna_trec' is active ── */}
+            {['luna','luna_trec'].includes(activePreset) && an.dayChart.length > 0 && (
+                <div style={C({ marginBottom: 0 })}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+                        <div>
+                            <h3 className="card-heading" style={{ margin:0, marginBottom:4 }}>
+                                {t('Vânzări pe Zile', 'Sales by Day', 'Продажи по дням')} — {an.pL}
+                            </h3>
+                            <p style={{ margin:0, fontSize:11, opacity:0.5 }}>
+                                {t('Venituri zilnice · hover pentru detalii', 'Daily revenue · hover for details', 'Ежедневная выручка · наведите для деталей')}
+                            </p>
+                        </div>
+                    </div>
+                    <div style={{ height: 280 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={an.dayChart} margin={{ top:8, right:8, left:0, bottom:40 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
+                                <XAxis dataKey="day" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                    angle={-45} textAnchor="end" height={44}
+                                    interval={an.dayChart.length > 20 ? Math.floor(an.dayChart.length / 15) : 0}/>
+                                <YAxis fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                    tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : ''} width={36}/>
+                                <Tooltip content={<TT/>}/>
+                                <Bar dataKey="rev" name={t('Vânzări', 'Sales', 'Продажи')} radius={[6,6,0,0]} maxBarSize={48}>
+                                    {an.dayChart.map((_,i) => <Cell key={i} fill={isDark ? 'rgba(99,102,241,0.8)' : '#6366F1'}/>)}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
