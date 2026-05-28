@@ -713,7 +713,10 @@ export default function Dashboard() {
         const diffMs = nowRO.getTime() - lastRO.getTime()
         const diffMin = Math.round(diffMs / 60000)
         const diffH = Math.round(diffMs / 3600000)
-        const isStale = diffMin > 120 // mai mult de 2 ore = posibil sync oprit
+        // Stale logic: during business hours (09-23) → >2h; outside (night) → >18h
+        const hourRO = nowRO.getHours()
+        const inBusinessHours = hourRO >= 9 && hourRO < 23
+        const isStale = inBusinessHours ? diffMin > 120 : diffMin > 1080 // 18h overnight
         const loc = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')
         const agoTxt = lang === 'ru' ? 'назад' : (lang === 'en' ? 'ago' : 'în urmă')
         const label = diffMin < 60 ? `${diffMin} min ${agoTxt}` : diffH < 24 ? `${diffH}h ${agoTxt}` : lastRO.toLocaleDateString(loc, { day:'2-digit', month:'short' })
@@ -727,7 +730,9 @@ export default function Dashboard() {
                         color: isStale ? '#EF4444' : '#10B981',
                         cursor:'default' }}>
                     {isStale ? <WifiOff size={11}/> : <Wifi size={11}/>}
-                    {isStale ? `${t('Sync oprit — ultima comandă acum', 'Sync stopped — last order', 'Синхр. остановлена — последний заказ')} ${label}` : `Live · ${label}`}
+                    {isStale
+                        ? `${t('Ultima comandă', 'Last order', 'Последний заказ')} ${label}`
+                        : `Live · ${label}`}
                 </div>
 
                 <button 
