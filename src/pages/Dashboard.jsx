@@ -374,7 +374,7 @@ export default function Dashboard() {
 
     // ── Yearly monthly comparison ──
     // Fiecare lună e fetchuită în PARALEL (5 requesturi simultane) — corect și rapid
-    const { data: yearlyData = [] } = useQuery({
+    const { data: yearlyData = [], isLoading: yearlyLoading } = useQuery({
         queryKey: ['dash-yearly'],
         staleTime: 15 * 60 * 1000, // 15 min — datele nu se schimbă des
         queryFn: async () => {
@@ -887,77 +887,56 @@ export default function Dashboard() {
             )}
 
             {/* ── DAILY BREAKDOWN CHART — when 'luna' or 'luna_trec' is active ── */}
-            {['luna','luna_trec'].includes(activePreset) && an.dayChart.length > 0 && (
-                <div style={C({ marginBottom: 0 })}>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-                        <div>
-                            <h3 className="card-heading" style={{ margin:0, marginBottom:4 }}>
-                                {t('Vânzări pe Zile', 'Sales by Day', 'Продажи по дням')} — {an.pL}
-                            </h3>
-                            <p style={{ margin:0, fontSize:11, opacity:0.5 }}>
-                                {t('Venituri zilnice · hover pentru detalii', 'Daily revenue · hover for details', 'Ежедневная выручка · наведите для деталей')}
-                            </p>
-                        </div>
-                    </div>
-                    <div style={{ height: 280 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={an.dayChart} margin={{ top:8, right:8, left:0, bottom:40 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
-                                <XAxis dataKey="day" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
-                                    angle={-45} textAnchor="end" height={44}
-                                    interval={an.dayChart.length > 20 ? Math.floor(an.dayChart.length / 15) : 0}/>
-                                <YAxis fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
-                                    tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : ''} width={36}/>
-                                <Tooltip content={<TT/>}/>
-                                <Bar dataKey="rev" name={t('Vânzări', 'Sales', 'Продажи')} radius={[6,6,0,0]} maxBarSize={48}>
-                                    {an.dayChart.map((_,i) => <Cell key={i} fill={isDark ? 'rgba(99,102,241,0.8)' : '#6366F1'}/>)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
 
-            {/* ── MONTHLY COMPARISON CHART — only for YTD / quarter / full-year presets ── */}
-            {monthlyChart.length > 1 && ['trim','ytd','custom'].includes(activePreset) && (
-                <div style={C({ })}>
+            {/* ── MONTHLY COMPARISON CHART ── */}
+            {['luna','luna_trec','trim','ytd','custom'].includes(activePreset) && (
+                <div style={C({ marginBottom: 24 })}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
                         <div>
                             <h3 className="card-heading" style={{ margin:0, marginBottom:4 }}>{t('Comparație Lunară', 'Monthly Comparison', 'Сравнение по месяцам')} {new Date().getFullYear()}</h3>
                             <p style={{ margin:0, fontSize:11, opacity:0.5 }}>{t('Venituri totale per lună · hover pentru detalii · linia = AOV', 'Total monthly revenue · hover for details · line = AOV', 'Общая месячная выручка · наведите для деталей · линия = AOV')}</p>
                         </div>
-                        <div style={{ display:'flex', gap:16, fontSize:11 }}>
-                        </div>
                     </div>
                     <div style={{ height: 280 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={monthlyChart} margin={{ top:32, right:20, left:10, bottom:0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
-                                <XAxis dataKey="month" fontSize={12} fontWeight={700} tickLine={false} axisLine={false} stroke="var(--text-secondary)"/>
-                                <YAxis yAxisId="rev" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
-                                    tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : ''} width={36}/>
-                                <YAxis yAxisId="aov" orientation="right" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
-                                    tickFormatter={v => v > 0 ? `${v}` : ''} width={40}/>
-                                <Tooltip content={<YearlyTT />}/>
-                                {[...brands, { id: 'altele', name: 'Altele' }].map((br, idx, arr) => {
-                                    const isLast = idx === arr.length - 1
-                                    const bc = { 'sushi master': '#EF4444', 'smash me': '#8B5CF6', 'we love sushi': '#F59E0B', 'ikura sushi': '#10B981' }
-                                    const color = bc[(br.name || '').toLowerCase()] || RC[idx % RC.length]
-                                    return (
-                                        <Bar key={br.id} yAxisId="rev" dataKey={`b_${br.name}`} name={br.name} stackId="a" fill={color} maxBarSize={72} minPointSize={12}
-                                            radius={isLast ? [8,8,0,0] : [0,0,0,0]}>
-                                            {isLast && <LabelList dataKey="rev" content={<MonthDeltaLabel />} />}
-                                        </Bar>
-                                    )
-                                })}
-                                <Line yAxisId="aov" type="monotone" dataKey="aov" name="AOV" stroke="#F59E0B"
-                                    strokeWidth={2} dot={{ fill:'#F59E0B', r:4, strokeWidth:0 }}
-                                    activeDot={{ r:6 }}/>
-                            </ComposedChart>
-                        </ResponsiveContainer>
+                        {yearlyLoading && monthlyChart.length === 0 ? (
+                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.35, fontSize: 13 }}>
+                                ⏳ {t('Se încarcă graficul lunar...', 'Loading monthly chart...', 'Загрузка...')}
+                            </div>
+                        ) : monthlyChart.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={monthlyChart} margin={{ top:32, right:20, left:10, bottom:0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
+                                    <XAxis dataKey="month" fontSize={12} fontWeight={700} tickLine={false} axisLine={false} stroke="var(--text-secondary)"/>
+                                    <YAxis yAxisId="rev" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                        tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : ''} width={36}/>
+                                    <YAxis yAxisId="aov" orientation="right" fontSize={10} tickLine={false} axisLine={false} stroke="var(--text-secondary)"
+                                        tickFormatter={v => v > 0 ? `${v}` : ''} width={40}/>
+                                    <Tooltip content={<YearlyTT />}/>
+                                    {[...brands, { id: 'altele', name: 'Altele' }].map((br, idx, arr) => {
+                                        const isLast = idx === arr.length - 1
+                                        const bc = { 'sushi master': '#EF4444', 'smash me': '#8B5CF6', 'we love sushi': '#F59E0B', 'ikura sushi': '#10B981' }
+                                        const color = bc[(br.name || '').toLowerCase()] || RC[idx % RC.length]
+                                        return (
+                                            <Bar key={br.id} yAxisId="rev" dataKey={`b_${br.name}`} name={br.name} stackId="a" fill={color} maxBarSize={72} minPointSize={12}
+                                                radius={isLast ? [8,8,0,0] : [0,0,0,0]}>
+                                                {isLast && <LabelList dataKey="rev" content={<MonthDeltaLabel />} />}
+                                            </Bar>
+                                        )
+                                    })}
+                                    <Line yAxisId="aov" type="monotone" dataKey="aov" name="AOV" stroke="#F59E0B"
+                                        strokeWidth={2} dot={{ fill:'#F59E0B', r:4, strokeWidth:0 }}
+                                        activeDot={{ r:6 }}/>
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.35, fontSize: 13 }}>
+                                {t('Fără date', 'No data', 'Нет данных')}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
+
 
             {/* ── BRAND BREAKDOWN — imediat după graficul lunar ── */}
             {brands.length > 0 && Object.keys(an.A.byBrand).length > 0 && (
@@ -1022,12 +1001,12 @@ export default function Dashboard() {
 
 
 
-            {/* PLATFORM BAR — full-width on short ranges, half-width alongside daily on long ranges */}
-            <div style={{ display:'grid', gridTemplateColumns: ['trim','ytd','custom'].includes(activePreset) ? '1fr 1fr' : '1fr', gap:18 }}>
-                {['trim','ytd','custom'].includes(activePreset) && (
+            {/* PLATFORM BAR & DAILY CHART */}
+            <div style={{ display:'grid', gridTemplateColumns: ['luna','luna_trec','trim','ytd','custom'].includes(activePreset) ? '1fr 1fr' : '1fr', gap:18, marginBottom: 24 }}>
+                {['luna','luna_trec','trim','ytd','custom'].includes(activePreset) && (
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Trend Zilnic', 'Daily Trend', 'Ежедневный тренд')} — {an.pL}</h3>
-                    {an.dayChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
+                    {an.dayChart.length === 0 ? <div style={{ height:220, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>⏳ {t('Se încarcă...', 'Loading...', 'Загрузка...')}</div> :
                     <div style={{ height:220 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={an.dayChart} margin={{ top:4, right:4, left:0, bottom:30 }}>
@@ -1047,8 +1026,8 @@ export default function Dashboard() {
 
                 <div style={C({})}>
                     <h3 className="card-heading">{t('Platforme Comparative', 'Platforms Comparison', 'Сравнение платформ')}</h3>
-                    {an.barChart.length === 0 ? <div style={{ height:200, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>{t('Fără date', 'No data', 'Нет данных')}</div> :
-                    <div style={{ height:200 }}>
+                    {an.barChart.length === 0 ? <div style={{ height:220, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.4, fontSize:13 }}>⏳ {t('Se încarcă...', 'Loading...', 'Загрузка...')}</div> :
+                    <div style={{ height:220 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={an.barChart} margin={{ top:4, right:4, left:0, bottom:0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false}/>
@@ -1063,6 +1042,7 @@ export default function Dashboard() {
                     </div>}
                 </div>
             </div>
+
 
             {/* TOP PRODUSE PE BRANDURI */}
             {brands.length > 0 && (
@@ -1124,7 +1104,7 @@ export default function Dashboard() {
                                                     onMouseEnter={e => e.currentTarget.style.opacity='0.7'}
                                                     onMouseLeave={e => e.currentTarget.style.opacity='1'}>
                                                     {imgUrl
-                                                        ? <img src={`http://localhost:3001/api/img?url=${encodeURIComponent(imgUrl)}`}
+                                                        ? <img src={`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/img?url=${encodeURIComponent(imgUrl)}`}
                                                             alt={p.name}
                                                             style={{ width:32, height:32, borderRadius:8, objectFit:'cover', flexShrink:0, border:`1px solid ${col}30` }}
                                                             onError={e => { e.target.style.display='none' }}

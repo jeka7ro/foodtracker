@@ -44,8 +44,45 @@ export default function MarketingPromotions() {
     // Filters — read from URL on mount, kept in state
     const [selectedCategory, setSelectedCategoryState] = useState(() => searchParams.get('cat') || '')
     const [selectedPlatform, setSelectedPlatformState] = useState(() => searchParams.get('platform') || '')
-    const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
+    const [activePreset, setActivePreset] = useState('azi')
+
+    const PRESETS = [
+        { id: 'azi', label: lang === 'ru' ? 'Сегодня' : lang === 'en' ? 'Today' : 'Azi' },
+        { id: 'ieri', label: lang === 'ru' ? 'Вчера' : lang === 'en' ? 'Yesterday' : 'Ieri' },
+        { id: 'sapt', label: lang === 'ru' ? 'Неделя' : lang === 'en' ? 'Week' : 'Săpt. Cur.' },
+        { id: 'luna', label: lang === 'ru' ? 'Месяц' : lang === 'en' ? 'This Month' : 'Luna Cur.' },
+        { id: 'luna_trec', label: lang === 'ru' ? 'Прош. месяц' : lang === 'en' ? 'Last Month' : 'Luna Trec.' },
+    ]
+
+    const handlePresetClick = (presetId) => {
+        setActivePreset(presetId)
+        const d = new Date()
+        const y = d.getFullYear(), m = d.getMonth(), dt = d.getDate()
+        const format = (date) => {
+            const tzOffset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - tzOffset).toISOString().split('T')[0]
+        }
+        
+        if (presetId === 'azi') {
+            setStartDate(format(d)); setEndDate(format(d));
+        } else if (presetId === 'ieri') {
+            const yest = new Date(y, m, dt - 1);
+            setStartDate(format(yest)); setEndDate(format(yest));
+        } else if (presetId === 'sapt') {
+            const dow = d.getDay() || 7;
+            const startOfWeek = new Date(y, m, dt - dow + 1);
+            setStartDate(format(startOfWeek)); setEndDate(format(d));
+        } else if (presetId === 'luna') {
+            const startOfMonth = new Date(y, m, 1);
+            setStartDate(format(startOfMonth)); setEndDate(format(d));
+        } else if (presetId === 'luna_trec') {
+            const startOfLast = new Date(y, m - 1, 1);
+            const endOfLast = new Date(y, m, 0);
+            setStartDate(format(startOfLast)); setEndDate(format(endOfLast));
+        }
+    }
 
     // Collapsed city sections
     const [collapsedCities, setCollapsedCities] = useState({})
@@ -168,14 +205,27 @@ export default function MarketingPromotions() {
                         {(lang === 'ru' ? 'Акции конкурентов, сгруппированные по городам.' : (lang === 'en' ? 'Competitor promotions grouped by city.' : 'Ofertele concurenței grupate pe orașe — Glovo, Wolt și Bolt.'))}
                     </p>
                 </div>
-                {/* Date range */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', padding: '6px', borderRadius: '12px', border: `1px solid ${colors.border}` }}>
-                    <div style={{ fontSize: '12px', color: colors.textSecondary, padding: '0 8px', fontWeight: '600' }}>{(lang === 'ru' ? 'Период:' : (lang === 'en' ? 'Period:' : 'Perioada:'))}</div>
-                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                        style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: isDark ? 'rgba(0,0,0,0.2)' : '#f4f4f5', color: colors.text, fontSize: '13px', outline: 'none' }} />
-                    <span style={{ color: colors.textSecondary }}>—</span>
-                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-                        style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: isDark ? 'rgba(0,0,0,0.2)' : '#f4f4f5', color: colors.text, fontSize: '13px', outline: 'none' }} />
+                {/* Date range & presets */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '4px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: '99px', padding: '3px' }}>
+                        {PRESETS.map(p => (
+                            <button key={p.id} onClick={() => handlePresetClick(p.id)}
+                                style={{ fontSize: '11px', fontWeight: '700', padding: '5px 13px', borderRadius: '99px', border: 'none',
+                                    background: activePreset === p.id ? '#6366F1' : 'transparent',
+                                    color: activePreset === p.id ? '#fff' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'),
+                                    cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+                                {p.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: isDark ? 'rgba(255,255,255,0.05)' : '#fff', padding: '6px', borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+                        <div style={{ fontSize: '12px', color: colors.textSecondary, padding: '0 8px', fontWeight: '600' }}>{(lang === 'ru' ? 'Период:' : (lang === 'en' ? 'Period:' : 'Perioada:'))}</div>
+                        <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setActivePreset('custom') }}
+                            style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: isDark ? 'rgba(0,0,0,0.2)' : '#f4f4f5', color: colors.text, fontSize: '13px', outline: 'none' }} />
+                        <span style={{ color: colors.textSecondary }}>—</span>
+                        <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setActivePreset('custom') }}
+                            style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: isDark ? 'rgba(0,0,0,0.2)' : '#f4f4f5', color: colors.text, fontSize: '13px', outline: 'none' }} />
+                    </div>
                 </div>
             </div>
 

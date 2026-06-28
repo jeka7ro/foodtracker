@@ -341,6 +341,15 @@ app.get('/api/health-sync', (req, res) => {
     return res.json({ status: 'ok', action: 'none', hoursSinceLastSync: hoursSinceSync.toFixed(1) })
 })
 
+// Auto-sync intern pentru mediul local (rulează la fiecare oră)
+setInterval(() => {
+    if (!salesSync.progress?.isSyncing) {
+        console.log('[AUTO-SYNC] Internal timer triggering sales sync...')
+        salesSync.syncSales(2).catch(e => console.error('[AUTO-SYNC] Sync err:', e))
+    }
+}, 60 * 60 * 1000) // La fiecare oră
+
+
 // ─── 1:1 SYNC Test (Iiko vs Aggregators) ───
 app.post('/api/sync-test-all', async (req, res) => {
     try {

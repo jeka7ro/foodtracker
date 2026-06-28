@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import AppLogo from '../components/AppLogo'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -81,18 +82,9 @@ export default function Login() {
                 boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
                 animation: 'fadeUp 0.5s ease',
             }}>
-                {/* Logo + title */}
-                <div style={{ marginBottom: '32px' }}>
-                    <img
-                        src="/getapp_smart_food_white.png"
-                        alt="App Logo"
-                        style={{
-                            height: '90px',
-                            display: 'block',
-                            margin: '0 auto',
-                            objectFit: 'contain',
-                        }}
-                    />
+                {/* Logo */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+                    <AppLogo height={96} textColor="#ffffff" />
                 </div>
 
                 <form onSubmit={handleSubmit}>

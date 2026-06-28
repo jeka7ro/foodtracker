@@ -18,6 +18,8 @@ import CompetitorProducts from './pages/CompetitorProducts'
 import Competitors from './pages/Competitors'
 import Brands from './pages/Brands'
 import Restaurants from './pages/Restaurants'
+import SyncReports from './pages/SyncReports'
+import AppLogo from './components/AppLogo'
 import Alerts from './pages/Alerts'
 import Events from './pages/Events'
 import Rules from './pages/Rules'
@@ -32,7 +34,6 @@ import RoleSettings from './pages/RoleSettings'
 import IikoProducts from './pages/IikoProducts'
 import Reputation from './pages/Reputation'
 import ProductAnalytics from './pages/ProductAnalytics'
-import SyncReports from './pages/SyncReports'
 
 function ProtectedRoute({ children }) {
     const { user, isLoadingAuth } = useAuth()
@@ -241,16 +242,10 @@ function Layout({ children }) {
                     justifyContent: 'center',
                     boxSizing: 'border-box',
                 }}>
-                    <img
-                        src="/getapp_smart_food_white.png"
-                        alt="Logo"
-                        style={{
-                            height: sidebarCollapsed ? '42px' : '64px',
-                            width: 'auto',
-                            objectFit: 'contain',
-                            transform: sidebarCollapsed ? 'none' : 'translateX(24px)',
-                            transition: 'all 0.2s',
-                        }}
+                    <AppLogo 
+                        height={sidebarCollapsed ? 32 : 54} 
+                        textColor={isDark ? '#ffffff' : '#111A2C'} 
+                        collapsed={sidebarCollapsed} 
                     />
                 </div>
 
