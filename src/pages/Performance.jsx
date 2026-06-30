@@ -389,7 +389,7 @@ export default function Performance() {
                 let hasMore = true
                 let i = 0
                 const step = 1000
-                const concurrency = 12
+                const concurrency = 3
                 
                 while (hasMore) {
                     const batchPromises = []
@@ -1093,15 +1093,18 @@ export default function Performance() {
                             
                             <div>
                                 {item.brand?.logo_url ? (
-                                    <img src={item.brand.logo_url} title={item.brand.name} alt={item.brand.name} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain', background: 'var(--glass-bg)', border: 'var(--glass-border)' }} />
+                                    <>
+                                        <img src={item.brand.logo_url} title={item.brand.name} alt={item.brand.name} style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain', background: 'var(--glass-bg)', border: 'var(--glass-border)' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
+                                        <div style={{ display: 'none', width: 32, height: 32, borderRadius: 8, background: 'var(--glass-bg-hover)', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontWeight: '800', fontSize: '14px' }}>{item.brand.name.charAt(0)}</div>
+                                    </>
                                 ) : (
-                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--glass-bg-hover)' }}></div>
+                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--glass-bg-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontWeight: '800', fontSize: '14px' }}>{item.brand ? item.brand.name.charAt(0) : ''}</div>
                                 )}
                             </div>
                             
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 {imgUrl ? (
-                                    <img src={imgUrl} alt={item.name} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
+                                    <img src={imgUrl} alt={item.name} loading="lazy" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', background: 'var(--glass-bg)', marginRight: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }} />
                                 ) : (
                                     <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--glass-bg)', marginRight: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}><Package size={18} /></div>
                                 )}
