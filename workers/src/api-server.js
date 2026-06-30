@@ -807,7 +807,17 @@ app.post('/api/competitive/scrape-restaurant', async (req, res) => {
     try {
         const { url, name, restaurantId } = req.body
         if (!url || !name) return res.status(400).json({ error: 'url and name required' })
-        const products = await competitorScraper.scrapeWoltProducts(url, name)
+        let products = []
+        let platform = 'wolt'
+        
+        if (url.includes('glovo')) {
+            platform = 'glovo'
+            products = await competitorScraper.scrapeGlovoProducts(url, name)
+        } else {
+            platform = 'wolt'
+            products = await competitorScraper.scrapeWoltProducts(url, name)
+        }
+
         if (products.length > 0 && restaurantId) {
             const today = new Date().toISOString().split('T')[0]
             await supabase.from('competitor_products').delete().eq('competitor_restaurant_id', restaurantId)
@@ -818,12 +828,13 @@ app.post('/api/competitive/scrape-restaurant', async (req, res) => {
                     is_promoted: p.isPromoted || false,
                     image_url: p.image_url || null,
                     description: p.description || null,
-                    snapshot_date: today, platform: 'wolt', city: null
+                    snapshot_date: today, platform, city: null
                 }))
             )
         }
-        res.json({ success: true, count: products.length, products })
+        res.json({ success: true, count: products.length, products, platform })
     } catch (err) {
+        console.error('[API] /competitive/scrape-restaurant error:', err.message)
         res.status(500).json({ error: err.message })
     }
 })
