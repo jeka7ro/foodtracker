@@ -17,17 +17,11 @@ import os from 'os'
 
 // Priority: env var → system Chrome (macOS) → let puppeteer find its own
 const SYSTEM_CHROME_MAC = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-const SYSTEM_CHROME_LINUX = '/usr/bin/google-chrome-stable'
 
 let CHROME_PATH = (process.env.PUPPETEER_EXECUTABLE_PATH || '').replace(/^"|"$/g, '').trim()
 
-if (!CHROME_PATH) {
-    if (os.platform() === 'darwin') {
-        CHROME_PATH = SYSTEM_CHROME_MAC
-    } else if (os.platform() === 'linux') {
-        // Render or Ubuntu fallback
-        CHROME_PATH = process.env.RENDER ? '/usr/bin/google-chrome' : SYSTEM_CHROME_LINUX
-    }
+if (!CHROME_PATH && os.platform() === 'darwin') {
+    CHROME_PATH = SYSTEM_CHROME_MAC
 }
 
 export const PUPPETEER_ARGS = [
