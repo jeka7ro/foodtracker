@@ -46,7 +46,6 @@ export default function Login() {
     }
 
     return (
-    return (
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: `url('/login_bg.png') center/cover no-repeat`,

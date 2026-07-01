@@ -47,7 +47,7 @@ export class SalesSync {
 
             // Authenticate keys once
             const tokens = {}
-            const apiKeys = ['a1fe30cdeb934aa0af01b6a35244b7f0', '124d0880f4b44717b69ee21d45fc2656']
+            const apiKeys = ['a1fe30cdeb934aa0af01b6a35244b7f0', '124d0880f4b44717b69ee21d45fc2656', '56597d13165c49c49c10e351b5eac617', '78a2206d3b9c4e93b9b5a5ee774f69aa']
             for (const k of apiKeys) {
                 try {
                     const resAuth = await fetch('https://api-eu.syrve.live/api/1/access_token', {
@@ -56,6 +56,48 @@ export class SalesSync {
                     })
                     if (resAuth.ok) tokens[k] = (await resAuth.json()).token
                 } catch(e) {}
+            }
+
+            // Fetch nomenclature for each unique organization to build a product -> topLevelCategory map
+            const orgProductCategoryMap = {}; // orgId -> { productId -> categoryName }
+            
+            for (const r of restaurants) {
+                const orgId = r.iiko_restaurant_id || r.iiko_config?.organizationId || r.iiko_config?.organization_id;
+                const apiKey = r.iiko_config?.api_login || 'a1fe30cdeb934aa0af01b6a35244b7f0';
+                const token = tokens[apiKey];
+                
+                if (orgId && token && !orgProductCategoryMap[orgId]) {
+                    try {
+                        const nRes = await fetch('https://api-eu.syrve.live/api/1/nomenclature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ organizationId: orgId })
+                        });
+                        if (nRes.ok) {
+                            const nData = await nRes.json();
+                            const groups = nData.groups || [];
+                            const products = nData.products || [];
+                            
+                            // Build group hierarchy map
+                            const groupMap = {};
+                            for (const g of groups) groupMap[g.id] = g;
+                            
+                            const getTopLevelGroup = (groupId) => {
+                                let curr = groupMap[groupId];
+                                while (curr && curr.parentGroup) {
+                                    curr = groupMap[curr.parentGroup];
+                                }
+                                return curr ? curr.name : '';
+                            };
+                            
+                            const productMap = {};
+                            for (const p of products) {
+                                productMap[p.id] = getTopLevelGroup(p.parentGroup);
+                            }
+                            orgProductCategoryMap[orgId] = productMap;
+                        }
+                    } catch(e) { console.error("Error fetching nomenclature for org", orgId, e.message); }
+                }
             }
 
             // Calculate total iterations
@@ -68,15 +110,11 @@ export class SalesSync {
             this.progress.total = validRests * daysBack;
 
             for (const r of restaurants) {
-                const orgId = r.iiko_restaurant_id || r.iiko_config?.organization_id
+                const orgId = r.iiko_restaurant_id || r.iiko_config?.organizationId || r.iiko_config?.organization_id
                 if (!orgId) continue
                 
-                const brandName = (r.brands?.name || '').toLowerCase()
-                let apiKey = r.iiko_config?.api_login
-                if (!apiKey) {
-                    if (brandName.includes('smash')) apiKey = '124d0880f4b44717b69ee21d45fc2656'
-                    else apiKey = 'a1fe30cdeb934aa0af01b6a35244b7f0'
-                }
+                let apiKey = r.iiko_config?.api_login || 'a1fe30cdeb934aa0af01b6a35244b7f0'
+                const filterCategories = r.iiko_config?.categories || null;
 
                 const token = tokens[apiKey]
                 if (!token) {
@@ -177,16 +215,6 @@ export class SalesSync {
                                 const baseId = o.order.id || o.id
                                 const uniqueOrderId = baseId + '_' + r.id
 
-                                const bName = (r.brands?.name || '').toLowerCase()
-                                const isSmashRest = bName.includes('smash')
-                                const isWlsRest = bName.includes('we love')
-                                const isIkuraRest = bName.includes('ikura')
-                                const isSmRest = !isSmashRest && !isWlsRest && !isIkuraRest
-
-                                const orderTypeName = (o.order.orderType?.name || '').toLowerCase()
-                                const isIkuraOrder = orderTypeName.includes('_i ') || orderTypeName.includes('ikura')
-                                const isWlsOrder = orderTypeName.includes('_w ') || orderTypeName.includes('wls') || orderTypeName.includes('we love')
-
                                 const items = []
                                 let orderSum = 0
 
@@ -194,29 +222,19 @@ export class SalesSync {
                                     for (const it of o.order.items) {
                                         if (it.type === 'Product' && it.product) {
                                             const pName = (it.product.name || '').toLowerCase()
+                                            const productId = it.product.id;
                                             
-                                            if (isSmashRest) {
-                                                // No filter for Smash, it has its own server
-                                            } else if (isWlsRest) {
-                                                // If the whole order is marked WLS, keep all items (except maybe obvious Sushi Master ones)
-                                                // Otherwise fallback to item level check
-                                                if (!isWlsOrder) {
-                                                    const hasWlsWords = pName.includes('we love') || pName.includes('wls') || pName.includes('w_') || pName.includes('love ') || pName.includes('delivery') || pName.includes('cola') || pName.includes('apa minerala') || pName.includes('apa plata');
-                                                    if (!hasWlsWords) continue;
-                                                } else {
-                                                    // Even if it's a WLS order, exclude obvious SM products if they got mixed in
-                                                    if (pName.includes('sushimaster') || pName.includes('shanghai') || pName.includes('big in japan')) continue;
-                                                }
-                                            } else if (isIkuraRest) {
-                                                if (!isIkuraOrder) {
-                                                    const hasIkuraWords = pName.includes('ikura') || pName.startsWith('i_') || pName.includes(' i_') || pName.includes('delivery') || pName.includes('cola') || pName.includes('apa minerala') || pName.includes('apa plata');
-                                                    if (!hasIkuraWords) continue;
-                                                } else {
-                                                    if (pName.includes('sushimaster') || pName.includes('shanghai') || pName.includes('big in japan')) continue;
-                                                }
-                                            } else if (isSmRest) {
-                                                if (pName.includes('we love') || pName.includes('wls') || pName.includes('w_') || pName.includes('love ') || pName.includes('ikura') || pName.startsWith('i_') || pName.includes(' i_') || pName.includes('burger') || pName.includes('smash')) {
-                                                    continue
+                                            // Get top level category for this product
+                                            const prodCategory = (orgProductCategoryMap[orgId]?.[productId] || '').toUpperCase();
+                                            
+                                            // Filter by Virtual Brand category if a filter is configured
+                                            if (filterCategories && filterCategories.length > 0) {
+                                                const matchesCategory = filterCategories.some(c => prodCategory.includes(c.toUpperCase()));
+                                                // Fallback: If category matching failed (e.g. missing nomenclature), string-match on name (last resort)
+                                                const fallbackMatch = filterCategories.some(c => pName.includes(c.toLowerCase()));
+                                                
+                                                if (!matchesCategory && !fallbackMatch) {
+                                                    continue; // Skip this product, it belongs to another Virtual Brand
                                                 }
                                             }
 
