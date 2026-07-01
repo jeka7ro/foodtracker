@@ -359,8 +359,9 @@ cron.schedule('*/3 * * * *', async () => {
 })
 
 // ─── AUTOMATIC IIKO SALES SYNC ───
-// Rulăm la fiecare 4 ore conform preferinței userului
-cron.schedule('0 */4 * * *', async () => {
+// Program de funcționare până la ora 22:00.
+// Sincronizare la 12:00, 16:00, 20:00 și 23:00 (final de zi). Până dimineața nu e nevoie.
+cron.schedule('0 12,16,20,23 * * *', async () => {
     console.log('\n📈 [SCHEDULER] Running scheduled automatic Iiko Sales Sync...')
     try {
         await salesSync.syncSales(7) // 7 zile back — safe net dacă Render pică câteva zile

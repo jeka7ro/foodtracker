@@ -713,10 +713,11 @@ export default function Dashboard() {
         const diffMs = nowRO.getTime() - lastRO.getTime()
         const diffMin = Math.round(diffMs / 60000)
         const diffH = Math.round(diffMs / 3600000)
-        // Stale logic: during business hours (09-23) → >4.5h (270m); outside (night) → >18h
+        // Stale logic: program de lucru este până la 22:00. Sync se face la 12, 16, 20, 23.
+        // Deci dimineața (înainte de 12:00), comanda de la 23:00 (13h) este perfect normală.
         const hourRO = nowRO.getHours()
-        const inBusinessHours = hourRO >= 9 && hourRO < 23
-        const isStale = inBusinessHours ? diffMin > 270 : diffMin > 1080 // 18h overnight
+        const isMorningGap = hourRO < 12
+        const isStale = isMorningGap ? diffMin > 840 : diffMin > 270 // 14h gap noaptea/dimineața, 4.5h ziua
         const loc = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')
         const agoTxt = lang === 'ru' ? 'назад' : (lang === 'en' ? 'ago' : 'în urmă')
         const label = diffMin < 60 ? `${diffMin} min ${agoTxt}` : diffH < 24 ? `${diffH}h ${agoTxt}` : lastRO.toLocaleDateString(loc, { day:'2-digit', month:'short' })
