@@ -58,6 +58,13 @@ const GLOVO_CAT_MAP = {
 }
 
 export class CompetitorScraper {
+    constructor() {
+        this.shouldStop = false;
+    }
+    
+    stopAllSearches() {
+        this.shouldStop = true;
+    }
 
     async getCitiesForBrand(brandId) {
         const { data } = await supabase.from('restaurants')
@@ -804,7 +811,9 @@ export class CompetitorScraper {
         onProgress?.({ type: 'start', totalSteps, cities: citiesToSearch, platforms: activePlatforms, search_term })
 
         for (const city of citiesToSearch) {
+            if (this.shouldStop) break;
             for (const platform of activePlatforms) {
+                if (this.shouldStop) break;
                 step++
                 const t0 = Date.now()
                 console.log(`\n  📍 ${city}/${platform} (${step}/${totalSteps})`)
@@ -829,17 +838,22 @@ export class CompetitorScraper {
             }
         }
 
-        console.log(`\n✅ "${search_term}" finalizat`)
-        onProgress?.({ type: 'done', totalSteps, search_term })
+        console.log(`\n✅ "${search_term}" finalizat${this.shouldStop ? ' (OPRIT)' : ''}`)
+        onProgress?.({ type: this.shouldStop ? 'stopped' : 'done', totalSteps, search_term })
     }
 
     async runAllSearches(onProgress = null) {
+        this.shouldStop = false;
         const { data: searches } = await supabase.from('competitive_searches').select('*').eq('is_active', true)
         if (!searches?.length) { console.log('[Competitor] No active searches'); return }
         const { data: brands } = await supabase.from('brands').select('name')
         const ourBrandNames = brands?.map(b => b.name) || []
         console.log(`\n🤖 ${searches.length} competitive searches...`)
-        for (const search of searches) await this.runSearch(search, ourBrandNames, onProgress)
-        console.log('\n✅ Toate căutările complete')
+        for (const search of searches) {
+            if (this.shouldStop) break;
+            await this.runSearch(search, ourBrandNames, onProgress)
+        }
+        console.log('\n✅ Toate căutările complete' + (this.shouldStop ? ' (OPRIT MANUL)' : ''))
+        this.shouldStop = false;
     }
 }

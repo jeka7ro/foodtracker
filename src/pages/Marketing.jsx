@@ -607,6 +607,17 @@ export default function Marketing() {
         }
     }
 
+    const handleStopAll = async () => {
+        try {
+            const resp = await fetch(`${import.meta.env.VITE_WORKER_URL || 'http://localhost:3001'}/api/competitive/stop-all`, { method: 'POST' })
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+            showToast('🛑 Semnal de oprire trimis! Se va opri după pasul curent.', 'warning', 4000)
+            setTimeout(() => { setRunningSearch(null); setProgressMap({}); loadHistory(); }, 3000)
+        } catch (err) {
+            showToast(`❌ Nu s-a putut opri. Worker offline.`, 'error', 8000)
+        }
+    }
+
     const handleSaveSearch = async () => {
         try {
             const { brand_id, search_term, platforms, cities, notes, auto_cities, glovo_category, wolt_category } = form
@@ -1488,6 +1499,19 @@ export default function Marketing() {
                         ) : (
                             <>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                    {runningSearch ? (
+                                        <button onClick={handleStopAll} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-full shadow-sm shadow-red-500/20 transition-all flex items-center gap-2">
+                                            <span className="material-symbols-rounded text-[20px]">stop_circle</span>
+                                            Oprește Toate
+                                        </button>
+                                    ) : (
+                                        <button onClick={handleRunAll} disabled={runningSearch} className="px-5 py-2.5 bg-[#12b4b4] hover:bg-[#0e9595] text-white font-medium rounded-full shadow-sm shadow-[#12b4b4]/20 transition-all flex items-center gap-2 disabled:opacity-50">
+                                            <span className={runningSearch === 'all' ? 'animate-spin material-symbols-rounded' : 'material-symbols-rounded text-[20px]'}>
+                                                {runningSearch === 'all' ? 'refresh' : 'play_arrow'}
+                                            </span>
+                                            Rulează Toate
+                                        </button>
+                                    )}
                                     <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: colors.text }}>
                                         {lang === 'ru' ? 'Конкуренция за "' : lang === 'en' ? 'Competition for "' : 'Concurență pentru "'}{selectedSearch.search_term}"
                                     </h2>

@@ -802,6 +802,12 @@ app.post('/api/competitive/run-all', async (req, res) => {
         .finally(() => { competitiveSearchRunning = false })
 })
 
+// Stop ALL active searches
+app.post('/api/competitive/stop-all', async (req, res) => {
+    competitorScraper.stopAllSearches()
+    res.json({ success: true, message: 'Sending stop signal to scraper...' })
+})
+
 // Scrape products for a specific restaurant on-demand
 app.post('/api/competitive/scrape-restaurant', async (req, res) => {
     try {
