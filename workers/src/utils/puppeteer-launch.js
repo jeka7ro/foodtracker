@@ -29,14 +29,15 @@ export const PUPPETEER_ARGS = [
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
     '--disable-accelerated-2d-canvas',
-    '--disable-gpu',
-    '--user-data-dir=/tmp/puppeteer_isolated_profile_' + Date.now()
+    '--disable-gpu'
 ]
 
 export async function launchBrowser(extraArgs = []) {
+    const profileDir = '--user-data-dir=/tmp/puppeteer_profile_' + Date.now() + '_' + Math.random().toString(36).substring(7)
+    
     const opts = {
         headless: true,
-        args: [...PUPPETEER_ARGS, ...(extraArgs.args || extraArgs)],
+        args: [...PUPPETEER_ARGS, profileDir, ...(extraArgs.args || extraArgs)],
     }
     if (CHROME_PATH) {
         opts.executablePath = CHROME_PATH
