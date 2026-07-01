@@ -1105,20 +1105,25 @@ export default function Dashboard() {
                             const maxQty = topProds[0]?.qty || 1
                             return (
                                 <div key={br.id} style={C({})}>
-                                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, paddingBottom:12, borderBottom:`1px dashed ${col}40` }}>
-                                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                                            <div style={{ 
-                                                width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${col}20, ${col}40)`,
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                                border: `1px solid ${col}40`, overflow: 'hidden'
-                                            }}>
-                                                {br.logo_url ? (
-                                                    <img src={br.logo_url} alt={br.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }}/>
-                                                ) : <span style={{ display:'none' }}></span>}
-                                                <span style={{ display: br.logo_url ? 'none' : 'flex', color: col, fontWeight: 800, fontSize: 14 }}>{br.name.substring(0, 2).toUpperCase()}</span>
+                                    <div style={{ position: 'relative', overflow: 'hidden', paddingBottom: 12, marginBottom: 16, borderBottom: `1px dashed ${col}40` }}>
+                                        {/* Background gradient banner taking full width behind header */}
+                                        <div style={{ position: 'absolute', top: -24, left: -24, right: -24, height: 80, background: `linear-gradient(135deg, ${col}15, ${col}05)`, zIndex: 0, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
+                                        
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1, marginTop: 4 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                <div style={{ 
+                                                    width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, ${col}20, ${col}40)`,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                                    border: `1px solid ${col}40`, overflow: 'hidden',
+                                                    boxShadow: `0 4px 12px ${col}20`
+                                                }}>
+                                                    {br.logo_url ? (
+                                                        <img src={br.logo_url} alt={br.name} style={{ width:'100%', height:'100%', objectFit:'contain', padding: 2, background: '#fff' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }}/>
+                                                    ) : <span style={{ display:'none' }}></span>}
+                                                    <span style={{ display: br.logo_url ? 'none' : 'flex', color: col, fontWeight: 800, fontSize: 16 }}>{br.name.substring(0, 2).toUpperCase()}</span>
+                                                </div>
+                                                <span style={{ fontSize:15, fontWeight:800 }}>{br.name}</span>
                                             </div>
-                                            <span style={{ fontSize:13, fontWeight:800 }}>{br.name}</span>
-                                        </div>
                                         <span style={{ fontSize:10, opacity:0.4, fontWeight:700 }}>{brandRows.length} cmd</span>
                                     </div>
                                     {topProds.length === 0
