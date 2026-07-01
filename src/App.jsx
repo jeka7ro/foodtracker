@@ -757,7 +757,14 @@ function Layout({ children }) {
                 </header>
 
                 {/* Main Content */}
-                <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', background: colors.bg }}>
+                <main style={{ 
+                    flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', 
+                    background: sidebarVariant === 1 ? (isDark ? 'rgba(20,20,25,0.95)' : 'rgba(255, 255, 255, 0.95)') : colors.bg,
+                    margin: sidebarVariant === 1 ? '16px' : '0',
+                    borderRadius: sidebarVariant === 1 ? '24px' : '0',
+                    border: sidebarVariant === 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none',
+                    boxShadow: sidebarVariant === 1 ? (isDark ? '0 8px 32px rgba(0,0,0,0.4)' : 'none') : 'none'
+                }}>
                     {children}
                 </main>
             </div>
