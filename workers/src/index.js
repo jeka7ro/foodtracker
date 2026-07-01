@@ -359,9 +359,8 @@ cron.schedule('*/3 * * * *', async () => {
 })
 
 // ─── AUTOMATIC IIKO SALES SYNC ───
-// Rulăm de 4 ori pe zi (04:00, 14:00, 22:00, 23:30) pentru a ține datele fresh
-// 23:30 garantează că datele de seară (peak hours) sunt sincronizate înainte de miezul nopții
-cron.schedule('0 4,14,22 * * *', async () => {
+// Rulăm la fiecare 4 ore conform preferinței userului
+cron.schedule('0 */4 * * *', async () => {
     console.log('\n📈 [SCHEDULER] Running scheduled automatic Iiko Sales Sync...')
     try {
         await salesSync.syncSales(7) // 7 zile back — safe net dacă Render pică câteva zile

@@ -713,10 +713,10 @@ export default function Dashboard() {
         const diffMs = nowRO.getTime() - lastRO.getTime()
         const diffMin = Math.round(diffMs / 60000)
         const diffH = Math.round(diffMs / 3600000)
-        // Stale logic: during business hours (09-23) → >2h; outside (night) → >18h
+        // Stale logic: during business hours (09-23) → >4.5h (270m); outside (night) → >18h
         const hourRO = nowRO.getHours()
         const inBusinessHours = hourRO >= 9 && hourRO < 23
-        const isStale = inBusinessHours ? diffMin > 120 : diffMin > 1080 // 18h overnight
+        const isStale = inBusinessHours ? diffMin > 270 : diffMin > 1080 // 18h overnight
         const loc = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'ro-RO')
         const agoTxt = lang === 'ru' ? 'назад' : (lang === 'en' ? 'ago' : 'în urmă')
         const label = diffMin < 60 ? `${diffMin} min ${agoTxt}` : diffH < 24 ? `${diffH}h ${agoTxt}` : lastRO.toLocaleDateString(loc, { day:'2-digit', month:'short' })
@@ -965,10 +965,14 @@ export default function Dashboard() {
                                     onMouseEnter={e => { e.currentTarget.style.borderColor=`${col}80`; e.currentTarget.style.transform='translateY(-2px)' }}
                                     onMouseLeave={e => { e.currentTarget.style.borderColor=isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'; e.currentTarget.style.transform='' }}>
                                     <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                                        {br.logo_url
-                                            ? <img src={br.logo_url} alt={br.name} style={{ height:28, maxWidth:80, objectFit:'contain' }}/>
-                                            : <div style={{ width:32, height:32, borderRadius:10, background:`${col}20`, color:col, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800 }}>{br.name[0]}</div>
-                                        }
+                                        {br.logo_url ? (
+                                            <>
+                                                <img src={br.logo_url} alt={br.name} style={{ height:28, maxWidth:80, objectFit:'contain' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }}/>
+                                                <div style={{ display:'none', width:32, height:32, borderRadius:10, background:`${col}20`, color:col, alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800 }}>{br.name[0]}</div>
+                                            </>
+                                        ) : (
+                                            <div style={{ width:32, height:32, borderRadius:10, background:`${col}20`, color:col, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800 }}>{br.name[0]}</div>
+                                        )}
                                         <div>
                                             <span style={{ fontSize:12, fontWeight:700, opacity:0.7, display:'block' }}>{br.name}</span>
                                             {numLocs > 0 && <span style={{ fontSize:10, opacity:0.5, display:'block', marginTop:1 }}>
