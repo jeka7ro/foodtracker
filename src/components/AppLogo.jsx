@@ -10,7 +10,7 @@ export default function AppLogo({ height = 56, textColor = '#2A2E35', collapsed 
             transition: 'all 0.2s'
         }}>
             <img 
-                src="/smart_food_logo.png" 
+                src={collapsed ? "/favicon.png" : "/smart_food_logo.png"} 
                 alt="GetApp Smart Food Logo" 
                 style={{ 
                     height: '100%', 
