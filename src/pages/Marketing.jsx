@@ -1330,13 +1330,19 @@ export default function Marketing() {
                             Șterge ({selectedSearchIds.size})
                         </button>
                     )}
-                    <button className="mkt-btn" onClick={handleRunAll} disabled={runningSearch === 'all'}
-                        style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: 'white', background: '#2bbec8', opacity: runningSearch === 'all' ? 0.7 : 1 }}>
-                        {runningSearch === 'all'
-                            ? <svg style={{ animation: 'spin 1s linear infinite' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                            : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>}
-                        {runningSearch === 'all' ? ((lang === 'ru' ? 'Выполняется…' : (lang === 'en' ? 'Running…' : 'Se rulează…'))) : t('run_all')}
-                    </button>
+                    {runningSearch ? (
+                        <button className="mkt-btn" onClick={handleStopAll}
+                            style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: 'white', background: '#EF4444' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /></svg>
+                            {lang === 'ru' ? 'Остановить' : lang === 'en' ? 'Stop' : 'Oprire'}
+                        </button>
+                    ) : (
+                        <button className="mkt-btn" onClick={handleRunAll}
+                            style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: 'white', background: '#2bbec8' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                            {t('run_all')}
+                        </button>
+                    )}
                     <button className="mkt-btn" onClick={() => { setShowForm(true); setEditingSearch(null) }}
                         style={{ ...glass, padding: '7px 14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: colors.text }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

@@ -1125,6 +1125,7 @@ export default function Dashboard() {
                                                 <span style={{ fontSize:15, fontWeight:800 }}>{br.name}</span>
                                             </div>
                                         <span style={{ fontSize:10, opacity:0.4, fontWeight:700 }}>{brandRows.length} cmd</span>
+                                        </div>
                                     </div>
                                     {topProds.length === 0
                                         ? <div style={{ fontSize:11, opacity:0.3, padding:'8px 0' }}>{t('Fără date', 'No data', 'Нет данных')}</div>
