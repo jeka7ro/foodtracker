@@ -262,7 +262,7 @@ export default function Dashboard() {
 
     // ── Helper paginare paralelă (refolosit în ambele query-uri) ──
     const fetchAllRows = async (from, to) => {
-        const fields = 'id,placed_at,total_amount,platform,restaurant_id,items'
+        const fields = 'id,placed_at,total_amount,platform,restaurant_id'
         const { count } = await supabase
             .from('platform_sales')
             .select('*', { count: 'exact', head: true })
@@ -312,6 +312,25 @@ export default function Dashboard() {
 
     // Alias pentru compatibilitate cu yearlyData (care are nevoie de toate vânzările)
     const sales = salesCur
+
+    // ── Query SEPARAT pentru Items (astfel incat Dashboardul principal sa se incarce instant) ──
+    const { data: salesCurItems = [], isLoading: isLoadingItems } = useQuery({
+        queryKey: ['dash-cur-items', dateRange.from, dateRange.to],
+        staleTime: 5 * 60 * 1000,
+        queryFn: async () => {
+            const { count } = await supabase.from('platform_sales').select('*', { count: 'exact', head: true }).gte('placed_at', dateRange.from).lte('placed_at', dateRange.to)
+            if (!count) return []
+            const CHUNK = 1000, PARALLEL = 3, all = []
+            for (let b = 0; b < Math.ceil(count / CHUNK); b += PARALLEL) {
+                const batch = Array.from({ length: Math.min(PARALLEL, Math.ceil(count / CHUNK) - b) }, (_, i) => 
+                    supabase.from('platform_sales').select('restaurant_id, items').gte('placed_at', dateRange.from).lte('placed_at', dateRange.to).range((b + i) * CHUNK, (b + i + 1) * CHUNK - 1).then(r => r.data || [])
+                )
+                const res = await Promise.all(batch)
+                res.forEach(r => all.push(...r))
+            }
+            return all
+        }
+    })
 
     const { data: rests = [] } = useQuery({
         queryKey: ['dash-rests'],
@@ -1070,7 +1089,7 @@ export default function Dashboard() {
                         {brands.map((br, bIdx) => {
                             const col = RC[bIdx % RC.length]
                             const brandRests = rests.filter(r => r.brand_id === br.id).map(r => r.id)
-                            const brandRows = salesCur.filter(s => brandRests.includes(s.restaurant_id))
+                            const brandRows = (prodView === 'alltime' ? allTimeItems : salesCurItems).filter(s => brandRests.includes(s.restaurant_id))
                             const prodMap = {}
                             brandRows.forEach(s => {
                                 if (!Array.isArray(s.items)) return
@@ -1088,10 +1107,17 @@ export default function Dashboard() {
                                 <div key={br.id} style={C({})}>
                                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, paddingBottom:12, borderBottom:`1px dashed ${col}40` }}>
                                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                                            {br.logo_url && (
-                                                <img src={br.logo_url} alt={br.name} style={{ height:24, maxWidth:80, objectFit:'contain' }} onError={(e) => { e.currentTarget.style.display='none'; if(e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.marginLeft='0'; }}/>
-                                            )}
-                                            <span style={{ fontSize:13, fontWeight:800, marginLeft: br.logo_url ? 8 : 0 }}>{br.name}</span>
+                                            <div style={{ 
+                                                width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${col}20, ${col}40)`,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                                border: `1px solid ${col}40`, overflow: 'hidden'
+                                            }}>
+                                                {br.logo_url ? (
+                                                    <img src={br.logo_url} alt={br.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }}/>
+                                                ) : <span style={{ display:'none' }}></span>}
+                                                <span style={{ display: br.logo_url ? 'none' : 'flex', color: col, fontWeight: 800, fontSize: 14 }}>{br.name.substring(0, 2).toUpperCase()}</span>
+                                            </div>
+                                            <span style={{ fontSize:13, fontWeight:800 }}>{br.name}</span>
                                         </div>
                                         <span style={{ fontSize:10, opacity:0.4, fontWeight:700 }}>{brandRows.length} cmd</span>
                                     </div>

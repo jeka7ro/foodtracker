@@ -16,7 +16,8 @@ export default function AppLogo({ height = 56, textColor = '#2A2E35', collapsed 
                     height: '100%', 
                     width: 'auto', 
                     objectFit: 'contain',
-                    maxWidth: collapsed ? '100%' : 'none'
+                    maxWidth: collapsed ? '100%' : 'none',
+                    filter: textColor === '#ffffff' ? 'brightness(0) invert(1)' : 'none'
                 }} 
             />
         </div>
