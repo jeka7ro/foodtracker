@@ -3,7 +3,7 @@ services:
     name: foodtracker-worker
     runtime: node
     rootDir: workers
-    buildCommand: npm install
+    buildCommand: ./render-build.sh
     startCommand: node src/api-server.js
     envVars:
       - key: NODE_VERSION
@@ -14,3 +14,5 @@ services:
         sync: false
       - key: PORT
         value: "10000"
+      - key: PUPPETEER_CACHE_DIR
+        value: "/opt/render/.cache/puppeteer"
