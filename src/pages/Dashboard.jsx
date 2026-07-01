@@ -1089,7 +1089,7 @@ export default function Dashboard() {
                                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, paddingBottom:12, borderBottom:`1px dashed ${col}40` }}>
                                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                                             {br.logo_url && (
-                                                <img src={br.logo_url} alt={br.name} style={{ height:24, maxWidth:80, objectFit:'contain' }}/>
+                                                <img src={br.logo_url} alt={br.name} style={{ height:24, maxWidth:80, objectFit:'contain' }} onError={(e) => { e.currentTarget.style.display='none'; if(e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.marginLeft='0'; }}/>
                                             )}
                                             <span style={{ fontSize:13, fontWeight:800, marginLeft: br.logo_url ? 8 : 0 }}>{br.name}</span>
                                         </div>
