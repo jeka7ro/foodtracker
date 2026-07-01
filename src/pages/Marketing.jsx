@@ -610,16 +610,19 @@ export default function Marketing() {
     const handleSaveSearch = async () => {
         try {
             const { brand_id, search_term, platforms, cities, notes, auto_cities, glovo_category, wolt_category } = form
+            const safeBrandId = brand_id || null
             let savedSearch
             if (editingSearch?.id) {
-                const { data } = await supabase.from('competitive_searches')
-                    .update({ brand_id, search_term, platforms, cities, notes, auto_cities, glovo_category, wolt_category, updated_at: new Date().toISOString() })
+                const { data, error } = await supabase.from('competitive_searches')
+                    .update({ brand_id: safeBrandId, search_term, platforms, cities, notes, auto_cities, glovo_category, wolt_category, updated_at: new Date().toISOString() })
                     .eq('id', editingSearch.id).select('*, brands(name, logo_url)').single()
+                if (error) throw error
                 savedSearch = data
             } else {
-                const { data } = await supabase.from('competitive_searches')
-                    .insert({ brand_id, search_term, platforms, cities, notes, is_active: true, auto_cities, glovo_category, wolt_category })
+                const { data, error } = await supabase.from('competitive_searches')
+                    .insert({ brand_id: safeBrandId, search_term, platforms, cities, notes, is_active: true, auto_cities, glovo_category, wolt_category })
                     .select('*, brands(name, logo_url)').single()
+                if (error) throw error
                 savedSearch = data
             }
             setShowForm(false); setEditingSearch(null)
