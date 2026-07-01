@@ -676,12 +676,15 @@ function Layout({ children }) {
                 <header style={{
                     height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                     padding: '0 24px', gap: '16px',
-                    background: isDark ? 'rgba(15,15,20,0.55)' : 'rgba(255, 255, 255, 0.75)',
-                    backdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
-                    WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.08)',
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-                    boxShadow: isDark ? '0 2px 32px rgba(0,0,0,0.5)' : '0 2px 32px rgba(0,0,0,0.05)',
-                    position: 'sticky', top: 0, zIndex: 50,
+                    background: sidebarVariant === 1 ? (isDark ? 'rgba(20,20,25,0.95)' : 'rgba(255, 255, 255, 0.95)') : (isDark ? 'rgba(15,15,20,0.55)' : 'rgba(255, 255, 255, 0.75)'),
+                    backdropFilter: sidebarVariant === 1 ? 'blur(20px)' : 'blur(48px) saturate(220%) brightness(1.08)',
+                    WebkitBackdropFilter: sidebarVariant === 1 ? 'blur(20px)' : 'blur(48px) saturate(220%) brightness(1.08)',
+                    border: sidebarVariant === 1 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none',
+                    borderBottom: sidebarVariant === 1 ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: sidebarVariant === 1 ? (isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.08)') : (isDark ? '0 2px 32px rgba(0,0,0,0.5)' : '0 2px 32px rgba(0,0,0,0.05)'),
+                    borderRadius: sidebarVariant === 1 ? '24px' : '0',
+                    margin: sidebarVariant === 1 ? '16px 16px 0 16px' : '0',
+                    position: 'sticky', top: sidebarVariant === 1 ? 16 : 0, zIndex: 50,
                 }}>
                         {/* ── Theme circle toggle ── */}
                     <div onClick={toggleTheme}
