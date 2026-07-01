@@ -44,7 +44,6 @@ echo "Installing npm dependencies..."
 npm install
 
 echo "Downloading Puppeteer Chrome..."
-# We rely on postinstall in package.json or explicitly run it here:
-PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer
+export PUPPETEER_CACHE_DIR=/opt/render/project/src/workers/.puppeteer_cache
 mkdir -p $PUPPETEER_CACHE_DIR
 npx puppeteer browsers install chrome
